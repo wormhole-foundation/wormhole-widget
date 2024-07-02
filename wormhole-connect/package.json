@@ -85,7 +85,8 @@
     "test": "vitest run tests/ci",
     "test:dev": "vitest",
     "checksdn": "npx tsx scripts/ofac/checkSdnListForUpdates.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "unused:exports": "ts-unused-exports ./tsconfig.json"
   },
   "browserslist": {
     "production": [
@@ -121,6 +122,7 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3",
     "prettier": "^2.8.8",
+    "ts-unused-exports": "^10.1.0",
     "typescript": "^5.3.3",
     "vite": "^5.3.1",
     "vite-bundle-visualizer": "^1.2.1",
