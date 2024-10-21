@@ -40,16 +40,6 @@ export type WormholeConfig = {
 
 export type Address = string;
 
-export type TokenId = {
-  chain: Chain;
-  address: string;
-};
-
 export type AnyContext = any;
 
 export type AnyContracts = any;
-
-export type TokenDetails = {
-  symbol: string;
-  decimals: number;
-};

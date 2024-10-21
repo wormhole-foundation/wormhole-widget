@@ -15,13 +15,14 @@ import UpIcon from '@mui/icons-material/ExpandLess';
 
 import config from 'config';
 
-import type { ChainConfig, TokenConfig } from 'config/types';
+import type { ChainConfig } from 'config/types';
 import type { WalletData } from 'store/wallet';
 import { isDisabledChain } from 'store/transferInput';
 import ChainList from './ChainList';
 import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
 import AssetBadge from 'components/AssetBadge';
+import { Token } from 'config/tokens';
 
 const useStyles = makeStyles()((theme: any) => ({
   card: {
@@ -62,11 +63,11 @@ const useStyles = makeStyles()((theme: any) => ({
 type Props = {
   chain?: Chain | undefined;
   chainList: Array<ChainConfig>;
-  token?: string;
-  sourceToken?: string;
-  tokenList?: Array<TokenConfig> | undefined;
+  token?: Token;
+  sourceToken?: Token;
+  tokenList?: Array<Token> | undefined;
   isFetching?: boolean;
-  setToken: (value: string) => void;
+  setToken: (value: Token) => void;
   setChain: (value: Chain) => void;
   wallet: WalletData;
   isSource: boolean;
@@ -74,7 +75,6 @@ type Props = {
 
 const AssetPicker = (props: Props) => {
   const [showChainSearch, setShowChainSearch] = useState(false);
-  const [selectedTokenChain, setSelectedTokenChain] = useState('');
   const { classes } = useStyles();
 
   const popupState = usePopupState({
@@ -113,12 +113,8 @@ const AssetPicker = (props: Props) => {
     return props.chain ? config.chains[props.chain] : undefined;
   }, [props.chain]);
 
-  const tokenConfig: TokenConfig | undefined = useMemo(() => {
-    return props.token ? config.tokens[props.token] : undefined;
-  }, [props.token]);
-
   const selection = useMemo(() => {
-    if (!chainConfig && !tokenConfig) {
+    if (!chainConfig && !props.token) {
       return (
         <Typography component={'div'} fontSize={16}>
           Select chain and token
@@ -126,17 +122,34 @@ const AssetPicker = (props: Props) => {
       );
     }
 
+    const tokenDisplay = props.token ? (
+      <>{props.token.display}</>
+    ) : (
+      <>Select token</>
+    );
+
     return (
       <div>
-        <Typography component={'div'} fontSize={16} fontWeight={700}>
-          {tokenConfig?.symbol || 'Select token'}
+        <Typography
+          component={'div'}
+          maxWidth={300}
+          fontSize={16}
+          fontWeight={700}
+          sx={{
+            display: 'flex',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tokenDisplay}
         </Typography>
         <Typography component={'div'} fontSize={12} sx={{ opacity: 0.6 }}>
           {chainConfig?.displayName}
         </Typography>
       </div>
     );
-  }, [chainConfig, tokenConfig]);
+  }, [chainConfig, props.token]);
 
   return (
     <>
@@ -151,7 +164,7 @@ const AssetPicker = (props: Props) => {
             component={'div'}
             gap={1}
           >
-            <AssetBadge chainConfig={chainConfig} tokenConfig={tokenConfig} />
+            <AssetBadge chainConfig={chainConfig} token={props.sourceToken} />
             {selection}
           </Typography>
           {popupState.isOpen ? <UpIcon /> : <DownIcon />}
@@ -191,12 +204,10 @@ const AssetPicker = (props: Props) => {
             isFetching={props.isFetching}
             selectedChainConfig={chainConfig}
             selectedToken={props.token}
-            selectedTokenChain={selectedTokenChain}
             sourceToken={props.sourceToken}
             wallet={props.wallet}
-            onSelectToken={(key: string) => {
+            onSelectToken={(key: Token) => {
               props.setToken(key);
-              setSelectedTokenChain(chainConfig.key);
               popupState.close();
             }}
             isSource={props.isSource}

@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import config from 'config';
-import { setDestToken, setSupportedDestTokens } from 'store/transferInput';
+import { setDestToken } from 'store/transferInput';
 
-import type { TokenConfig } from 'config/types';
+import { Token } from 'config/tokens';
 
-import { Chain } from '@wormhole-foundation/sdk';
+import { Chain, TokenId } from '@wormhole-foundation/sdk';
+import { useTokens } from 'contexts/TokensContext';
 
 type Props = {
   sourceChain: Chain | undefined;
-  sourceToken: string;
+  sourceToken: Token | undefined;
   destChain: Chain | undefined;
   route?: string;
 };
 
 type ReturnProps = {
+  supportedDestTokens: Token[];
   isFetching: boolean;
 };
 
@@ -24,7 +26,10 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
 
   const dispatch = useDispatch();
 
+  const [supportedDestTokens, setSupportedDestTokens] = useState<Token[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+
+  const { getOrFetchToken, lastTokenCacheUpdate } = useTokens();
 
   useEffect(() => {
     if (!destChain) {
@@ -34,48 +39,43 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
     let active = true;
 
     const computeDestTokens = async () => {
-      let supported: Array<TokenConfig> = [];
-
       // Start fetching and setting all supported tokens
-      setIsFetching(true);
 
-      try {
-        supported = await config.routes.allSupportedDestTokens(
-          config.tokens[sourceToken],
-          sourceChain,
-          destChain,
-        );
-      } catch (e) {
-        console.error(e);
-      }
+      if (sourceChain && destChain) {
+        let supportedIds: TokenId[] = [];
+        setIsFetching(true);
 
-      dispatch(setSupportedDestTokens(supported));
-
-      // Done fetching and setting all supported tokens
-      setIsFetching(false);
-
-      if (destChain && supported.length === 1) {
-        if (active) {
-          dispatch(setDestToken(supported[0].key));
+        try {
+          supportedIds = await config.routes.allSupportedDestTokens(
+            sourceToken,
+            sourceChain,
+            destChain,
+          );
+        } catch (e) {
+          console.error(e);
         }
-      }
 
-      // If all the supported tokens are the same token
-      // select the native version for applicable tokens
-      const symbols = supported.map((t) => t.symbol);
-      if (
-        destChain &&
-        symbols.every((s) => s === symbols[0]) &&
-        ['USDC', 'tBTC'].includes(symbols[0])
-      ) {
-        const key = supported.find(
-          (t) =>
-            t.symbol === symbols[0] &&
-            t.nativeChain === t.tokenId?.chain &&
-            t.nativeChain === destChain,
-        )?.key;
-        if (active && key) {
-          dispatch(setDestToken(key));
+        const supported: Token[] = [];
+
+        await Promise.all(
+          supportedIds.map(async (tokenId) => {
+            const t = await getOrFetchToken(tokenId);
+            if (t) {
+              supported.push(t);
+            }
+          }),
+        );
+
+        setSupportedDestTokens(supported);
+
+        // Done fetching and setting all supported tokens
+        setIsFetching(false);
+
+        // Auto-select if there's only one option
+        if (destChain && supported.length === 1) {
+          if (active) {
+            dispatch(setDestToken(supported[0].tuple));
+          }
         }
       }
     };
@@ -85,9 +85,17 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
     return () => {
       active = false;
     };
-  }, [sourceToken, sourceChain, destChain, dispatch]);
+  }, [
+    sourceToken,
+    sourceChain,
+    destChain,
+    dispatch,
+    lastTokenCacheUpdate,
+    getOrFetchToken,
+  ]);
 
   return {
+    supportedDestTokens,
     isFetching,
   };
 };

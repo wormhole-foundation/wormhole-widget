@@ -15,9 +15,10 @@ import Typography from '@mui/material/Typography';
 import { amount } from '@wormhole-foundation/sdk';
 
 import config from 'config';
-import { getDisplayName, calculateUSDPrice } from 'utils';
+import { calculateUSDPrice } from 'utils';
 import { RootState } from 'store';
 import { setToNativeToken } from 'store/relay';
+import { useTokens } from 'contexts/TokensContext';
 
 const useStyles = makeStyles()(() => ({
   card: {
@@ -93,12 +94,11 @@ const GasSlider = (props: {
     (state: RootState) => state.transferInput,
   );
 
-  const { usdPrices: tokenPrices } = useSelector(
-    (state: RootState) => state.tokenPrices,
-  );
+  const { getTokenPrice, isFetchingTokenPrices, getSmallDisplayName } =
+    useTokens();
 
   const destChainConfig = config.chains[destChain!];
-  const nativeGasTokenConfig = config.tokens[destChainConfig!.gasToken];
+  const nativeGasToken = config.tokens.getGasToken(destChain!);
 
   const [isGasSliderOpen, setIsGasSliderOpen] = useState(!props.disabled);
   const [percentage, setPercentage] = useState(0);
@@ -110,33 +110,34 @@ const GasSlider = (props: {
   }, [debouncedPercentage]);
 
   const nativeGasPrice = useMemo(() => {
-    if (!destChain) {
+    if (!destChain || !nativeGasToken) {
       return null;
     }
 
     const tokenAmount = amount.display(
       amount.truncate(props.destinationGasDrop, 6),
     );
-    console.log(tokenAmount);
 
     const tokenPrice = calculateUSDPrice(
+      getTokenPrice,
       props.destinationGasDrop,
-      tokenPrices.data,
-      nativeGasTokenConfig,
+      nativeGasToken,
     );
 
     return (
       <Typography fontSize={14}>
-        {`${tokenAmount} ${getDisplayName(
-          nativeGasTokenConfig,
-          destChain,
-        )} ${tokenPrice}`}
+        {`${tokenAmount} ${getSmallDisplayName(nativeGasToken)} ${tokenPrice}`}
       </Typography>
     );
-  }, [nativeGasTokenConfig, tokenPrices, props.destinationGasDrop, destChain]);
+  }, [
+    nativeGasToken,
+    isFetchingTokenPrices,
+    props.destinationGasDrop,
+    destChain,
+  ]);
 
   // Checking required values
-  if (!destChainConfig || !nativeGasTokenConfig) {
+  if (!destChainConfig || !nativeGasToken) {
     return <></>;
   }
 
@@ -166,7 +167,7 @@ const GasSlider = (props: {
         <Collapse in={isGasSliderOpen} unmountOnExit>
           <div className={classes.container}>
             <Typography color={theme.palette.text.secondary} fontSize={14}>
-              {`Use the slider to buy extra ${nativeGasTokenConfig.symbol} for future transactions.`}
+              {`Use the slider to buy extra ${nativeGasToken.symbol} for future transactions.`}
             </Typography>
             <div>
               <StyledSlider

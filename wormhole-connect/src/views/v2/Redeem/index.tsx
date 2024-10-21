@@ -63,6 +63,8 @@ import TxFailedIcon from 'icons/TxFailed';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import TxReadyForClaim from 'icons/TxReadyForClaim';
+import { useGetRedeemTokens } from 'hooks/useGetTokens';
+import { tokenIdFromTuple } from 'config/tokens';
 
 type StyleProps = {
   transitionDuration?: string | undefined;
@@ -148,6 +150,15 @@ const Redeem = () => {
 
   const routeContext = React.useContext(RouteContext);
 
+  const { sourceToken, destToken } = useGetRedeemTokens();
+
+  if (!sourceToken) {
+    // TODO
+  }
+  if (!destToken) {
+    // TODO
+  }
+
   useConnectToLastUsedWallet();
 
   const {
@@ -171,8 +182,8 @@ const Redeem = () => {
     recipient,
     toChain,
     fromChain,
-    tokenKey,
-    receivedTokenKey,
+    token,
+    receivedToken,
     amount,
     eta = 0,
   } = txData!;
@@ -213,8 +224,8 @@ const Redeem = () => {
 
   const details = getTransferDetails(
     routeName!,
-    tokenKey,
-    receivedTokenKey,
+    sourceToken!,
+    destToken!,
     fromChain,
     toChain,
     amount,
@@ -632,24 +643,14 @@ const Redeem = () => {
       // These routes set the recipient address to the associated token address
       ['ManualTokenBridge', 'ManualCCTP'].includes(routeName)
     ) {
-      const receivedToken = config.sdkConverter.toTokenIdV2(
-        config.tokens[receivedTokenKey],
-        'Solana',
-      );
+      const { address: receiveTokenAddress } = tokenIdFromTuple(receivedToken);
 
-      try {
-        const ata = getAssociatedTokenAddressSync(
-          new PublicKey(receivedToken.address.toString()),
-          new PublicKey(receivingWallet.address),
-        );
-        if (!ata.equals(new PublicKey(recipient))) {
-          setClaimError('Not connected to the receiving wallet');
-          return false;
-        }
-      } catch (e: unknown) {
-        console.log(
-          `Error while checking associated token address for the recipient: ${e}`,
-        );
+      const ata = getAssociatedTokenAddressSync(
+        new PublicKey(receiveTokenAddress.toString()),
+        new PublicKey(receivingWallet.address),
+      );
+      if (!ata.equals(new PublicKey(recipient))) {
+        setClaimError('Not connected to the receiving wallet');
         return false;
       }
 
@@ -672,7 +673,7 @@ const Redeem = () => {
     toChain,
     isResumeTx,
     routeName,
-    receivedTokenKey,
+    receivedToken,
   ]);
 
   // Callback for claim action in Manual route transactions
@@ -691,8 +692,8 @@ const Redeem = () => {
 
     const transferDetails = {
       route: routeName,
-      fromToken: getTokenDetails(tokenKey),
-      toToken: getTokenDetails(receivedTokenKey),
+      fromToken: getTokenDetails(config.tokens.mustGet(token)),
+      toToken: getTokenDetails(config.tokens.mustGet(receivedToken)),
       fromChain: fromChain,
       toChain: toChain,
     };
@@ -767,13 +768,12 @@ const Redeem = () => {
     fromChain,
     isConnectedToReceivingWallet,
     isTxDestQueued,
-    receivedTokenKey,
     receivingWallet.address,
+    token,
     routeContext.receipt,
     routeContext.route,
     routeName,
     toChain,
-    tokenKey,
   ]);
 
   // Main CTA button which has separate states for automatic and manual claims
@@ -867,7 +867,7 @@ const Redeem = () => {
     }
 
     const { to, queueReleaseTime } = routeContext.receipt;
-    const symbol = config.tokens[receivedTokenKey]?.symbol || '';
+    const symbol = config.tokens.get(receivedToken)?.symbol || '';
     const releaseTime = queueReleaseTime.toLocaleString();
 
     return (
@@ -883,7 +883,7 @@ const Redeem = () => {
     );
   }, [
     classes.delayText,
-    receivedTokenKey,
+    receivedToken,
     routeContext.receipt,
     theme.palette.text.secondary,
   ]);

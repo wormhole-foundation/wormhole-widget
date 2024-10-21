@@ -5,7 +5,8 @@ import {
   MAINNET_REST_MAPPING,
   MAINNET_RPC_MAPPING,
 } from './rpcs';
-import { MAINNET_TOKENS, MAINNET_WRAPPED_TOKENS } from './tokens';
+import { MAINNET_TOKENS } from './tokens';
+import { MAINNET_WRAPPED_TOKENS } from './wrappedTokens';
 
 export * from './chains';
 export * from './rpcs';

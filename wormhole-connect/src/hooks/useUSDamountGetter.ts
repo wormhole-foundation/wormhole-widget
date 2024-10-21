@@ -1,27 +1,27 @@
-import config from 'config';
 import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from 'store';
-import { getTokenPrice } from 'utils';
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
+import { Token } from 'config/tokens';
+import { useTokens } from 'contexts/TokensContext';
 
 export const useUSDamountGetter = (): ((args: {
-  token: string;
+  token: Token;
   amount: sdkAmount.Amount;
 }) => number | undefined) => {
-  const {
-    usdPrices: { data },
-  } = useSelector((state: RootState) => state.tokenPrices);
+  const { getTokenPrice, lastTokenPriceUpdate } = useTokens();
 
   return useCallback(
     ({ token, amount }) => {
-      const prices = data || {};
       const numericAmount = sdkAmount.whole(amount);
-      const tokenPrice = Number(getTokenPrice(prices, config.tokens[token]));
+      if (!token) return undefined;
+      const tokenPrice = Number(getTokenPrice(token));
       const USDAmount = tokenPrice * numericAmount;
 
       return isNaN(USDAmount) ? undefined : parseFloat(USDAmount.toFixed(2));
     },
-    [data],
+    // ES Lint complains that lastTokenPriceUpdate is unused/unnecessary here... but that's wrong.
+    // We want to recompute the price after we update conversion rates.
+    //
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lastTokenPriceUpdate, getTokenPrice],
   );
 };

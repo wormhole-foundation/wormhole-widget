@@ -1,10 +1,7 @@
 import { getWormholeContextV2 } from 'config';
 import { RelayerFee } from 'store/relay';
-import { TokenConfig } from 'config/types';
 import {
-  TokenId,
   Chain,
-  TokenAddress,
   Wormhole,
   AttestedTransferReceipt,
   RedeemedTransferReceipt,
@@ -22,8 +19,8 @@ import { NttRoute } from '@wormhole-foundation/sdk-route-ntt';
 import { Connection } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
-import { getTokenDecimals, getWrappedToken } from 'utils';
 import { WORMSCAN } from 'config/constants';
+import { TokenTuple } from 'config/tokens';
 
 // Used to represent an initiated transfer. Primarily for the Redeem view.
 export interface TransferInfo {
@@ -41,11 +38,11 @@ export interface TransferInfo {
 
   // Source token address
   tokenAddress: string;
-  tokenKey: string;
+  token: TokenTuple;
   tokenDecimals: number;
 
   // Destination token
-  receivedTokenKey: string;
+  receivedToken: TokenTuple;
   receiveAmount?: amount.Amount;
   relayerFee?: RelayerFee;
 
@@ -54,63 +51,6 @@ export interface TransferInfo {
 
   // ETA for the route this transfer was initiated on
   eta?: number;
-}
-
-// This function has three levels of priority when fetching a token bridge
-// foreign asset address.
-//
-// 1. Check built-in config
-// 2. Check cache
-// 3. Fetch the address on chain using RPC (& cache this for next time)
-export async function getTokenBridgeWrappedTokenAddress<C extends Chain>(
-  token: TokenConfig,
-  chain: C,
-): Promise<TokenAddress<C> | null> {
-  // Try cache first
-  const cached = config.wrappedTokenAddressCache.get(token.key, chain);
-  if (cached) {
-    return cached;
-  }
-
-  // Fetch live and cache
-  const wh = await getWormholeContextV2();
-  const chainContext = wh.getChain(chain);
-  const tb = await chainContext.getTokenBridge();
-
-  console.info(
-    `Resolving foreign address for token ${token.key} on chain ${chain}`,
-  );
-
-  const tokenId = config.sdkConverter.toTokenIdV2(token);
-
-  try {
-    const wrapped = await tb.getWrappedAsset(tokenId);
-
-    if (wrapped) {
-      config.wrappedTokenAddressCache.set(token.key, chain, wrapped);
-    }
-
-    return wrapped;
-  } catch (_e) {
-    return null;
-  }
-}
-
-// This function is a synchronous version of `getTokenBridgeWrappedTokenAddress`
-// that returns the cached value if it exists.
-export function getTokenBridgeWrappedTokenAddressSync<C extends Chain>(
-  token: TokenConfig,
-  chain: C,
-): TokenAddress<C> | null {
-  return config.wrappedTokenAddressCache.get(token.key, chain);
-}
-
-export async function getDecimals(
-  token: TokenId,
-  chain: Chain,
-): Promise<number> {
-  const wh = await getWormholeContextV2();
-  return await wh.getDecimals(chain, token.address);
 }
 
 export type ExplorerInfo = {
@@ -221,44 +161,41 @@ const parseTokenBridgeReceipt = async (
       await tb.getTokenNativeAddress(payload.token.chain, payload.token.address)
     ).toString();
 
-    const tokenIdV2 = Wormhole.tokenId(payload.token.chain, tokenAddress);
-    const tokenV1 = config.sdkConverter.findTokenConfigV1(
-      tokenIdV2,
-      config.tokensArr,
-    );
+    const tokenId = Wormhole.tokenId(payload.token.chain, tokenAddress);
+    const token = config.tokens.get(tokenId);
 
-    if (!tokenV1) {
+    if (!token) {
       // This is a token Connect is not aware of
       throw new Error('Unknown token');
     }
 
-    const fromChain = receipt.from;
-
-    const decimals = getTokenDecimals(fromChain, getWrappedToken(tokenV1));
-
-    txData.tokenDecimals = decimals;
+    txData.tokenDecimals = token.decimals;
 
     txData.amount = amount.fromBaseUnits(
       payload.token.amount,
       // VAAs are truncated to a max of 8 decimal places
-      Math.min(8, decimals),
+      Math.min(8, token.decimals),
     );
     txData.tokenAddress = tokenAddress;
-    txData.tokenKey = tokenV1.key;
-    txData.receivedTokenKey = tokenV1.key;
+    txData.token = token.tuple;
+    // TODO token refactor this is technically wrong but I think it still displays correctly...
+    txData.receivedToken = token.tuple;
     txData.receiveAmount = txData.amount;
     if (payload.payload?.toNativeTokenAmount) {
       txData.receiveNativeAmount = amount.fromBaseUnits(
         payload.payload.toNativeTokenAmount,
-        Math.min(8, decimals),
+        Math.min(8, token.decimals),
       );
     }
     if (payload.payload?.targetRelayerFee) {
       txData.relayerFee = {
         fee: Number(
-          amount.fmt(payload.payload.targetRelayerFee, Math.min(8, decimals)),
+          amount.fmt(
+            payload.payload.targetRelayerFee,
+            Math.min(8, token.decimals),
+          ),
         ),
-        tokenKey: tokenV1.key,
+        token: token.tuple,
       };
     }
   }
@@ -317,22 +254,16 @@ const parseCCTPReceipt = async (
         circle.usdcContract.get(config.network, receipt.from)!
       : payload.burnToken.toNative(receipt.from).toString(),
   );
+  const usdcLegacy = config.tokens.get(sourceTokenId);
 
-  const usdcLegacy = config.sdkConverter.findTokenConfigV1(
-    sourceTokenId,
-    config.tokensArr,
-  );
   if (!usdcLegacy) {
     throw new Error(`Couldn't find USDC for source chain`);
   }
 
   txData.tokenAddress = sourceTokenId.address.toString();
-  txData.tokenKey = usdcLegacy.key;
-
-  const decimals = getTokenDecimals(receipt.from, getWrappedToken(usdcLegacy));
-
-  txData.tokenDecimals = decimals;
-  txData.amount = amount.fromBaseUnits(payload.amount, decimals);
+  txData.token = usdcLegacy.tuple;
+  txData.tokenDecimals = usdcLegacy.decimals;
+  txData.amount = amount.fromBaseUnits(payload.amount, usdcLegacy.decimals);
   txData.receiveAmount = txData.amount;
 
   txData.sender = payload.messageSender.toNative(receipt.from).toString();
@@ -356,14 +287,24 @@ const parseCCTPReceipt = async (
 
   // The attestation doesn't have the destination token address, but we can deduce which it is
   // just based off the destination chain
-  const destinationUsdcLegacy = config.tokensArr.find((token) => {
-    return token.symbol === 'USDC' && token.nativeChain === txData.toChain;
-  });
-  if (!destinationUsdcLegacy) {
-    throw new Error(`Couldn't find USDC for destination chain`);
-  }
+  if (txData.toChain) {
+    const usdcContract = circle.usdcContract.get(
+      config.network,
+      txData.toChain,
+    );
+    if (!usdcContract) {
+      throw new Error(`Couldn't find USDC for destination chain`);
+    }
+    const destinationUsdcLegacy = config.tokens.get(
+      txData.toChain,
+      usdcContract,
+    );
+    if (!destinationUsdcLegacy) {
+      throw new Error(`Couldn't find USDC for destination chain`);
+    }
 
-  txData.receivedTokenKey = destinationUsdcLegacy.key;
+    txData.receivedToken = destinationUsdcLegacy.tuple;
+  }
 
   return txData as TransferInfo;
 };
@@ -386,11 +327,8 @@ const parseNttReceipt = (
     receipt.from,
     receipt.params.normalizedParams.sourceContracts.token,
   );
-  const srcTokenV1 = config.sdkConverter.findTokenConfigV1(
-    srcTokenIdV2,
-    config.tokensArr,
-  );
-  if (!srcTokenV1) {
+  const srcToken = config.tokens.get(srcTokenIdV2);
+  if (!srcToken) {
     // This is a token Connect is not aware of
     throw new Error('Unknown src token');
   }
@@ -399,11 +337,8 @@ const parseNttReceipt = (
     receipt.to,
     receipt.params.normalizedParams.destinationContracts.token,
   );
-  const dstTokenV1 = config.sdkConverter.findTokenConfigV1(
-    dstTokenIdV2,
-    config.tokensArr,
-  );
-  if (!dstTokenV1) {
+  const dstToken = config.tokens.get(dstTokenIdV2);
+  if (!dstToken) {
     // This is a token Connect is not aware of
     throw new Error('Unknown dst token');
   }
@@ -427,10 +362,10 @@ const parseNttReceipt = (
       .toNative(receipt.to)
       .toString(),
     amount: amt,
-    tokenAddress: srcTokenV1.tokenId!.address.toString(),
-    tokenKey: srcTokenV1.key,
+    tokenAddress: srcToken.tokenId!.address.toString(),
+    token: srcToken.tuple,
     tokenDecimals: trimmedAmount.decimals,
-    receivedTokenKey: dstTokenV1.key,
+    receivedToken: dstToken.tuple,
     receiveAmount: amt,
     relayerFee: undefined, // TODO: how to get?
   };

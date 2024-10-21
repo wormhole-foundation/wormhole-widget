@@ -1,18 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { isHexString } from 'ethers';
-import { isValidTransactionDigest, SUI_TYPE_ARG } from '@mysten/sui.js';
-import { TokenId, Context } from 'sdklegacy';
+import { isValidTransactionDigest } from '@mysten/sui.js';
+import { Context } from 'sdklegacy';
 
 import config from 'config';
-import { ChainConfig, TokenConfig } from 'config/types';
+import { ChainConfig } from 'config/types';
+import { Token } from 'config/tokens';
 import { isGatewayChain } from './cosmos';
-import { TokenPrices } from 'store/tokenPrices';
 import {
   Chain,
+  TokenId,
   chainToPlatform,
+  isNative,
   amount as sdkAmount,
 } from '@wormhole-foundation/sdk';
-import { getNativeVersionOfToken } from 'store/transferInput';
 
 export const MAX_DECIMALS = 6;
 export const NORMALIZED_DECIMALS = 8;
@@ -22,12 +23,7 @@ export function convertAddress(address: string): string {
   return `0x${address.slice(address.length - 40, address.length)}`;
 }
 
-function isNative(address: string) {
-  return address === SUI_TYPE_ARG || address === '0x1::aptos_coin::AptosCoin';
-}
-
 export function trimAddress(address: string, max = 6): string {
-  if (isNative(address)) return address;
   return (
     address.slice(0, max) +
     '...' +
@@ -80,93 +76,44 @@ export function getChainConfig(chain: Chain): ChainConfig {
   return chainConfig;
 }
 
-export function getWrappedToken(token: TokenConfig): TokenConfig {
-  if (!token) throw new Error('token must be defined');
-
+export function getWrappedToken(token: Token): Token {
   // if token is not native, return token
-  if (token.tokenId) return token;
-
-  // otherwise get wrapped token
-  if (!token.tokenId && !token.wrappedAsset)
-    throw new Error(`token details misconfigured for ${token.key}`);
-  if (!token.tokenId && token.wrappedAsset) {
-    const wrapped = config.tokens[token.wrappedAsset];
-    if (!wrapped) throw new Error('wrapped token not found');
-    return wrapped;
+  if (isNative(token.tokenId.address)) {
+    const chainConfig = config.chains[token.chain];
+    const wrappedNativeTokenAddr = chainConfig!.wrappedGasToken;
+    if (wrappedNativeTokenAddr) {
+      const wrappedNativeToken = config.tokens.get(
+        token.chain,
+        wrappedNativeTokenAddr,
+      );
+      if (wrappedNativeToken) {
+        return wrappedNativeToken;
+      }
+    }
   }
+
+  // Otherwise we just return the token :>
   return token;
 }
 
-export function getWrappedTokenId(token: TokenConfig): TokenId {
+export function getWrappedTokenId(token: Token): TokenId {
   const wrapped = getWrappedToken(token);
   return wrapped.tokenId!;
 }
 
-export function getTokenById(tokenId: TokenId): TokenConfig | undefined {
-  return config.tokensArr.find(
-    (t) =>
-      t.tokenId &&
-      tokenId.chain === t.tokenId.chain &&
-      tokenId.address.toLowerCase() === t.tokenId!.address.toLowerCase(),
-  );
-}
-
-export function getDisplayName(token: TokenConfig, chain: Chain): string {
-  const isWrapped = isWrappedToken(token, chain);
-  const baseName = token.displayName ?? token.symbol;
-
-  if (!isWrapped) {
-    return baseName;
-  }
-
-  const isEthereum = token.nativeChain === 'Ethereum';
-
-  // TODO: remove this once CCTP is launched on Sui
-  if (isStableCoin(token) && !isEthereum && chain === 'Sui') {
-    return `Wormhole-wrapped ${token.nativeChain} ${baseName}`;
-  }
-
-  const prefix = `Wormhole-wrapped ${
-    isFrankensteinToken(token, chain)
-      ? isEthereum
-        ? ''
-        : `${token.nativeChain} `
-      : ''
-  }`;
-
-  return `${prefix}${baseName}`;
-}
-
-export function getGasToken(chain: Chain): TokenConfig {
-  const gasToken = config.tokens[getChainConfig(chain).gasToken];
+export function getGasToken(chain: Chain): Token {
+  const gasToken = config.tokens.getGasToken(chain);
   if (!gasToken) throw new Error(`gas token not found for ${chain}`);
   return gasToken;
 }
 
-export function getTokenDecimals(chain: Chain, token: TokenConfig): number {
+export function chainDisplayName(chain: Chain): string {
   const chainConfig = config.chains[chain];
-  if (!chainConfig) throw new Error(`chain config for ${chain} not found`);
-
-  /*
-  if (token?.tokenId === 'native') {
-    const { decimals } = getGasToken(chain);
-    return decimals;
+  if (chainConfig) {
+    return chainConfig.displayName;
+  } else {
+    return chain;
   }
-  */
-
-  const { nativeChain, decimals } = token;
-
-  const platform = chainToPlatform(chain);
-  const tokenPlatform = chainToPlatform(nativeChain);
-
-  // If the token is native to the chain, return the token's decimals
-  if (platform === tokenPlatform) return decimals;
-
-  // Otherwise, return the minimum of the token's decimals and the platform's max decimals (token bridge)
-  // See: https://github.com/wormhole-foundation/wormhole/blob/main/whitepapers/0003_token_bridge.md#handling-of-token-amounts-and-decimals
-  const maxWrappedDecimals = platform === 'Evm' ? 18 : 8;
-
-  return Math.min(decimals, maxWrappedDecimals);
 }
 
 function fallbackCopyTextToClipboard(text: string) {
@@ -265,32 +212,6 @@ export function isEqualCaseInsensitive(a: string, b: string) {
   return a.toLowerCase() === b.toLowerCase();
 }
 
-export const sortTokens = (tokens: TokenConfig[], chain: Chain) => {
-  const gasToken = getGasToken(chain);
-  const wrappedGasToken = getWrappedToken(gasToken);
-  return [...tokens].sort((a, b) => {
-    // native tokens first
-    if (a.key === gasToken.key) return -1; // Sort gasToken first
-    if (b.key === gasToken.key) return 1; // Sort gasToken first
-    if (a.key === wrappedGasToken.key) return -1; // Sort wrappedGasToken second
-    if (b.key === wrappedGasToken.key) return 1; // Sort wrappedGasToken second
-    if (a.nativeChain === chain && b.nativeChain !== chain) return -1; // Sort nativeChain tokens third
-    if (b.nativeChain === chain && a.nativeChain !== chain) return 1; // Sort nativeChain tokens third
-    return 0; // Sort the rest
-  });
-};
-
-export const getTokenPrice = (
-  tokenPrices: TokenPrices,
-  token: TokenConfig,
-): number | undefined => {
-  if (tokenPrices && token) {
-    const price = tokenPrices[token.coinGeckoId]?.usd;
-    return price;
-  }
-  return undefined;
-};
-
 export const getUSDFormat = (price: number | undefined): string => {
   if (typeof price === 'undefined') {
     return '';
@@ -307,16 +228,16 @@ export const getUSDFormat = (price: number | undefined): string => {
 };
 
 export const calculateUSDPriceRaw = (
+  getTokenPrice: (token: Token) => number | undefined,
   amount?: sdkAmount.Amount | number,
-  tokenPrices?: TokenPrices | null,
-  token?: TokenConfig,
+  token?: Token,
 ): number | undefined => {
-  if (typeof amount === 'undefined' || !tokenPrices || !token) {
+  if (typeof amount === 'undefined' || !token) {
     return undefined;
   }
 
-  const usdPrice = getTokenPrice(tokenPrices || {}, token) || 0;
-  if (usdPrice > 0) {
+  const usdPrice = getTokenPrice(token);
+  if (usdPrice) {
     if (typeof amount === 'number') {
       return amount * usdPrice;
     } else {
@@ -326,11 +247,11 @@ export const calculateUSDPriceRaw = (
 };
 
 export const calculateUSDPrice = (
+  getTokenPrice: (token: Token) => number | undefined,
   amount?: sdkAmount.Amount | number,
-  tokenPrices?: TokenPrices | null,
-  token?: TokenConfig,
+  token?: Token,
 ): string => {
-  return getUSDFormat(calculateUSDPriceRaw(amount, tokenPrices, token));
+  return getUSDFormat(calculateUSDPriceRaw(getTokenPrice, amount, token));
 };
 
 /**
@@ -380,30 +301,19 @@ export const getExplorerUrl = (chain: Chain, address: string) => {
 // and likely have no liquidity.
 // An example of a Frankenstein token is wormhole-wrapped Arbitrum WETH on Solana.
 // However wormhole-wrapped Ethereum WETH on Solana is not a Frankenstein token.
-export const isFrankensteinToken = (token: TokenConfig, chain: Chain) => {
+export const isFrankensteinToken = (token: Token, chain: Chain) => {
+  if (!token.isTokenBridgeWrappedToken) {
+    return false;
+  }
+
   const { nativeChain, symbol } = token;
 
   if (symbol === 'USDC' && nativeChain === 'Ethereum' && chain === 'Fantom') {
     return true;
   }
 
-  if (!isWrappedToken(token, chain)) {
-    return false;
-  }
-
-  // If there is a native version of the token on the chain, then it's a Frankenstein token
-  if (getNativeVersionOfToken(token.symbol, chain)) {
-    return true;
-  }
-
   if (token.symbol === 'tBTC') {
     return true;
-  }
-
-  // TODO: Remove this once CCTP is launched on Sui
-  // Allow all USDC flavors to be transferred on Sui
-  if (token.symbol === 'USDC' && chain === 'Sui') {
-    return false;
   }
 
   return (
@@ -412,17 +322,7 @@ export const isFrankensteinToken = (token: TokenConfig, chain: Chain) => {
   );
 };
 
-export const isWrappedToken = (token: TokenConfig, chain: Chain) => {
-  return token.nativeChain !== chain;
-};
-
-// Canonical tokens may be Wormhole-wrapped tokens that are canonical on the chain
-// e.g., Wormhole-wrapped Ethereum USDC is canonical on Sui
-export const isCanonicalToken = (token: TokenConfig, chain: Chain) => {
-  return token.key === 'USDCeth' && chain === 'Sui';
-};
-
-export const isStableCoin = (token: TokenConfig) => {
+export const isStableCoin = (token: Token) => {
   return ['USDC', 'USDT', 'DAI'].includes(token.symbol);
 };
 

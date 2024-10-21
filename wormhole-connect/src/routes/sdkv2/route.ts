@@ -6,26 +6,20 @@ import {
   routes,
   chainToPlatform,
   isSameToken,
-  TokenId as TokenIdV2,
+  TokenId as TokenId,
   TransferState,
   TransactionId,
-  isNative,
 } from '@wormhole-foundation/sdk';
-import { TokenConfig } from 'config/types';
-import { getTokenBridgeWrappedTokenAddressSync } from 'utils/sdkv2';
+import { Token } from 'config/tokens';
 
 import { SDKv2Signer } from './signer';
 
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import config, { getWormholeContextV2 } from 'config';
 import {
-  getGasToken,
-  getWrappedToken,
-  getWrappedTokenId,
-  isFrankensteinToken,
-  isWrappedToken,
   sleep,
 } from 'utils';
+import { isFrankensteinToken } from 'utils';
 import { TransferWallet } from 'utils/wallet';
 
 type Amount = sdkAmount.Amount;
@@ -65,8 +59,8 @@ export class SDKv2Route {
   }
 
   async isRouteSupported(
-    sourceToken: string,
-    destToken: string,
+    sourceToken: Token,
+    destToken: Token,
     fromChain: Chain,
     toChain: Chain,
   ): Promise<boolean> {
@@ -78,24 +72,16 @@ export class SDKv2Route {
     const fromChainSupported = supportedChains.includes(fromContext.chain);
     const toChainSupported = supportedChains.includes(toContext.chain);
 
-    const fromTokenIdV2 = await config.sdkConverter.getTokenIdV2ForKey(
-      sourceToken,
-      fromChain,
-      config.tokens,
-    );
-    const toTokenIdV2 = await config.sdkConverter.getTokenIdV2ForKey(
-      destToken,
-      toChain,
-      config.tokens,
-    );
+    const fromTokenSupported = !!(
+      await this.rc.supportedSourceTokens(fromContext.context)
+    ).find((tokenId) => {
+      return isSameToken(tokenId, sourceToken);
+    });
 
-    if (!fromTokenIdV2 || !toTokenIdV2) return false;
-
-    // Do not allow tokens supported by NTT to be bridged via the token bridge
     if (
       this.IS_TOKEN_BRIDGE_ROUTE &&
       (await isNttSupportedToken(
-        fromTokenIdV2,
+        sourceToken,
         fromContext.context,
         toContext.context,
       ))
@@ -103,27 +89,14 @@ export class SDKv2Route {
       return false;
     }
 
-    const fromTokenSupported = !!(
-      await this.rc.supportedSourceTokens(fromContext.context)
-    ).find((tokenId) => {
-      return isSameToken(tokenId, fromTokenIdV2);
-    });
-
     const supportedDestinationTokens = await this.rc.supportedDestinationTokens(
-      fromTokenIdV2,
+      sourceToken,
       fromContext.context,
       toContext.context,
     );
 
     const toTokenSupported = !!supportedDestinationTokens.find((tokenId) => {
-      let _toTokenIdV2 = toTokenIdV2;
-      if (this.IS_TOKEN_BRIDGE_ROUTE && isNative(toTokenIdV2.address)) {
-        // the SDK does not return the dest token with its address set to 'native'
-        // so we need to get the wrapped token address and compare that
-        const gasToken = getWrappedTokenId(getGasToken(toChain));
-        _toTokenIdV2 = config.sdkConverter.tokenIdV2(toChain, gasToken.address);
-      }
-      return isSameToken(tokenId, _toTokenIdV2);
+      return isSameToken(tokenId, destToken);
     });
 
     const isSupported =
@@ -139,26 +112,20 @@ export class SDKv2Route {
     return this.rc.supportedChains(config.network).includes(chain);
   }
 
-  async supportedSourceTokens(
-    tokens: TokenConfig[],
-    _destToken?: TokenConfig | undefined,
-    fromChain?: Chain | undefined,
-    _destChain?: Chain | undefined,
-  ): Promise<TokenConfig[]> {
+  async supportedSourceTokens(fromChain?: Chain | undefined): Promise<Token[]> {
     if (!fromChain) return [];
 
     const fromContext = await this.getV2ChainContext(fromChain);
     return (await this.rc.supportedSourceTokens(fromContext.context))
-      .map((t: TokenIdV2) => config.sdkConverter.findTokenConfigV1(t, tokens))
-      .filter((tc) => tc != undefined) as TokenConfig[];
+      .map((t: TokenId) => config.tokens.get(t))
+      .filter((tc) => tc != undefined) as Token[];
   }
 
   async supportedDestTokens(
-    tokens: TokenConfig[],
-    sourceToken: TokenConfig | undefined,
+    sourceToken: Token | undefined,
     fromChain?: Chain | undefined,
     toChain?: Chain | undefined,
-  ): Promise<TokenConfig[]> {
+  ): Promise<TokenId[]> {
     if (!fromChain || !toChain || !sourceToken) return [];
 
     if (this.IS_TOKEN_BRIDGE_ROUTE) {
@@ -169,56 +136,20 @@ export class SDKv2Route {
 
     const fromContext = await this.getV2ChainContext(fromChain);
     const toContext = await this.getV2ChainContext(toChain);
-    const sourceTokenV2 = config.sdkConverter.toTokenIdV2(
-      sourceToken,
-      fromChain,
-    );
 
     const destTokenIds = await this.rc.supportedDestinationTokens(
-      sourceTokenV2,
+      sourceToken.tokenId,
       fromContext.context,
       toContext.context,
     );
 
-    // TODO SDKV2 hack
-    //
-    // SDKv2 only returns token addresses, not metadata like names and logos.
-    //
-    // For custom tokens with no built-in foreign asset addresses, this means
-    // we can't match the result of supportedDestinationTokens back up to a TokenConfig
-    // to get its name and logo.
-    //
-    // Since token bridge only outputs the same token as you put in, we're just
-    // returning sourceToken here as a hack so that we can maintain the name and logo.
-    //
-    // A longer term solution to this might be to add methods to SDKv2 for fetching token
-    // metadata like name/logo and not relying on configuration for this at all. At that
-    // point all that would be required would be an address.
-    if (this.IS_TOKEN_BRIDGE_ROUTE && destTokenIds.length > 0) {
-      const isWrapped = isWrappedToken(sourceToken, toChain);
-      const wrappedTokenAddress = getTokenBridgeWrappedTokenAddressSync(
-        getWrappedToken(sourceToken),
-        toChain,
-      );
-      if (isWrapped && !wrappedTokenAddress) {
-        // The wrapped token must have a foreign address configured,
-        // otherwise don't support it
-        return [];
-      }
-      return [getWrappedToken(sourceToken)];
-    }
-
-    return destTokenIds
-      .map((t: TokenIdV2): TokenConfig | undefined =>
-        config.sdkConverter.findTokenConfigV1(t, tokens),
-      )
-      .filter((tc) => tc != undefined) as TokenConfig[];
+    return destTokenIds;
   }
 
   async getQuote(
     amount: Amount,
-    sourceTokenV1: string,
-    destTokenV1: string,
+    sourceToken: Token,
+    destToken: Token,
     sourceChain: Chain,
     destChain: Chain,
     options?: routes.AutomaticTokenBridgeRoute.Options,
@@ -230,9 +161,8 @@ export class SDKv2Route {
     ]
   > {
     const req = await this.createRequest(
-      amount,
-      sourceTokenV1,
-      destTokenV1,
+      sourceToken,
+      destToken,
       sourceChain,
       destChain,
     );
@@ -253,33 +183,11 @@ export class SDKv2Route {
   }
 
   async createRequest(
-    amount: Amount,
-    sourceTokenV1: string,
-    destTokenV1: string,
+    sourceToken: Token,
+    destToken: Token,
     sourceChain: Chain,
     destChain: Chain,
   ): Promise<routes.RouteTransferRequest<Network>> {
-    const sourceTokenV2: TokenIdV2 | undefined =
-      await config.sdkConverter.getTokenIdV2ForKey(
-        sourceTokenV1,
-        sourceChain,
-        config.tokens,
-      );
-
-    const destTokenV2: TokenIdV2 | undefined =
-      await config.sdkConverter.getTokenIdV2ForKey(
-        destTokenV1,
-        destChain,
-        config.tokens,
-      );
-
-    if (sourceTokenV2 === undefined) {
-      throw new Error(`Failed to find TokenId for ${sourceTokenV1}`);
-    }
-    if (destTokenV2 === undefined) {
-      throw new Error(`Failed to find TokenId for ${destTokenV1}`);
-    }
-
     const sourceContext = (await this.getV2ChainContext(sourceChain)).context;
     const destContext = (await this.getV2ChainContext(destChain)).context;
 
@@ -288,8 +196,8 @@ export class SDKv2Route {
       wh,
       /* @ts-ignore */
       {
-        source: sourceTokenV2,
-        destination: destTokenV2,
+        source: sourceToken.tokenId,
+        destination: destToken.tokenId,
       },
       sourceContext,
       destContext,
@@ -299,8 +207,8 @@ export class SDKv2Route {
 
   async computeReceiveAmount(
     amountIn: Amount,
-    sourceToken: string,
-    destToken: string,
+    sourceToken: Token,
+    destToken: Token,
     fromChain: Chain | undefined,
     toChain: Chain | undefined,
     options?: routes.AutomaticTokenBridgeRoute.Options,
@@ -326,8 +234,8 @@ export class SDKv2Route {
 
   async computeQuote(
     amountIn: Amount,
-    sourceToken: string,
-    destToken: string,
+    sourceToken: Token,
+    destToken: Token,
     fromChain: Chain,
     toChain: Chain,
     options?: routes.AutomaticTokenBridgeRoute.Options,
@@ -352,18 +260,18 @@ export class SDKv2Route {
   }
 
   async send(
-    sourceToken: TokenConfig,
+    sourceToken: Token,
     amount: Amount,
     fromChain: Chain,
     senderAddress: string,
     toChain: Chain,
     recipientAddress: string,
-    destToken: string,
+    destToken: Token,
     options?: routes.AutomaticTokenBridgeRoute.Options,
   ): Promise<[routes.Route<Network>, routes.Receipt]> {
     const [route, quote, req] = await this.getQuote(
       amount,
-      sourceToken.key,
+      sourceToken,
       destToken,
       fromChain,
       toChain,
@@ -437,7 +345,7 @@ export class SDKv2Route {
   // Prevent receiving illiquid wormhole-wrapped tokens
   // This is not a perfect solution or an exhaustive list of all illiquid tokens,
   // but it should cover the most common cases
-  isIlliquidDestToken(token: TokenConfig, toChain: Chain): boolean {
+  isIlliquidDestToken(token: Token, toChain: Chain): boolean {
     const { symbol, nativeChain } = token;
 
     if (isFrankensteinToken(token, toChain)) {
@@ -459,7 +367,7 @@ export class SDKv2Route {
 
 // returns true if the token is supported by a NTT route, false otherwise
 const isNttSupportedToken = async (
-  token: TokenIdV2,
+  token: Token,
   fromContext: ChainContext<Network, Chain>,
   toContext: ChainContext<Network, Chain>,
 ): Promise<boolean> => {

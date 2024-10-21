@@ -1,4 +1,5 @@
-import { TokensConfig, ChainsConfig, TokenAddressesByChain } from './types';
+import { ChainsConfig, WrappedTokenAddresses } from './types';
+import { TokenCache } from './tokens';
 import { Chain } from '@wormhole-foundation/sdk';
 import { NttRoute } from '@wormhole-foundation/sdk-route-ntt';
 import { DefaultInputs } from './ui';
@@ -44,70 +45,27 @@ export const validateChainResources = () => {
 };
 */
 
-export const mergeCustomTokensConfig = (
-  builtin: TokensConfig,
-  custom?: TokensConfig,
-): TokensConfig => {
-  if (!custom) return builtin;
-
-  const builtinTokens = Object.values(builtin);
-  const builtinKeys = builtinTokens.map((tk) => tk.key);
-
-  customTokensLoop: for (const key in custom) {
-    // Verify that custom token config does not conflict with any built-in tokens
-    const customToken = custom[key];
-    if (key in builtin) {
-      console.warn(
-        `Skipping custom token config for "${key}" because it conflicts with a built-in`,
-      );
-      continue;
-    }
-    // Verify that custom token config (chain, symbol) tuple does not conflict with any built-in tokens
-    for (const bt of Object.values(builtin)) {
-      if (
-        bt.nativeChain === customToken.nativeChain &&
-        bt.symbol === customToken.symbol
-      ) {
-        console.warn(
-          `Skipping custom token config for "${key}" because its symbol "${customToken.symbol}" and chain ${customToken.nativeChain} conflicts with a built-in`,
-        );
-        continue customTokensLoop;
-      }
-    }
-    if (builtinKeys.includes(customToken.key)) {
-      console.warn(
-        `Skipping custom token config for "${key}" because its key "${customToken.key}" conflicts with a built-in`,
-      );
-      continue;
-    }
-
-    // Accept custom token config
-    console.info(`Accepted custom token config for "${key}"`);
-    builtin[key] = customToken;
-  }
-
-  return builtin;
-};
-
 export const mergeCustomWrappedTokens = (
-  builtin: TokenAddressesByChain,
-  custom?: TokenAddressesByChain,
-): TokenAddressesByChain => {
+  builtin: WrappedTokenAddresses,
+  custom?: WrappedTokenAddresses,
+): WrappedTokenAddresses => {
   if (!custom) return builtin;
 
-  for (const key in custom) {
-    builtin[key] = {
-      ...custom[key],
-      // Prevent overwriting built-in wrapped token addresses
-      ...builtin[key],
-    };
+  for (const chain in custom) {
+    for (const addr in custom[chain]) {
+      builtin[chain][addr] = {
+        ...custom[chain][addr],
+        // Prevent overwriting built-in wrapped token addresses
+        ...builtin[chain][addr],
+      };
+    }
   }
 
   return builtin;
 };
 
 export const mergeNttConfig = (
-  tokens: TokensConfig,
+  tokens: TokenCache,
   builtin: NttRoute.Config,
   custom?: NttRoute.Config,
 ) => {
@@ -142,7 +100,7 @@ export const mergeNttConfig = (
     if (
       !tokenConfig.every(({ chain, token }) =>
         Object.values(tokens).some(
-          (tk) => tk.nativeChain === chain && tk.tokenId?.address === token,
+          (tk) => tk.chain === chain && tk.tokenId?.address === token,
         ),
       )
     ) {
@@ -172,7 +130,7 @@ export const mergeNttConfig = (
 export const validateDefaults = (
   defaults: DefaultInputs,
   chains: ChainsConfig,
-  tokens: TokensConfig,
+  tokens: TokenCache,
 ) => {
   if (!defaults) return;
   if (defaults.fromChain) {
@@ -218,9 +176,11 @@ export const validateDefaults = (
     }
   }
 
-  if (defaults.tokenKey) {
-    const tokenConfig = tokens[defaults.tokenKey];
-    if (!tokenConfig) {
+  if (defaults.fromChain && defaults.tokenKey) {
+    const token =
+      tokens.get(defaults.fromChain, defaults.tokenKey) ||
+      tokens.findBySymbol(defaults.fromChain, defaults.tokenKey);
+    if (!token) {
       error(
         `Invalid token "${defaults.tokenKey}" specified for defaultInputs.tokenKey`,
       );
