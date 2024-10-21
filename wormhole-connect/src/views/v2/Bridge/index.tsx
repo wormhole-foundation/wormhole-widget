@@ -42,6 +42,7 @@ import { useSortedRoutesWithQuotes } from 'hooks/useSortedRoutesWithQuotes';
 import { useFetchTokenPrices } from 'hooks/useFetchTokenPrices';
 
 import type { Chain } from '@wormhole-foundation/sdk';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import { useAmountValidation } from 'hooks/useAmountValidation';
 import useGetTokenBalances from 'hooks/useGetTokenBalances';
 
@@ -203,11 +204,6 @@ const Bridge = () => {
 
   // Fetch token prices
   useFetchTokenPrices();
-
-  const walletsConnected = useMemo(
-    () => !!sendingWallet.address && !!receivingWallet.address,
-    [sendingWallet.address, receivingWallet.address],
-  );
 
   const sourceTokenArray = useMemo(() => {
     return sourceToken ? [config.tokens[sourceToken]] : [];
@@ -430,10 +426,12 @@ const Bridge = () => {
     sourceToken &&
     destChain &&
     destToken &&
-    walletsConnected &&
+    sendingWallet.address &&
+    receivingWallet.address &&
+    amount &&
     !hasError;
 
-  const hasEnteredAmount = Number(amount) > 0;
+  const hasEnteredAmount = amount && sdkAmount.whole(amount) > 0;
 
   // Review transaction button is shown only when everything is ready
   const reviewTransactionButton = (

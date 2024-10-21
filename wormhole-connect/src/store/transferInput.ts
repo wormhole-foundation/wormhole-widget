@@ -4,11 +4,12 @@ import { TokenConfig } from 'config/types';
 import { TransferWallet, walletAcceptedChains } from 'utils/wallet';
 import { clearWallet, setWalletError, WalletData } from './wallet';
 import { DataWrapper, getEmptyDataWrapper } from './helpers';
-import { Chain } from '@wormhole-foundation/sdk';
+import { getTokenDecimals } from 'utils';
+import { Chain, amount } from '@wormhole-foundation/sdk';
 
 export type Balance = {
   lastUpdated: number;
-  balance: string | null;
+  balance: amount.Amount | null;
 };
 export type Balances = { [key: string]: Balance };
 export type ChainBalances = {
@@ -17,13 +18,6 @@ export type ChainBalances = {
 export type BalancesCache = { [key in Chain]?: ChainBalances };
 type WalletAddress = string;
 export type WalletBalances = { [key: WalletAddress]: BalancesCache };
-
-export const formatStringAmount = (amountStr = '0'): string => {
-  const amountNum = parseFloat(amountStr);
-  return amountNum.toLocaleString('en', {
-    maximumFractionDigits: 4,
-  });
-};
 
 // for use in USDC or other tokens that have versions on many chains
 // returns token key
@@ -85,7 +79,7 @@ export interface TransferInputState {
   toChain: Chain | undefined;
   token: string;
   destToken: string;
-  amount: string;
+  amount?: amount.Amount;
   receiveAmount: DataWrapper<string>;
   route?: string;
   preferredRouteName?: string | undefined;
@@ -122,7 +116,7 @@ function getInitialState(): TransferInputState {
     toChain: config.ui.defaultInputs?.toChain || undefined,
     token: config.ui.defaultInputs?.tokenKey || '',
     destToken: config.ui.defaultInputs?.toTokenKey || '',
-    amount: '',
+    amount: undefined,
     receiveAmount: getEmptyDataWrapper(),
     preferredRouteName: config.ui.defaultInputs?.preferredRouteName,
     route: undefined,
@@ -150,7 +144,7 @@ const performModificationsIfFromChainChanged = (state: TransferInputState) => {
       (!tokenConfig.tokenId && tokenConfig.nativeChain !== fromChain)
     ) {
       state.token = '';
-      state.amount = '';
+      state.amount = undefined;
     }
     if (
       tokenConfig.symbol === 'USDC' &&
@@ -242,7 +236,18 @@ export const transferInputSlice = createSlice({
       state: TransferInputState,
       { payload }: PayloadAction<string>,
     ) => {
-      state.amount = payload;
+      if (state.token && state.fromChain) {
+        const tokenConfig = config.tokens[state.token];
+        const decimals = getTokenDecimals(state.fromChain, tokenConfig);
+        const parsed = amount.parse(payload, decimals);
+        if (amount.units(parsed) === 0n) {
+          state.amount = undefined;
+        } else {
+          state.amount = parsed;
+        }
+      } else {
+        console.warn(`Can't call setAmount without a fromChain and token`);
+      }
     },
     updateBalances: (
       state: TransferInputState,

@@ -33,7 +33,7 @@ import {
 } from 'store/redeem';
 import { setRoute as setAppRoute } from 'store/router';
 import { setToChain } from 'store/transferInput';
-import { toFixedDecimals } from 'utils/balance';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import { removeTxFromLocalStorage } from 'utils/inProgressTxCache';
 import { minutesAndSecondsWithPadding } from 'utils/transferValidation';
 
@@ -265,7 +265,7 @@ const WidgetItem = (props: Props) => {
               </Typography>
               <Stack direction="row" alignItems="center">
                 <Typography fontSize={14} marginRight="8px">
-                  {`${toFixedDecimals(amount, 4)} ${
+                  {`${sdkAmount.display(sdkAmount.truncate(amount, 4))} ${
                     config.tokens[tokenKey].symbol
                   }`}
                 </Typography>
