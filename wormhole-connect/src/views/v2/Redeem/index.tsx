@@ -248,7 +248,6 @@ const Redeem = () => {
         if (txData?.sendTx) {
           removeTxFromLocalStorage(txData?.sendTx);
         }
-
       }
     } else if (isTxRefunded) {
       config.triggerEvent({
@@ -273,11 +272,6 @@ const Redeem = () => {
       );
 
       setIsClaimInProgress(false);
-    } else if (isTxAttested && !isAutomaticRoute && txData?.sendTx) {
-      // If this is a manual transaction in attested state,
-      // we will mark the local storage item as readyToClaim
-      updateTxInLocalStorage(txData?.sendTx, 'isReadyToClaim', true);
-
     } else if (unhandledManualClaimError) {
       const [uiError, transferError] = interpretTransferError(
         unhandledManualClaimError,
@@ -297,6 +291,10 @@ const Redeem = () => {
       );
 
       setIsClaimInProgress(false);
+    } else if (isTxAttested && !isAutomaticRoute && txData?.sendTx) {
+      // If this is a manual transaction in attested state,
+      // we will mark the local storage item as readyToClaim
+      updateTxInLocalStorage(txData?.sendTx, 'isReadyToClaim', true);
     }
   }, [
     receipt?.state,
@@ -773,7 +771,7 @@ const Redeem = () => {
               Claim tokens to complete transfer
             </Typography>
           </Button>
-        )
+        );
       }
     }
   }, [
