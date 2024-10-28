@@ -163,7 +163,7 @@ const useGetTokenBalances = (
     return () => {
       isActive = false;
     };
-  }, [cachedBalances, walletAddress, chain, tokens]);
+  }, [cachedBalances, chain, dispatch, tokens, walletAddress]);
 
   return { isFetching, balances };
 };

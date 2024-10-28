@@ -71,7 +71,8 @@ const useComputeSourceTokens = (props: Props): ReturnProps => {
       active = false;
     };
     // IMPORTANT: do not include token in dependency array
-  }, [route, sourceChain, destToken, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destChain, destToken, dispatch, route, sourceChain]);
 
   return { isFetching };
 };

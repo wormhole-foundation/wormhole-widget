@@ -192,7 +192,7 @@ const useTransactionHistoryMayan = (
     return () => {
       cancelled = true;
     };
-  }, [page, pageSize]);
+  }, [address, page, pageSize, parseTransactions]);
 
   return {
     transactions,

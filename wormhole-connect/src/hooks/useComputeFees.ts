@@ -141,6 +141,7 @@ const useComputeFees = (props: Props): returnProps => {
     sourceChain,
     destChain,
     tokenPrices,
+    getEstimatedTime,
   ]);
 
   return {

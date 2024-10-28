@@ -55,7 +55,7 @@ export const useSortedRoutesWithQuotes = (): HookReturn => {
       destToken,
       nativeGas: toNativeToken,
     }),
-    [parseFloat(amount), fromChain, token, toChain, destToken, toNativeToken],
+    [amount, fromChain, token, toChain, destToken, toNativeToken],
   );
 
   const { quotesMap, isFetching } = useRoutesQuotesBulk(
@@ -122,7 +122,7 @@ export const useSortedRoutesWithQuotes = (): HookReturn => {
       // Returning BigInt results in TypeError
       return Number(destAmountB - destAmountA);
     });
-  }, [routesWithQuotes]);
+  }, [preferredRouteName, routesWithQuotes]);
 
   const sortedRoutes = useMemo(
     () => sortedRoutesWithQuotes.map((r) => r.route),
@@ -137,6 +137,12 @@ export const useSortedRoutesWithQuotes = (): HookReturn => {
       quotesMap,
       isFetchingQuotes: isFetching,
     }),
-    [supportedRoutes, sortedRoutesWithQuotes, quotesMap, isFetching],
+    [
+      supportedRoutes,
+      sortedRoutes,
+      sortedRoutesWithQuotes,
+      quotesMap,
+      isFetching,
+    ],
   );
 };

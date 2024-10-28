@@ -101,6 +101,7 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
       }
     };
   }, [
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     routes.join(),
     params.sourceChain,
     params.sourceToken,
@@ -110,6 +111,9 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
     params.nativeGas,
     nonce,
     isTransactionInProgress,
+    params,
+    routes,
+    refreshTimeout,
   ]);
 
   const quotesMap = useMemo(
@@ -118,7 +122,12 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
         acc[route] = quotes[index];
         return acc;
       }, {} as Record<string, QuoteResult | undefined>),
-    [routes.join(), quotes],
+    [
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      routes.join(),
+      routes,
+      quotes,
+    ],
   );
 
   // Filter out quotes that would result in a large instant loss

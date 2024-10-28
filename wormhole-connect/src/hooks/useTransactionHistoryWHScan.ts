@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   amount as sdkAmount,
   chainIdToChain,
@@ -118,7 +118,10 @@ const useTransactionHistoryWHScan = (
 
   const { address, page = 0, pageSize = 30 } = props;
 
-  const parseSingleTx = (tx: WormholeScanTransaction) => {
+  // Common parsing logic for a single transaction from WHScan API.
+  // IMPORTANT: Anything specific to a route, please use that route's parser:
+  // parseTokenBridgeTx | parseNTTTx | parseCCTPTx | parsePorticoTx
+  const parseSingleTx = useCallback((tx: WormholeScanTransaction) => {
     const { content, data, sourceChain, targetChain } = tx;
     const { tokenAmount, usdAmount } = data || {};
     const { standarizedProperties } = content || {};
@@ -219,97 +222,115 @@ const useTransactionHistoryWHScan = (
     };
 
     return txData;
-  };
+  }, []);
 
   // Parser for Portal Token Bridge transactions (appId === PORTAL_TOKEN_BRIDGE)
   // IMPORTANT: This is where we can add any customizations specific to Token Bridge data
   // that we have retrieved from WHScan API
-  const parseTokenBridgeTx = (tx: WormholeScanTransaction) => {
-    return parseSingleTx(tx);
-  };
+  const parseTokenBridgeTx = useCallback(
+    (tx: WormholeScanTransaction) => {
+      return parseSingleTx(tx);
+    },
+    [parseSingleTx],
+  );
 
   // Parser for NTT transactions (appId === NATIVE_TOKEN_TRANSFER)
   // IMPORTANT: This is where we can add any customizations specific to NTT data
   // that we have retrieved from WHScan API
-  const parseNTTTx = (tx: WormholeScanTransaction) => {
-    return parseSingleTx(tx);
-  };
+  const parseNTTTx = useCallback(
+    (tx: WormholeScanTransaction) => {
+      return parseSingleTx(tx);
+    },
+    [parseSingleTx],
+  );
 
   // Parser for CCTP transactions (appId === CCTP_WORMHOLE_INTEGRATION)
   // IMPORTANT: This is where we can add any customizations specific to CCTP data
   // that we have retrieved from WHScan API
-  const parseCCTPTx = (tx: WormholeScanTransaction) => {
-    return parseSingleTx(tx);
-  };
+  const parseCCTPTx = useCallback(
+    (tx: WormholeScanTransaction) => {
+      return parseSingleTx(tx);
+    },
+    [parseSingleTx],
+  );
 
   // Parser for Portico transactions (appId === ETH_BRIDGE or USDT_BRIDGE)
   // IMPORTANT: This is where we can add any customizations specific to Portico data
   // that we have retrieved from WHScan API
-  const parsePorticoTx = (tx: WormholeScanTransaction) => {
-    const txData = parseSingleTx(tx);
-    if (!txData) return;
+  const parsePorticoTx = useCallback(
+    (tx: WormholeScanTransaction) => {
+      const txData = parseSingleTx(tx);
+      if (!txData) return;
 
-    const payload = tx.content.payload
-      .parsedPayload as unknown as WormholeScanPorticoParsedPayload;
+      const payload = tx.content.payload
+        .parsedPayload as unknown as WormholeScanPorticoParsedPayload;
 
-    const {
-      finalTokenAddress,
-      flagSet,
-      minAmountFinish,
-      recipientAddress,
-      relayerFee,
-    } = payload;
+      const {
+        finalTokenAddress,
+        flagSet,
+        minAmountFinish,
+        recipientAddress,
+        relayerFee,
+      } = payload;
 
-    const nativeTokenKey = getNativeVersionOfToken(
-      tx.data.symbol,
-      txData.fromChain,
-    );
-    const nativeToken = config.tokens[nativeTokenKey];
-    if (!nativeToken) return;
+      const nativeTokenKey = getNativeVersionOfToken(
+        tx.data.symbol,
+        txData.fromChain,
+      );
+      const nativeToken = config.tokens[nativeTokenKey];
+      if (!nativeToken) return;
 
-    const startToken = flagSet.flags.shouldWrapNative
-      ? getGasToken(txData.fromChain)
-      : nativeToken;
+      const startToken = flagSet.flags.shouldWrapNative
+        ? getGasToken(txData.fromChain)
+        : nativeToken;
 
-    const finalTokenConfig = config.sdkConverter.findTokenConfigV1(
-      Wormhole.tokenId(
-        txData.toChain,
-        toNative(txData.toChain, finalTokenAddress).toString(),
-      ),
-      config.tokensArr,
-    );
-    if (!finalTokenConfig) return;
+      const finalTokenConfig = config.sdkConverter.findTokenConfigV1(
+        Wormhole.tokenId(
+          txData.toChain,
+          toNative(txData.toChain, finalTokenAddress).toString(),
+        ),
+        config.tokensArr,
+      );
+      if (!finalTokenConfig) return;
 
-    const receiveAmount = BigInt(minAmountFinish) - BigInt(relayerFee);
+      const receiveAmount = BigInt(minAmountFinish) - BigInt(relayerFee);
 
-    // Override with Portico specific data
-    txData.tokenKey = startToken.key;
-    txData.tokenAddress = startToken.tokenId?.address || 'native';
-    txData.receivedTokenKey = flagSet.flags.shouldUnwrapNative
-      ? getGasToken(txData.toChain).key
-      : finalTokenConfig.key;
-    txData.receiveAmount =
-      receiveAmount > 0
-        ? toFixedDecimals(
-            sdkAmount.display(
-              sdkAmount.fromBaseUnits(receiveAmount, finalTokenConfig.decimals),
-              0,
-            ),
-            DECIMALS,
-          )
-        : '';
-    txData.recipient = toNative(txData.toChain, recipientAddress).toString();
+      // Override with Portico specific data
+      txData.tokenKey = startToken.key;
+      txData.tokenAddress = startToken.tokenId?.address || 'native';
+      txData.receivedTokenKey = flagSet.flags.shouldUnwrapNative
+        ? getGasToken(txData.toChain).key
+        : finalTokenConfig.key;
+      txData.receiveAmount =
+        receiveAmount > 0
+          ? toFixedDecimals(
+              sdkAmount.display(
+                sdkAmount.fromBaseUnits(
+                  receiveAmount,
+                  finalTokenConfig.decimals,
+                ),
+                0,
+              ),
+              DECIMALS,
+            )
+          : '';
+      txData.recipient = toNative(txData.toChain, recipientAddress).toString();
 
-    return txData;
-  };
+      return txData;
+    },
+    [parseSingleTx],
+  );
 
-  const PARSERS = {
-    PORTAL_TOKEN_BRIDGE: parseTokenBridgeTx,
-    NATIVE_TOKEN_TRANSFER: parseNTTTx,
-    CCTP_WORMHOLE_INTEGRATION: parseCCTPTx,
-    ETH_BRIDGE: parsePorticoTx,
-    USDT_BRIDGE: parsePorticoTx,
-  };
+  const PARSERS = useMemo(
+    () => ({
+      PORTAL_TOKEN_BRIDGE: parseTokenBridgeTx,
+      NATIVE_TOKEN_TRANSFER: parseNTTTx,
+      CCTP_WORMHOLE_INTEGRATION: parseCCTPTx,
+      ETH_BRIDGE: parsePorticoTx,
+      USDT_BRIDGE: parsePorticoTx,
+    }),
+    [parseCCTPTx, parseNTTTx, parsePorticoTx, parseTokenBridgeTx],
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parseTransactions = useCallback(
@@ -339,7 +360,7 @@ const useTransactionHistoryWHScan = (
         })
         .filter((tx) => !!tx); // Filter out unsupported transactions
     },
-    [],
+    [PARSERS, parsePorticoTx],
   );
 
   useEffect(() => {
@@ -413,7 +434,7 @@ const useTransactionHistoryWHScan = (
     return () => {
       cancelled = true;
     };
-  }, [page, pageSize]);
+  }, [address, page, pageSize, parseTransactions]);
 
   return {
     transactions,

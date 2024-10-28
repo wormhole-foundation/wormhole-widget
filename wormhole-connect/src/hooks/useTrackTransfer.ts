@@ -21,7 +21,7 @@ const useTrackTransfer = (): void => {
 
     let sleepTime = 5000;
 
-    if (txData && txData.eta && txData.eta < 30_000) {
+    if (txData?.eta && txData.eta < 30_000) {
       // Poll aggressively for very fast transfers
       sleepTime = 1000;
     }
@@ -83,7 +83,7 @@ const useTrackTransfer = (): void => {
     return () => {
       isActive = false;
     };
-  }, [routeContext, txData?.eta, timestamp]);
+  }, [routeContext, txData?.eta, timestamp, dispatch]);
 };
 
 export default useTrackTransfer;
