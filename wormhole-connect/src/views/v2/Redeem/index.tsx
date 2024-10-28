@@ -744,6 +744,22 @@ const Redeem = () => {
       );
     }
 
+    if (!isTxAttested || isClaimInProgress) {
+      return (
+        <Button disabled variant="primary" className={classes.actionButton}>
+          <Typography
+            display="flex"
+            alignItems="center"
+            gap={1}
+            textTransform="none"
+          >
+            <CircularProgress color="secondary" size={16} />
+            Transfer in progress
+          </Typography>
+        </Button>
+      );
+    }
+
     const canBeManuallyClaimed =
       isTxDestQueued || (!isAutomaticRoute && isTxAttested);
 
