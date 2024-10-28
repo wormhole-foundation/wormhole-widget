@@ -674,7 +674,7 @@ const Redeem = () => {
       !isTxFailed &&
       (isTxDestQueued || !isAutomaticRoute)
     ) {
-      if (isTxAttested) {
+      if (isTxAttested && !isClaimInProgress) {
         return isConnectedToReceivingWallet ? (
           <Button
             className={joinClass([classes.actionButton, classes.claimButton])}
@@ -693,6 +693,20 @@ const Redeem = () => {
           >
             <Typography textTransform="none">
               Connect receiving wallet
+            </Typography>
+          </Button>
+        );
+      } else {
+        return (
+          <Button disabled variant="primary" className={classes.actionButton}>
+            <Typography
+              display="flex"
+              alignItems="center"
+              gap={1}
+              textTransform="none"
+            >
+              <CircularProgress color="secondary" size={16} />
+              Transfer in progress
             </Typography>
           </Button>
         );
