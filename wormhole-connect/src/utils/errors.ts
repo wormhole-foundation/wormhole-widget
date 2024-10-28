@@ -18,7 +18,7 @@ import { InsufficientFundsForGasError } from 'sdklegacy';
 // attempt to capture errors using regex
 export const INSUFFICIENT_ALLOWANCE_REGEX = /insufficient token allowance/im;
 export const USER_REJECTED_REGEX = new RegExp(
-  'user rejected|rejected the request|rejected from user|user cancel|aborted by user',
+  'user rejected|rejected the request|rejected from user|user cancel|aborted by user|plugin closed',
   'mi',
 );
 

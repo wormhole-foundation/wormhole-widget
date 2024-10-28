@@ -202,21 +202,22 @@ async function createPriorityFeeInstructions(
   transaction: Transaction | VersionedTransaction,
   commitment?: Commitment,
 ) {
-  if (
-    isVersionedTransaction(transaction) &&
-    !transaction.message.recentBlockhash
-  ) {
-    // This is required for versioned transactions - simulateTransaction throws
-    // if recentBlockhash is an empty string.
-    const { blockhash } = await connection.getLatestBlockhash(commitment);
-    transaction.message.recentBlockhash = blockhash;
-  }
-
   let unitsUsed = 200_000;
   let simulationAttempts = 0;
 
   simulationLoop: while (simulationAttempts < 5) {
     simulationAttempts++;
+
+    if (
+      isVersionedTransaction(transaction) &&
+      !transaction.message.recentBlockhash
+    ) {
+      // This is required for versioned transactions - simulateTransaction throws
+      // if recentBlockhash is an empty string.
+      const { blockhash } = await connection.getLatestBlockhash(commitment);
+      transaction.message.recentBlockhash = blockhash;
+    }
+
     const response = await (isVersionedTransaction(transaction)
       ? connection.simulateTransaction(transaction, {
           commitment,
@@ -229,7 +230,13 @@ async function createPriorityFeeInstructions(
       // simulation a few times to get a successful response.
       if (response.value.logs) {
         for (const line of response.value.logs) {
-          if (line.includes('SlippageToleranceExceeded')) {
+          if (line.includes('BlockhashNotFound')) {
+            console.info(
+              'Blockhash not found during simulation. Trying again.',
+            );
+            sleep(1000);
+            continue simulationLoop;
+          } else if (line.includes('SlippageToleranceExceeded')) {
             console.info('Slippage failure during simulation. Trying again.');
             sleep(1000);
             continue simulationLoop;
