@@ -78,6 +78,7 @@ type Props = {
 
 const AssetPicker = (props: Props) => {
   const [showChainSearch, setShowChainSearch] = useState(false);
+  const [selectedTokenChain, setSelectedTokenChain] = useState('');
   const { classes } = useStyles();
 
   const popupState = usePopupState({
@@ -108,6 +109,8 @@ const AssetPicker = (props: Props) => {
         props.setChain(firstAllowedChain.key);
       }
     }
+    // Re-run only when popup state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [popupState.isOpen]);
 
   const chainConfig: ChainConfig | undefined = useMemo(() => {
@@ -141,7 +144,7 @@ const AssetPicker = (props: Props) => {
         <TokenIcon icon={tokenConfig?.icon} height={48} />
       </Badge>
     );
-  }, [chainConfig, tokenConfig]);
+  }, [chainConfig, classes.chainBadge, tokenConfig?.icon]);
 
   const selection = useMemo(() => {
     if (!chainConfig && !tokenConfig) {
@@ -162,7 +165,7 @@ const AssetPicker = (props: Props) => {
         </Typography>
       </div>
     );
-  }, [props.chain, props.token]);
+  }, [chainConfig, tokenConfig]);
 
   return (
     <>
@@ -211,10 +214,12 @@ const AssetPicker = (props: Props) => {
             isFetching={props.isFetching}
             selectedChainConfig={chainConfig}
             selectedToken={props.token}
+            selectedTokenChain={selectedTokenChain}
             sourceToken={props.sourceToken}
             wallet={props.wallet}
             onSelectToken={(key: string) => {
               props.setToken(key);
+              setSelectedTokenChain(chainConfig?.key || '');
               popupState.close();
             }}
             isSource={props.isSource}
