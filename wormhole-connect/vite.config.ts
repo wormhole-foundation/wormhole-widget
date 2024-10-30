@@ -141,10 +141,6 @@ export default defineConfig(({ command, mode }) => {
           output,
           external,
         },
-        sourcemap: 'inline',
-      },
-      css: {
-        devSourcemap: true,
       },
       plugins,
       optimizeDeps,
