@@ -55,6 +55,10 @@
     "@xlabs-libs/wallet-aggregator-sei": "^0.0.1-alpha.14",
     "@xlabs-libs/wallet-aggregator-solana": "^0.0.1-alpha.15",
     "@xlabs-libs/wallet-aggregator-sui": "^0.0.1-alpha.10",
+    "@xlabs-xyz/arbitrary-token-transfer-evm-route": "^0.0.1-alpha.5",
+    "@xlabs-xyz/arbitrary-token-transfer-route": "^0.0.1-alpha.4",
+    "@xlabs-xyz/arbitrary-token-transfer-solana-route": "^0.0.1-alpha.4",
+    "@xlabs-xyz/arbitrary-token-transfers-definitions": "^0.0.1-alpha.5",
     "aptos": "1.5.0",
     "axios": "^1.2.4",
     "binary-parser": "^2.2.1",
@@ -160,6 +164,13 @@
     },
     "vite-plugin-dts": {
       "vue-tsc": "2.0.0"
+    },
+    "@xlabs-xyz/arbitrary-token-transfer-solana-route": {
+      "@xlabs-xyz/solana-arbitrary-token-transfers": "^0.0.2-alpha6",
+      "@xlabs/solana-price-oracle-sdk": "^0.0.14"
+    },
+    "@xlabs-xyz/solana-arbitrary-token-transfers": {
+      "@xlabs/solana-price-oracle-sdk": "^0.0.14"
     }
   }
 }

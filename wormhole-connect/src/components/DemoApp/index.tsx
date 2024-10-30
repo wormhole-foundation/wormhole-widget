@@ -39,6 +39,7 @@ import {
 } from '@mayanfinance/wormhole-sdk-route';
 import { NTT_TEST_CONFIG_TESTNET, NTT_TEST_CONFIG_MAINNET } from './consts';
 import { DEFAULT_ROUTES, nttRoutes } from 'routes/operator';
+import { AutomaticTokenBridgeRouteV3 } from '@xlabs-xyz/arbitrary-token-transfer-route';
 
 const MAX_URL_SIZE = 30_000; // 30kb (HTTP header limit is set to 32kb)
 
@@ -73,6 +74,8 @@ const parseConfig = (config: string): WormholeConnectConfig => {
       window.testNttRoutesTestnet = () => nttRoutes(NTT_TEST_CONFIG_TESTNET);
       /* @ts-ignore */
       window.testNttRoutesMainnet = () => nttRoutes(NTT_TEST_CONFIG_MAINNET);
+      /* @ts-ignore */
+      window.AutomaticTokenBridgeRouteV3 = AutomaticTokenBridgeRouteV3;
 
       return eval(
         `(function() { return ${config} })()`,
@@ -239,6 +242,10 @@ function DemoApp() {
                 <pre>testNttRoutesTestnet</pre>
                 <i>{'(NttRoute.Config) -> RouteConstructor[])'}</i>
               </li>
+              {/* <li>
+                <pre>AutomaticTokenBridgeRouteV3</pre>
+                <i>{'RouteConstructor'}</i>
+              </li> */}
             </ul>
           </div>
         ) : undefined}

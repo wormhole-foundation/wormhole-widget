@@ -11,6 +11,12 @@ import {
   NttRoute,
 } from '@wormhole-foundation/sdk-route-ntt';
 
+import { AutomaticTokenBridgeRouteV3 } from '@xlabs-xyz/arbitrary-token-transfer-route';
+
+import '@xlabs-xyz/arbitrary-token-transfers-definitions';
+import '@xlabs-xyz/arbitrary-token-transfer-evm-route';
+import '@xlabs-xyz/arbitrary-token-transfer-solana-route';
+
 import '@wormhole-foundation/sdk-definitions-ntt';
 import '@wormhole-foundation/sdk-evm-ntt';
 import '@wormhole-foundation/sdk-solana-ntt';
@@ -27,6 +33,7 @@ type forEachCallback<T> = (name: string, route: SDKv2Route) => T;
 export const DEFAULT_ROUTES = [
   routes.AutomaticCCTPRoute,
   routes.CCTPRoute,
+  AutomaticTokenBridgeRouteV3,
   routes.AutomaticTokenBridgeRoute,
   routes.TokenBridgeRoute,
   routes.AutomaticPorticoRoute,
