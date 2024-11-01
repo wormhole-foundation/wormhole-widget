@@ -219,7 +219,7 @@ const AssetPicker = (props: Props) => {
             wallet={props.wallet}
             onSelectToken={(key: string) => {
               props.setToken(key);
-              setSelectedTokenChain(chainConfig?.key || '');
+              setSelectedTokenChain(chainConfig.key);
               popupState.close();
             }}
             isSource={props.isSource}
