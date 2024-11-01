@@ -65,7 +65,7 @@ const useFetchRedeemTx = (): void => {
     return () => {
       isActive = false;
     };
-  }, [receipt]);
+  }, [dispatch, receipt]);
 };
 
 export default useFetchRedeemTx;
