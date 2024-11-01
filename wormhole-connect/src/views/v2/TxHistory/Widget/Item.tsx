@@ -21,7 +21,7 @@ import { makeStyles } from 'tss-react/mui';
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import config, { getWormholeContextV2 } from 'config';
 import { RouteContext } from 'contexts/RouteContext';
-import useTrackTransferInProgress from 'hooks/useTrackTransferInProgress';
+import useTrackTransfer from 'hooks/useTrackTransfer';
 import ArrowRight from 'icons/ArrowRight';
 import TokenIcon from 'icons/TokenIcons';
 import TxCompleteIcon from 'icons/TxComplete';
@@ -99,7 +99,7 @@ const WidgetItem = (props: Props) => {
     onExpire: () => setEtaExpired(true),
   });
 
-  const { isCompleted, isReadyToClaim } = useTrackTransferInProgress({
+  const { isCompleted, isReadyToClaim } = useTrackTransfer({
     eta,
     receipt,
     route,

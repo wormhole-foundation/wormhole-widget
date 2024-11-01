@@ -357,7 +357,10 @@ const ReviewTransaction = (props: Props) => {
             gap={1}
             textTransform="none"
           >
-            <CircularProgress color="secondary" size={16} />
+            <CircularProgress
+              size={16}
+              sx={{ color: theme.palette.primary.contrastText }}
+            />
             {mobile ? 'Preparing' : 'Preparing transaction'}
           </Typography>
         ) : !isTransactionInProgress && props.isFetchingQuotes ? (

@@ -146,15 +146,11 @@ const Redeem = () => {
 
   const [isWalletSidebarOpen, setIsWalletSidebarOpen] = useState(false);
 
-  // Start tracking changes in the transaction
-  useTrackTransfer();
-
   const routeContext = React.useContext(RouteContext);
 
   useConnectToLastUsedWallet();
 
   const {
-    transferComplete: isTxComplete,
     route: routeName,
     timestamp: txTimestamp,
     isResumeTx,
@@ -183,6 +179,12 @@ const Redeem = () => {
   } = txData!;
 
   const getUSDAmount = useUSDamountGetter();
+
+  // Start tracking changes in the transaction
+  const { isCompleted: isTxComplete } = useTrackTransfer({
+    receipt,
+    route: routeName,
+  });
 
   const isAutomaticRoute = useMemo(() => {
     if (!routeName) {
@@ -753,7 +755,12 @@ const Redeem = () => {
             gap={1}
             textTransform="none"
           >
-            <CircularProgress color="secondary" size={16} />
+            <CircularProgress
+              size={16}
+              sx={{
+                color: theme.palette.primary.contrastText,
+              }}
+            />
             Transfer in progress
           </Typography>
         </Button>
