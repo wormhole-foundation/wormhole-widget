@@ -104,7 +104,7 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    routes.join(), // .join() is necessary to prevent unncessary updates when routes array's ref changed but its content did not
+    routes.join(), // .join() is necessary to prevent unnecessary updates when routes array's ref changed but its content did not
     params.sourceChain,
     params.sourceToken,
     params.destChain,
@@ -114,7 +114,6 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
     nonce,
     isTransactionInProgress,
     params,
-    refreshTimeout,
   ]);
 
   const quotesMap = useMemo(
@@ -123,10 +122,11 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
         acc[route] = quotes[index];
         return acc;
       }, {} as Record<string, QuoteResult | undefined>),
+    // Important: We should not include routes property in deps. See routes.join() below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      routes.join(), // .join() is necessary to prevent unncessary updates when routes array's ref changed but its content did not
-      routes,
+      routes.join(), // .join() is necessary to prevent unnecessary updates when routes array's ref changed but its content did not
       quotes,
     ],
   );
