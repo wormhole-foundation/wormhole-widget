@@ -228,13 +228,15 @@ export const validate = async (
     transferInput.token &&
     transferInput.destToken &&
     transferInput.amount &&
-    Number.parseFloat(transferInput.amount) >= 0 &&
-    transferInput.routeStates?.some((rs) => rs.supported) !== undefined
-      ? true
-      : false;
+    Number.parseFloat(transferInput.amount) >= 0;
 
   if (!isCanceled()) {
-    dispatch(setValidations({ validations, showValidationState }));
+    dispatch(
+      setValidations({
+        validations,
+        showValidationState: !!showValidationState,
+      }),
+    );
   }
 };
 
