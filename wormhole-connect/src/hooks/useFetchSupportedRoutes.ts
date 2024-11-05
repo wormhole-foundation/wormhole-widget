@@ -56,7 +56,9 @@ const useFetchSupportedRoutes = (): HookReturn => {
           console.error('Error when checking route is supported:', e, name);
         }
 
-        _routes.push(name);
+        if (supported) {
+          _routes.push(name);
+        }
       });
 
       if (isActive) {
