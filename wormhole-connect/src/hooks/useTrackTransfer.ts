@@ -19,9 +19,10 @@ type Props = {
 type ReturnProps = {
   isCompleted: boolean;
   isReadyToClaim: boolean;
+  receipt: routes.Receipt<AttestationReceipt> | undefined;
 };
 
-const useTrackTransferV2 = (props: Props): ReturnProps => {
+const useTrackTransfer = (props: Props): ReturnProps => {
   const [completed, setCompleted] = useState(false);
   const [readyToClaim, setReadyToClaim] = useState(false);
   const [receipt, setReceipt] = useState<routes.Receipt<AttestationReceipt>>();
@@ -116,7 +117,8 @@ const useTrackTransferV2 = (props: Props): ReturnProps => {
   return {
     isCompleted: completed,
     isReadyToClaim: readyToClaim,
+    receipt,
   };
 };
 
-export default useTrackTransferV2;
+export default useTrackTransfer;

@@ -174,17 +174,24 @@ const Redeem = () => {
     tokenKey,
     receivedTokenKey,
     amount,
-    receiveAmount,
     eta = 0,
   } = txData!;
 
   const getUSDAmount = useUSDamountGetter();
 
   // Start tracking changes in the transaction
-  const { isCompleted: isTxComplete } = useTrackTransfer({
-    receipt,
-    route: routeName,
-  });
+  const { isCompleted: isTxComplete, receipt: trackingReceipt } =
+    useTrackTransfer({
+      receipt,
+      route: routeName,
+    });
+
+  // Set latest receipt from useTrackTransfer in RouteContext
+  useEffect(() => {
+    if (trackingReceipt) {
+      routeContext.setReceipt(trackingReceipt);
+    }
+  }, [routeContext, trackingReceipt]);
 
   const isAutomaticRoute = useMemo(() => {
     if (!routeName) {
@@ -326,7 +333,7 @@ const Redeem = () => {
     }
 
     restart(new Date(txTimestamp + eta), true);
-  }, [eta, txTimestamp]);
+  }, [eta, isRunning, restart, txTimestamp]);
 
   // Time remaining to reach the estimated completion of the transaction
   const remainingEta = useMemo(() => {
@@ -387,16 +394,13 @@ const Redeem = () => {
       </Stack>
     );
   }, [
-    isTxAttested,
     isTxComplete,
     isTxRefunded,
     isTxFailed,
     isTxDestQueued,
-    receiveAmount,
-    receivedTokenKey,
-    recipient,
+    isTxAttested,
+    isAutomaticRoute,
     toChain,
-    config,
   ]);
 
   // Displays the ETA value and the countdown within the ETA circle
@@ -429,7 +433,14 @@ const Redeem = () => {
         <Typography fontSize={28}>{counter}</Typography>
       </Stack>
     );
-  }, [eta, etaExpired, isRunning, minutes, seconds]);
+  }, [
+    eta,
+    etaExpired,
+    isRunning,
+    minutes,
+    seconds,
+    theme.palette.text.secondary,
+  ]);
 
   // Value for determinate circular progress bar
   const etaProgressValue = useMemo(() => {
@@ -498,7 +509,7 @@ const Redeem = () => {
                 ? classes.circularProgressCircleIndeterminite
                 : classes.circularProgressCircleDeterminite,
             }}
-            disableShrink
+            disableShrink={etaExpired} // Disable shrinking for indeterminate progress, which is when eta expires
             size={140}
             thickness={2}
             value={etaProgressValue}
@@ -520,7 +531,16 @@ const Redeem = () => {
         </Box>
       </>
     );
-  }, [etaDisplay, etaExpired, etaProgressValue]);
+  }, [
+    classes.circularProgressCircleDeterminite,
+    classes.circularProgressCircleIndeterminite,
+    classes.circularProgressRoot,
+    etaDisplay,
+    etaExpired,
+    etaProgressValue,
+    theme.palette.background.default,
+    theme.palette.primary.main,
+  ]);
 
   // Circular progress indicator component for ETA countdown
   const etaCircle = useMemo(() => {
@@ -558,12 +578,18 @@ const Redeem = () => {
       return etaCircularProgress;
     }
   }, [
+    classes.txStatusIcon,
     etaCircularProgress,
+    isAutomaticRoute,
     isTxComplete,
     isTxRefunded,
-    isTxFailed,
     isTxDestQueued,
+    isTxFailed,
     isTxAttested,
+    theme.palette.primary.light,
+    theme.palette.warning.main,
+    theme.palette.warning.light,
+    theme.palette.error.light,
   ]);
 
   useEffect(() => {
@@ -610,14 +636,23 @@ const Redeem = () => {
         config.tokens[receivedTokenKey],
         'Solana',
       );
-      const ata = getAssociatedTokenAddressSync(
-        new PublicKey(receivedToken.address.toString()),
-        new PublicKey(receivingWallet.address),
-      );
-      if (!ata.equals(new PublicKey(recipient))) {
-        setClaimError('Not connected to the receiving wallet');
+
+      try {
+        const ata = getAssociatedTokenAddressSync(
+          new PublicKey(receivedToken.address.toString()),
+          new PublicKey(receivingWallet.address),
+        );
+        if (!ata.equals(new PublicKey(recipient))) {
+          setClaimError('Not connected to the receiving wallet');
+          return false;
+        }
+      } catch (e: unknown) {
+        console.log(
+          `Error while checking associated token address for the recipient: ${e}`,
+        );
         return false;
       }
+
       setClaimError('');
       return true;
     }
@@ -637,7 +672,6 @@ const Redeem = () => {
     toChain,
     isResumeTx,
     routeName,
-    config,
     receivedTokenKey,
   ]);
 
@@ -746,7 +780,7 @@ const Redeem = () => {
       );
     }
 
-    if (!isTxAttested || isClaimInProgress) {
+    if (isClaimInProgress) {
       return (
         <Button disabled variant="primary" className={classes.actionButton}>
           <Typography
@@ -797,15 +831,30 @@ const Redeem = () => {
         );
       }
     }
+
+    return (
+      <Button
+        variant="primary"
+        className={classes.actionButton}
+        onClick={() => {
+          dispatch(setRoute('bridge'));
+        }}
+      >
+        <Typography textTransform="none">Start a new transaction</Typography>
+      </Button>
+    );
   }, [
+    claimError,
+    classes.actionButton,
+    classes.claimButton,
     isAutomaticRoute,
     isClaimInProgress,
+    isConnectedToReceivingWallet,
     isTxAttested,
     isTxComplete,
-    isTxRefunded,
-    isTxFailed,
     isTxDestQueued,
-    isConnectedToReceivingWallet,
+    isTxRefunded,
+    theme.palette.primary.contrastText,
   ]);
 
   const txDelayedText = useMemo(() => {
@@ -828,7 +877,12 @@ const Redeem = () => {
         complete your transfer.`}
       </Typography>
     );
-  }, [routeContext.receipt, config, receivedTokenKey]);
+  }, [
+    classes.delayText,
+    receivedTokenKey,
+    routeContext.receipt,
+    theme.palette.text.secondary,
+  ]);
 
   return (
     <div className={joinClass([classes.container, classes.spacer])}>

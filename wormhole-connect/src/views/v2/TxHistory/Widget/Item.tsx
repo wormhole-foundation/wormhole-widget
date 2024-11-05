@@ -89,7 +89,13 @@ const WidgetItem = (props: Props) => {
   const theme = useTheme();
 
   const { data: transaction } = props;
-  const { receipt, route, timestamp, txDetails, txHash } = transaction;
+  const {
+    receipt: initialReceipt,
+    route,
+    timestamp,
+    txDetails,
+    txHash,
+  } = transaction;
   const { amount, eta, fromChain, toChain, tokenKey } = txDetails || {};
 
   // Initialize the countdown
@@ -99,9 +105,13 @@ const WidgetItem = (props: Props) => {
     onExpire: () => setEtaExpired(true),
   });
 
-  const { isCompleted, isReadyToClaim } = useTrackTransfer({
+  const {
+    isCompleted,
+    isReadyToClaim,
+    receipt: trackingReceipt,
+  } = useTrackTransfer({
     eta,
-    receipt,
+    receipt: initialReceipt,
     route,
   });
 
@@ -111,6 +121,14 @@ const WidgetItem = (props: Props) => {
       removeTxFromLocalStorage(txHash);
     }
   }, [isCompleted, txHash]);
+
+  // We have the initial receipt from local storage,
+  // but the receipt from useTrackTransfer is more up-to-date,
+  // so we need to use that one first.
+  const receipt = useMemo(
+    () => trackingReceipt || initialReceipt,
+    [trackingReceipt, initialReceipt],
+  );
 
   // Remaining from the original ETA since the creation of this transaction
   const etaRemaining = useMemo(() => {
@@ -191,6 +209,11 @@ const WidgetItem = (props: Props) => {
     // Clear previous errors when user clicks on the widget again
     setError('');
 
+    if (!receipt) {
+      setError('No receipt found for this transaction');
+      return;
+    }
+
     try {
       const wh = await getWormholeContextV2();
       const sdkRoute = new (config.routes.get(route).rc)(wh);
@@ -208,12 +231,14 @@ const WidgetItem = (props: Props) => {
       // Set the App route to navigate user to Redeem view
       dispatch(setAppRoute('redeem'));
 
-      routeContext.setRoute(sdkRoute);
+      // Setting the receipt for Redeem view
       routeContext.setReceipt(receipt);
+      // Navigate user to Redeem view
+      routeContext.setRoute(sdkRoute);
     } catch (e: unknown) {
       setError(`Error resuming transaction: ${txDetails.sendTx}`);
     }
-  }, [receipt, route, timestamp, txDetails]);
+  }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
   if (!transaction) {
     return <></>;
