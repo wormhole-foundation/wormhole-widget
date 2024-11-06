@@ -141,14 +141,13 @@ const bucketByEta = (
   routesWithQuotes: RouteWithQuote[],
 ): RouteWithQuote[][] => {
   const thresholds = [60 * 1000, Infinity];
-  const buckets: RouteWithQuote[][] = [];
+  const buckets: RouteWithQuote[][] = Array(thresholds.length).fill([]);
 
   for (const routeAndQuote of routesWithQuotes) {
     const { quote } = routeAndQuote;
     for (let i = 0; i < thresholds.length; i++) {
       const threshold = thresholds[i];
       if (quote.eta && quote.eta <= threshold) {
-        if (buckets[i] === undefined) buckets[i] = [];
         buckets[i]!.push(routeAndQuote);
         break;
       }
