@@ -148,7 +148,7 @@ const bucketByEta = (
     for (let i = 0; i < thresholds.length; i++) {
       const threshold = thresholds[i];
       if (quote.eta && quote.eta <= threshold) {
-        buckets[i]!.push(routeAndQuote);
+        buckets[i].push(routeAndQuote);
         break;
       }
     }
