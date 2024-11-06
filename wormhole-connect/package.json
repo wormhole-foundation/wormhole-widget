@@ -86,7 +86,7 @@
     "test:dev": "vitest",
     "checksdn": "npx tsx scripts/ofac/checkSdnListForUpdates.ts",
     "preview": "vite preview",
-    "unused:exports": "ts-unused-exports ./tsconfig.json"
+    "unused:exports": "ts-unused-exports ./tsconfig.json --ignoreLocallyUsed"
   },
   "browserslist": {
     "production": [

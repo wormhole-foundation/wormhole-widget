@@ -34,17 +34,8 @@ export const redeemSlice = createSlice({
     setSendTx: (state: RedeemState, { payload }: PayloadAction<string>) => {
       state.sendTx = payload;
     },
-    setRedeemTx: (state: RedeemState, { payload }) => {
-      state.redeemTx = payload;
-    },
     setRoute: (state: RedeemState, { payload }) => {
       state.route = payload;
-    },
-    setTransferComplete: (
-      state: RedeemState,
-      { payload }: PayloadAction<boolean>,
-    ) => {
-      state.transferComplete = payload;
     },
     clearRedeem: (state: RedeemState) => {
       Object.keys(state).forEach((key) => {
@@ -67,8 +58,6 @@ export const redeemSlice = createSlice({
 export const {
   setTxDetails,
   setSendTx,
-  setRedeemTx,
-  setTransferComplete,
   clearRedeem,
   setRoute,
   setIsResumeTx,

@@ -23,18 +23,12 @@ export const routerSlice = createSlice({
   name: 'router',
   initialState,
   reducers: {
-    setWalletModal: (
-      state: RouterState,
-      { payload }: PayloadAction<TransferWallet | false>,
-    ) => {
-      state.showWalletModal = payload;
-    },
     setRoute: (state: RouterState, { payload }: PayloadAction<Route>) => {
       state.route = payload;
     },
   },
 });
 
-export const { setWalletModal, setRoute } = routerSlice.actions;
+export const { setRoute } = routerSlice.actions;
 
 export default routerSlice.reducer;

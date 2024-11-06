@@ -31,24 +31,6 @@ export const relaySlice = createSlice({
     ) => {
       state.toNativeToken = payload;
     },
-    setReceiveNativeAmt: (
-      state: RelayState,
-      { payload }: PayloadAction<number>,
-    ) => {
-      state.receiveNativeAmt = payload;
-    },
-    setRelayerFee: (
-      state: RelayState,
-      { payload }: PayloadAction<RelayerFee | undefined>,
-    ) => {
-      state.relayerFee = payload;
-    },
-    setReceiverNativeBalance: (
-      state: RelayState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiverNativeBalance = payload;
-    },
     // clear relay state
     clearRelay: (state: RelayState) => {
       Object.keys(state).forEach((key) => {
@@ -59,11 +41,6 @@ export const relaySlice = createSlice({
   },
 });
 
-export const {
-  setToNativeToken,
-  setReceiveNativeAmt,
-  setRelayerFee,
-  setReceiverNativeBalance,
-} = relaySlice.actions;
+export const { setToNativeToken } = relaySlice.actions;
 
 export default relaySlice.reducer;
