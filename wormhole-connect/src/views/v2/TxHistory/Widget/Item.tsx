@@ -125,10 +125,7 @@ const WidgetItem = (props: Props) => {
   // We have the initial receipt from local storage,
   // but the receipt from useTrackTransfer is more up-to-date,
   // so we need to use that one first.
-  const receipt = useMemo(
-    () => trackingReceipt || initialReceipt,
-    [trackingReceipt, initialReceipt],
-  );
+  const receipt = trackingReceipt || initialReceipt;
 
   // Remaining from the original ETA since the creation of this transaction
   const etaRemaining = useMemo(() => {
