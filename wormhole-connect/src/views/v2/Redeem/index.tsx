@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import {
   isAttested,
+  isCompleted,
   isDestinationQueued,
   isRefunded,
   isFailed,
@@ -180,18 +181,22 @@ const Redeem = () => {
   const getUSDAmount = useUSDamountGetter();
 
   // Start tracking changes in the transaction
-  const { isCompleted: isTxComplete, receipt: trackingReceipt } =
-    useTrackTransfer({
-      receipt,
-      route: routeName,
-    });
+  const txTrackingResult = useTrackTransfer({
+    receipt,
+    route: routeName,
+  });
+
+  // We need check the initial receipt state and tracking result together
+  // for the latest status on transaction completion
+  const isTxCompleted =
+    (receipt && isCompleted(receipt)) || txTrackingResult.isCompleted;
 
   // Set latest receipt from useTrackTransfer in RouteContext
   useEffect(() => {
-    if (trackingReceipt) {
-      routeContext.setReceipt(trackingReceipt);
+    if (txTrackingResult.receipt) {
+      routeContext.setReceipt(txTrackingResult.receipt);
     }
-  }, [routeContext, trackingReceipt]);
+  }, [routeContext, txTrackingResult.receipt]);
 
   const isAutomaticRoute = useMemo(() => {
     if (!routeName) {
@@ -232,7 +237,7 @@ const Redeem = () => {
 
     if (!receipt) return;
 
-    if (isTxComplete) {
+    if (isTxCompleted) {
       if (!transferSuccessEventFired) {
         // When we see the transfer was complete for the first time,
         // fire a transfer.success telemetry event.
@@ -307,7 +312,7 @@ const Redeem = () => {
     }
   }, [
     receipt?.state,
-    isTxComplete,
+    isTxCompleted,
     isTxRefunded,
     isTxAttested,
     unhandledManualClaimError,
@@ -376,7 +381,7 @@ const Redeem = () => {
   // Header showing the status of the transaction
   const statusHeader = useMemo(() => {
     let statusText = 'Transaction submitted';
-    if (isTxComplete) {
+    if (isTxCompleted) {
       statusText = 'Transaction complete';
     } else if (isTxRefunded) {
       statusText = 'Transaction was refunded';
@@ -394,7 +399,7 @@ const Redeem = () => {
       </Stack>
     );
   }, [
-    isTxComplete,
+    isTxCompleted,
     isTxRefunded,
     isTxFailed,
     isTxDestQueued,
@@ -544,7 +549,7 @@ const Redeem = () => {
 
   // Circular progress indicator component for ETA countdown
   const etaCircle = useMemo(() => {
-    if (isTxComplete) {
+    if (isTxCompleted) {
       return (
         <TxCompleteIcon
           className={classes.txStatusIcon}
@@ -581,7 +586,7 @@ const Redeem = () => {
     classes.txStatusIcon,
     etaCircularProgress,
     isAutomaticRoute,
-    isTxComplete,
+    isTxCompleted,
     isTxRefunded,
     isTxDestQueued,
     isTxFailed,
@@ -766,7 +771,7 @@ const Redeem = () => {
 
   // Main CTA button which has separate states for automatic and manual claims
   const actionButton = useMemo(() => {
-    if (isTxComplete || isTxRefunded) {
+    if (isTxCompleted || isTxRefunded) {
       return (
         <Button
           variant="primary"
@@ -851,7 +856,7 @@ const Redeem = () => {
     isClaimInProgress,
     isConnectedToReceivingWallet,
     isTxAttested,
-    isTxComplete,
+    isTxCompleted,
     isTxDestQueued,
     isTxRefunded,
     theme.palette.primary.contrastText,
