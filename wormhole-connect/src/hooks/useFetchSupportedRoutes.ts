@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
-import { maybeLogError } from 'utils/errors';
+import { maybeLogSdkError } from 'utils/errors';
 
 type HookReturn = {
   supportedRoutes: string[];
@@ -54,7 +54,10 @@ const useFetchSupportedRoutes = (): HookReturn => {
             });
           }
         } catch (e) {
-          maybeLogError(e, `Error when checking route (${name}) is supported`);
+          maybeLogSdkError(
+            e,
+            `Error when checking route (${name}) is supported`,
+          );
         }
 
         if (supported) {

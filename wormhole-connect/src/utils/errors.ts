@@ -66,7 +66,7 @@ export function interpretTransferError(
   return [uiErrorMessage, { type: internalErrorCode, original: e }];
 }
 
-export function maybeLogError(e: any, prefix?: string) {
+export function maybeLogSdkError(e: any, prefix?: string) {
   if (e instanceof Error && e.message.startsWith('No protocols registered for'))
     return;
 
