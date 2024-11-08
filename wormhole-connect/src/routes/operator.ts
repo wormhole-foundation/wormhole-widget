@@ -14,6 +14,7 @@ import {
 import '@wormhole-foundation/sdk-definitions-ntt';
 import '@wormhole-foundation/sdk-evm-ntt';
 import '@wormhole-foundation/sdk-solana-ntt';
+import { maybeLogError } from 'utils/errors';
 
 export interface TxInfo {
   route: string;
@@ -167,7 +168,7 @@ export default class RouteOperator {
           supported[token.key] = token;
         }
       } catch (e) {
-        console.error(e);
+        maybeLogError(e);
       }
     });
     return Object.values(supported);
