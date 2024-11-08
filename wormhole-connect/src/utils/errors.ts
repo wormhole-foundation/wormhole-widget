@@ -66,10 +66,10 @@ export function interpretTransferError(
   return [uiErrorMessage, { type: internalErrorCode, original: e }];
 }
 
-export function maybeLogError(e: any) {
+export function maybeLogError(e: any, prefix?: string) {
   const ignore =
     e instanceof Error && e.message.startsWith('No protocols registered for');
   if (!ignore) {
-    console.error(e);
+    console.error(prefix ? `${prefix}: ${e}` : e);
   }
 }

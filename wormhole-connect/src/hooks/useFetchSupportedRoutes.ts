@@ -54,7 +54,7 @@ const useFetchSupportedRoutes = (): HookReturn => {
             });
           }
         } catch (e) {
-          maybeLogError(e);
+          maybeLogError(e, `Error when checking route (${name}) is supported`);
         }
 
         if (supported) {
