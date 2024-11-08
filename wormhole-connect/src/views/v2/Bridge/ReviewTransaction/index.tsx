@@ -193,10 +193,6 @@ const ReviewTransaction = (props: Props) => {
         await registerWalletSigner(sourceChain, TransferWallet.SENDING);
       }
 
-      if (fromConfig?.context === Context.COSMOS) {
-        await switchChain(fromConfig.chainId, TransferWallet.SENDING);
-      }
-
       config.triggerEvent({
         type: 'transfer.initiate',
         details: transferDetails,

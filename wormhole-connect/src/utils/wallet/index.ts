@@ -306,10 +306,6 @@ export const getWalletOptions = async (
     const aptosWallet = await import('utils/wallet/aptos');
     const aptosOptions = aptosWallet.fetchOptions();
     return Object.values(mapWallets(aptosOptions, Context.APTOS));
-  } else if (config.context === Context.SEI) {
-    const seiWallet = await import('utils/wallet/sei');
-    const seiOptions = await seiWallet.fetchOptions();
-    return Object.values(mapWallets(seiOptions, Context.SEI));
   }
   return [];
 };
