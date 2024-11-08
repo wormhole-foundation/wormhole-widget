@@ -67,9 +67,8 @@ export function interpretTransferError(
 }
 
 export function maybeLogError(e: any, prefix?: string) {
-  const ignore =
-    e instanceof Error && e.message.startsWith('No protocols registered for');
-  if (!ignore) {
-    console.error(prefix ? `${prefix}: ${e}` : e);
-  }
+  if (e instanceof Error && e.message.startsWith('No protocols registered for'))
+    return;
+
+  console.error(prefix ? `${prefix}: ${e}` : e);
 }
