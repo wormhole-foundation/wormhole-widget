@@ -163,8 +163,6 @@ See [`chains.ts`](https://github.com/wormhole-foundation/wormhole-sdk-ts/blob/ma
 | Xlayer | Xlayer |
 | Mantle | Mantle |
 
-> Osmosis support is in beta, reach out to a Wormhole contributor for early access.
-
 ### RPC Endpoints (`rpcs`):
 
 We strongly recommend that you configure your own custom RPC endpoints for each network your application needs. The default public RPCs may be throttled or rate limited.
