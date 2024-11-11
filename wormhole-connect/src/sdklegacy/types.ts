@@ -11,8 +11,6 @@ export enum Context {
   NEAR = 'Near',
   APTOS = 'Aptos',
   SUI = 'Sui',
-  SEI = 'Sei',
-  COSMOS = 'Cosmos',
   OTHER = 'OTHER',
 }
 

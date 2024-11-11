@@ -14,7 +14,6 @@ import config from 'config';
 import { getChainByChainId } from 'utils';
 
 import { RootState } from 'store';
-import { AssetInfo } from './evm';
 import { Dispatch } from 'redux';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -189,16 +188,12 @@ export const switchChain = async (
   if (config.context === Context.ETH) {
     try {
       // some wallets may not support chain switching
-      const { switchChain } = await import('utils/wallet/evm');
-      await switchChain(w, chainId as number);
+      const evm = await import('utils/wallet/evm');
+      await evm.switchChain(w, chainId as number);
     } catch (e) {
       if (e instanceof NotSupported) return;
       throw e;
     }
-  }
-  if (config.context === Context.COSMOS) {
-    const { switchChain } = await import('utils/wallet/cosmos');
-    await switchChain(w, chainId as string);
   }
   return w.getAddress();
 };
@@ -207,12 +202,6 @@ export const disconnect = async (type: TransferWallet) => {
   const w = walletConnection[type]! as any;
   if (!w) return;
   await w.disconnect();
-};
-
-export const watchAsset = async (asset: AssetInfo, type: TransferWallet) => {
-  const wallet = walletConnection[type]!;
-  const { watchAsset } = await import('utils/wallet/evm');
-  await watchAsset(asset, wallet);
 };
 
 export const signAndSendTransaction = async (
@@ -229,8 +218,8 @@ export const signAndSendTransaction = async (
   }
 
   if (chainConfig.context === Context.ETH) {
-    const { signAndSendTransaction } = await import('utils/wallet/evm');
-    const tx = await signAndSendTransaction(
+    const evm = await import('utils/wallet/evm');
+    const tx = await evm.signAndSendTransaction(
       request as EvmUnsignedTransaction<Network, EvmChains>,
       wallet,
       chain,
@@ -238,23 +227,23 @@ export const signAndSendTransaction = async (
     );
     return tx;
   } else if (chainConfig.context === Context.SOLANA) {
-    const { signAndSendTransaction } = await import('utils/wallet/solana');
-    const signature = await signAndSendTransaction(
+    const solana = await import('utils/wallet/solana');
+    const signature = await solana.signAndSendTransaction(
       request as SolanaUnsignedTransaction<Network>,
       wallet,
       options,
     );
     return signature;
   } else if (chainConfig.context === Context.SUI) {
-    const { signAndSendTransaction } = await import('utils/wallet/sui');
-    const tx = await signAndSendTransaction(
+    const sui = await import('utils/wallet/sui');
+    const tx = await sui.signAndSendTransaction(
       request as SuiUnsignedTransaction<Network, SuiChains>,
       wallet,
     );
     return tx.id;
   } else if (chainConfig.context === Context.APTOS) {
-    const { signAndSendTransaction } = await import('utils/wallet/aptos');
-    const tx = await signAndSendTransaction(
+    const aptos = await import('utils/wallet/aptos');
+    const tx = await aptos.signAndSendTransaction(
       request as AptosUnsignedTransaction<Network, AptosChains>,
       wallet,
     );
@@ -262,37 +251,6 @@ export const signAndSendTransaction = async (
   } else {
     throw new Error('unimplemented');
   }
-
-  /*
-  switch (chainConfig.context) {
-    case Context.ETH: {
-    }
-    case Context.SOLANA: {
-    }
-    case Context.SUI: {
-      const { signAndSendTransaction } = await import('utils/wallet/sui');
-      const tx = await signAndSendTransaction(request, wallet);
-      return tx.id;
-    }
-    case Context.APTOS: {
-      const { signAndSendTransaction } = await import('utils/wallet/aptos');
-      const tx = await signAndSendTransaction(request, wallet);
-      return tx.id;
-    }
-    case Context.SEI: {
-      const { signAndSendTransaction } = await import('utils/wallet/sei');
-      const tx = await signAndSendTransaction(request, wallet);
-      return tx.id;
-    }
-    case Context.COSMOS: {
-      const { signAndSendTransaction } = await import('utils/wallet/cosmos');
-      const tx = await signAndSendTransaction(request, wallet);
-      return tx.id;
-    }
-    default:
-      throw new Error(`Invalid context ${chainConfig.context}`);
-  }
-    */
 };
 
 const getReady = (wallet: Wallet) => {
@@ -348,34 +306,6 @@ export const getWalletOptions = async (
     const aptosWallet = await import('utils/wallet/aptos');
     const aptosOptions = aptosWallet.fetchOptions();
     return Object.values(mapWallets(aptosOptions, Context.APTOS));
-  } else if (config.context === Context.SEI) {
-    const seiWallet = await import('utils/wallet/sei');
-    const seiOptions = await seiWallet.fetchOptions();
-    return Object.values(mapWallets(seiOptions, Context.SEI));
-  } else if (config.context === Context.COSMOS) {
-    if (config.key === 'Evmos') {
-      const {
-        wallets: { cosmosEvm },
-      } = await import('utils/wallet/cosmos');
-
-      return Object.values(
-        mapWallets(cosmosEvm, Context.COSMOS, ['OKX Wallet']),
-      );
-    } else if (config.key === 'Injective') {
-      const {
-        wallets: { cosmosEvm },
-      } = await import('utils/wallet/cosmos');
-
-      return Object.values(
-        mapWallets(cosmosEvm, Context.COSMOS, ['OKX Wallet']),
-      );
-    } else {
-      const {
-        wallets: { cosmos },
-      } = await import('utils/wallet/cosmos');
-
-      return Object.values(mapWallets(cosmos, Context.COSMOS));
-    }
   }
   return [];
 };

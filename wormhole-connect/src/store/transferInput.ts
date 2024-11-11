@@ -1,13 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Context } from 'sdklegacy';
 import config from 'config';
 import { TokenConfig } from 'config/types';
-import {
-  switchChain,
-  TransferWallet,
-  walletAcceptedChains,
-} from 'utils/wallet';
-import { clearWallet, setAddress, setWalletError, WalletData } from './wallet';
+import { TransferWallet, walletAcceptedChains } from 'utils/wallet';
+import { clearWallet, setWalletError, WalletData } from './wallet';
 import {
   DataWrapper,
   errorDataWrapper,
@@ -409,12 +404,6 @@ export const selectChain = async (
   // vary depending on the chain)
   const chainConfig = config.chains[chain];
   if (!chainConfig) return;
-  if (chainConfig.context === wallet.type && wallet.type === Context.COSMOS) {
-    const address = await switchChain(chainConfig.chainId, type);
-    if (address) {
-      dispatch(setAddress({ type, address }));
-    }
-  }
 
   dispatch(
     type === TransferWallet.SENDING ? setFromChain(chain) : setToChain(chain),
