@@ -150,7 +150,8 @@ const bucketByEta = (
     const { quote } = routeAndQuote;
     for (let i = 0; i < thresholds.length; i++) {
       const threshold = thresholds[i];
-      if (quote.eta && quote.eta <= threshold) {
+      const eta = quote.eta ?? Infinity;
+      if (eta <= threshold) {
         buckets[i].push(routeAndQuote);
         break;
       }
