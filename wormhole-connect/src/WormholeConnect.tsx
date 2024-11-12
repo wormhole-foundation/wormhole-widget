@@ -1,4 +1,7 @@
 import * as React from 'react';
+// fixes "styled_default is not a function" error
+// https://github.com/vitejs/vite/issues/12423#issuecomment-2080351394
+import '@mui/material/styles/styled';
 import { Provider } from 'react-redux';
 import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
