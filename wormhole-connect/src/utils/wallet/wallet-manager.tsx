@@ -1,6 +1,6 @@
 import React, { Fragment, useRef } from "react"
 import { toChainId } from '@wormhole-foundation/sdk';
-import { DynamicContextProvider, useDynamicContext, useUserWallets } from "@dynamic-labs/sdk-react-core"
+import { DynamicContextProvider, useDynamicContext, useUserWallets, useDynamicModals } from "@dynamic-labs/sdk-react-core"
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum"
 import { SolanaWalletConnectors } from "@dynamic-labs/solana"
 import { CosmosWalletConnectors } from "@dynamic-labs/cosmos"
@@ -34,8 +34,9 @@ interface InternalWMProviderProps {
 type WalletConnection = DynamicWallet | any
 
 const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderProps>> = ({ children, chainRef, onConnectRef }) => {
-    const { sdkHasLoaded, setShowAuthFlow: setShowDynamicWalletAuthModal, primaryWallet } = useDynamicContext();
+    const { sdkHasLoaded, setShowAuthFlow: setShowDynamicWalletAuthModal, primaryWallet, /*handleLogOut, handleUnlinkWallet*/ } = useDynamicContext();
     const userWallets = useUserWallets()
+    const { setShowLinkNewWalletModal, } = useDynamicModals()
     const [walletSidebarProps, setWalletSidebarProps] = React.useState<{ isOpen: boolean, type: TransferWallet }>(defaultWalletSidebarConfig);
     const {
         fromChain: sourceChain,
@@ -55,14 +56,16 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         return wallets
     }, [primaryWallet, userWallets])
 
-    const disconnectAllConnectedDynamicWallets = React.useCallback(() => {
-        connectedWalletsFromDynamic.reverse().forEach((wallet) => {
-            wallet.connector.removeAllListeners()
-            wallet.connector.endSession().then(() => console.log(`Disconnected wallet ${wallet.connector.name}`))
-        })
-    }, [connectedWalletsFromDynamic])
+    // const disconnectAllConnectedDynamicWallets = React.useCallback(() => {
+    //     connectedWalletsFromDynamic.reverse().forEach((wallet) => {
+    //         wallet.connector.removeAllListeners()
+    //         wallet.connector.endSession().then(() => console.log(`Disconnected wallet ${wallet.connector.name}`))
+    //         handleUnlinkWallet(wallet.id)
+    //     })
+    //     handleLogOut()
+    // }, [connectedWalletsFromDynamic])
 
-    console.log(walletConnection, disconnectAllConnectedDynamicWallets)
+    // console.log(walletConnection, disconnectAllConnectedDynamicWallets)
 
     const connectWallet = React.useCallback((type: TransferWallet) => {
         const chain = type === TransferWallet.SENDING ? sourceChain : destChain
@@ -70,11 +73,14 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         if (!chain) return
         if (isChainSupportedByDynamicWallet(chain)) {
             chainRef.current = chain
-            setShowDynamicWalletAuthModal(true)
+            if (connectedWalletsFromDynamic.length === 0)
+                setShowDynamicWalletAuthModal(true)
+            else
+                setShowLinkNewWalletModal(true)
         } else {
             setWalletSidebarProps({ isOpen: true, type });
         }
-    }, [sdkHasLoaded, sourceChain, destChain])
+    }, [sdkHasLoaded, sourceChain, destChain, connectedWalletsFromDynamic])
 
     const setWalletConnection = React.useCallback((type: TransferWallet, wallet: WalletConnection) => {
         walletConnection[type] = wallet;
@@ -145,6 +151,10 @@ const WalletManagerProvider: React.FC<React.PropsWithChildren<{ theme?: Theme }>
                     }
                 },
                 // TODO: Config networks
+                overrides: {
+                    evmNetworks: [],
+                },
+                walletConnectPreferredChains: [],
             }}
         >
             <InternalWMComponent chainRef={chainRef} onConnectRef={onConnectRef}>
