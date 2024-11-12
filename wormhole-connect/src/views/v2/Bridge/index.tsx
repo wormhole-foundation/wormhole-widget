@@ -66,6 +66,10 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     alignItems: 'center',
   },
+  ctaContainer: {
+    marginTop: '8px',
+    width: '100%',
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -82,6 +86,7 @@ const useStyles = makeStyles()((theme) => ({
   reviewTransaction: {
     padding: '8px 16px',
     borderRadius: '8px',
+    height: '48px',
     margin: 'auto',
     maxWidth: '420px',
     width: '100%',
@@ -89,7 +94,7 @@ const useStyles = makeStyles()((theme) => ({
   spacer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '8px',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
@@ -121,7 +126,7 @@ const Bridge = () => {
     token: sourceToken,
     destToken,
     route,
-    routeStates,
+    preferredRouteName,
     supportedDestTokens: supportedDestTokensBase,
     supportedSourceTokens,
     amount,
@@ -133,7 +138,7 @@ const Bridge = () => {
     sortedRoutes,
     sortedRoutesWithQuotes,
     quotesMap,
-    isFetchingQuotes,
+    isFetching: isFetchingQuotes,
   } = useSortedRoutesWithQuotes();
 
   // Compute and set source tokens
@@ -158,28 +163,32 @@ const Bridge = () => {
   // Set selectedRoute if the route is auto-selected
   // After the auto-selection, we set selectedRoute when user clicks on a route in the list
   useEffect(() => {
-    const validRoutes = sortedRoutesWithQuotes.filter(
-      (rs) => rs.route.supported,
-    );
-
-    if (validRoutes.length === 0) {
+    if (sortedRoutesWithQuotes.length === 0) {
       setSelectedRoute('');
     } else {
-      const autoselectedRoute = route || validRoutes[0].route.name;
+      const preferredRoute = sortedRoutesWithQuotes.find(
+        (route) => route.route === preferredRouteName,
+      );
+      const autoselectedRoute =
+        route ?? preferredRoute?.route ?? sortedRoutesWithQuotes[0].route;
       const isSelectedRouteValid =
-        validRoutes.findIndex((r) => r.route.name === selectedRoute) > -1;
+        sortedRoutesWithQuotes.findIndex((r) => r.route === selectedRoute) > -1;
+
+      if (!isSelectedRouteValid) {
+        setSelectedRoute('');
+      }
 
       // If no route is autoselected or we already have a valid selected route,
-      // we should avoid to overwrite it
+      // we should avoid overwriting it
       if (!autoselectedRoute || (selectedRoute && isSelectedRouteValid)) {
         return;
       }
 
-      const routeData = validRoutes?.find(
-        (rs) => rs.route.name === autoselectedRoute,
+      const routeData = sortedRoutesWithQuotes?.find(
+        (rs) => rs.route === autoselectedRoute,
       );
 
-      if (routeData) setSelectedRoute(routeData.route.name);
+      if (routeData) setSelectedRoute(routeData.route);
     }
   }, [route, sortedRoutesWithQuotes]);
 
@@ -194,6 +203,11 @@ const Bridge = () => {
 
   // Fetch token prices
   useFetchTokenPrices();
+
+  const walletsConnected = useMemo(
+    () => !!sendingWallet.address && !!receivingWallet.address,
+    [sendingWallet.address, receivingWallet.address],
+  );
 
   const sourceTokenArray = useMemo(() => {
     return sourceToken ? [config.tokens[sourceToken]] : [];
@@ -365,7 +379,11 @@ const Bridge = () => {
     const isTxHistoryDisabled = !sendingWallet?.address;
     return (
       <div className={classes.bridgeHeader}>
-        <Header align="left" text={config.ui.title} size={18} />
+        <Header
+          align="left"
+          text={config.ui.title ?? 'Wormhole Connect'}
+          size={18}
+        />
         <Tooltip
           title={isTxHistoryDisabled ? 'No connected wallets found' : ''}
         >
@@ -412,16 +430,10 @@ const Bridge = () => {
     sourceToken &&
     destChain &&
     destToken &&
-    sendingWallet.address &&
-    receivingWallet.address &&
-    Number(amount) > 0 &&
+    walletsConnected &&
     !hasError;
 
-  const supportedRouteSelected = useMemo(
-    () =>
-      routeStates?.find?.((rs) => rs.name === selectedRoute && !!rs.supported),
-    [routeStates, selectedRoute],
-  );
+  const hasEnteredAmount = Number(amount) > 0;
 
   // Review transaction button is shown only when everything is ready
   const reviewTransactionButton = (
@@ -429,10 +441,7 @@ const Bridge = () => {
       variant="primary"
       className={classes.reviewTransaction}
       disabled={
-        !isValid ||
-        isFetchingQuotes ||
-        !supportedRouteSelected ||
-        !selectedRoute
+        !isValid || isFetchingQuotes || !selectedRoute || !hasEnteredAmount
       }
       onClick={() => {
         dispatch(setTransferRoute(selectedRoute));
@@ -444,6 +453,14 @@ const Bridge = () => {
       </Typography>
     </Button>
   );
+
+  const reviewButtonTooltip = !hasEnteredAmount
+    ? 'Please enter an amount'
+    : isFetchingQuotes
+    ? 'Loading quotes...'
+    : !selectedRoute
+    ? 'Please select a quote'
+    : '';
 
   if (willReviewTransaction) {
     return (
@@ -475,8 +492,15 @@ const Bridge = () => {
         isLoading={isFetchingQuotes || isFetchingBalances}
         hasError={hasError}
       />
-      {walletConnector}
-      {showReviewTransactionButton ? reviewTransactionButton : null}
+      <span className={classes.ctaContainer}>
+        {showReviewTransactionButton ? (
+          <Tooltip title={reviewButtonTooltip}>
+            <span>{reviewTransactionButton}</span>
+          </Tooltip>
+        ) : (
+          walletConnector
+        )}
+      </span>
       {config.ui.showHamburgerMenu ? null : <FooterNavBar />}
       <div className={classes.poweredBy}>
         <PoweredByIcon color={theme.palette.text.primary} />

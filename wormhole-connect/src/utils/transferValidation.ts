@@ -17,7 +17,6 @@ import { RelayState } from 'store/relay';
 import { walletAcceptedChains } from './wallet';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDebounce } from 'use-debounce';
-import { DataWrapper } from 'store/helpers';
 import { Chain } from '@wormhole-foundation/sdk';
 
 export const validateFromChain = (chain: Chain | undefined): ValidationErr => {
@@ -93,7 +92,6 @@ export const validateDestToken = (
 export const validateAmount = (
   amount: string,
   balance: string | null,
-  maxAmount: number,
 ): ValidationErr => {
   if (amount === '') return '';
   const numAmount = Number.parseFloat(amount);
@@ -102,9 +100,6 @@ export const validateAmount = (
   if (balance) {
     const b = Number.parseFloat(balance.replaceAll(',', ''));
     if (numAmount > b) return 'Amount exceeds available balance.';
-  }
-  if (numAmount > maxAmount) {
-    return `At the moment, amount cannot exceed ${maxAmount}`;
   }
   return '';
 };
@@ -142,30 +137,6 @@ export const validateToNativeAmt = (
   return '';
 };
 
-export const validateRelayerFee = (
-  route: string,
-  routeOptions: any,
-): ValidationErr => {
-  if (!route) return '';
-  return '';
-};
-
-export const validateReceiveAmount = (
-  route: string,
-  receiveAmount: DataWrapper<string>,
-  routeOptions: any,
-): ValidationErr => {
-  if (!route) return '';
-  return '';
-};
-
-export const getMaxAmt = (route?: string): number => {
-  if (!route) return Infinity;
-  const r = config.routes.get(route);
-  if (!r) return Infinity;
-  return r.getMaxSendAmount();
-};
-
 export const getIsAutomatic = (route?: string): boolean => {
   if (!route) return false;
   const r = config.routes.get(route);
@@ -197,7 +168,6 @@ export const validateAll = async (
     fromChain,
     token,
   );
-  const maxSendAmount = getMaxAmt(route);
   const baseValidations = {
     sendingWallet: await validateWallet(sending, fromChain),
     receivingWallet: await validateWallet(receiving, toChain),
@@ -205,11 +175,7 @@ export const validateAll = async (
     toChain: validateToChain(toChain, fromChain),
     token: validateToken(token, fromChain),
     destToken: validateDestToken(destToken, toChain, supportedDestTokens),
-    amount: validateAmount(
-      amount,
-      sendingTokenBalance?.balance || null,
-      maxSendAmount,
-    ),
+    amount: validateAmount(amount, sendingTokenBalance?.balance || null),
     toNativeToken: '',
     relayerFee: '',
     receiveAmount: '',
@@ -262,13 +228,15 @@ export const validate = async (
     transferInput.token &&
     transferInput.destToken &&
     transferInput.amount &&
-    Number.parseFloat(transferInput.amount) >= 0 &&
-    transferInput.routeStates?.some((rs) => rs.supported) !== undefined
-      ? true
-      : false;
+    Number.parseFloat(transferInput.amount) >= 0;
 
   if (!isCanceled()) {
-    dispatch(setValidations({ validations, showValidationState }));
+    dispatch(
+      setValidations({
+        validations,
+        showValidationState: !!showValidationState,
+      }),
+    );
   }
 };
 

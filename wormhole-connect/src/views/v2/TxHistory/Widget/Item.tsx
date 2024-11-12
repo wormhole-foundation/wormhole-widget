@@ -1,5 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { useDispatch } from 'react-redux';
 import { useTimer } from 'react-timer-hook';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -10,18 +18,31 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { makeStyles } from 'tss-react/mui';
 
-import config from 'config';
+import AlertBannerV2 from 'components/v2/AlertBanner';
+import config, { getWormholeContextV2 } from 'config';
+import { RouteContext } from 'contexts/RouteContext';
+import useTrackTransfer from 'hooks/useTrackTransfer';
 import ArrowRight from 'icons/ArrowRight';
 import TokenIcon from 'icons/TokenIcons';
 import TxCompleteIcon from 'icons/TxComplete';
+import {
+  setRoute as setRedeemRoute,
+  setIsResumeTx,
+  setTimestamp,
+  setTxDetails,
+} from 'store/redeem';
+import { setRoute as setAppRoute } from 'store/router';
+import { setToChain } from 'store/transferInput';
 import { toFixedDecimals } from 'utils/balance';
 import { removeTxFromLocalStorage } from 'utils/inProgressTxCache';
-import { poll } from 'utils/polling';
 import { minutesAndSecondsWithPadding } from 'utils/transferValidation';
 
 import type { TransactionLocal } from 'config/types';
 
 const useStyles = makeStyles()((theme: any) => ({
+  alertBanner: {
+    marginTop: '12px',
+  },
   arrowIcon: {
     fontSize: '16px',
     margin: '0 4px',
@@ -59,23 +80,23 @@ type Props = {
 };
 
 const WidgetItem = (props: Props) => {
-  const [senderTimestamp, setSenderTimestamp] = useState('');
+  const [error, setError] = useState('');
   const [etaExpired, setEtaExpired] = useState(false);
-  const [inProgress, setInProgress] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
 
   const { classes } = useStyles();
+  const dispatch = useDispatch();
+  const routeContext = useContext(RouteContext);
+  const theme = useTheme();
 
   const { data: transaction } = props;
   const {
+    receipt: initialReceipt,
+    route,
+    timestamp,
+    txDetails,
     txHash,
-    eta,
-    explorerInfo,
-    amount,
-    sourceChain,
-    destChain,
-    tokenKey,
   } = transaction;
+  const { amount, eta, fromChain, toChain, tokenKey } = txDetails || {};
 
   // Initialize the countdown
   const { seconds, minutes, totalSeconds, isRunning, restart } = useTimer({
@@ -84,96 +105,52 @@ const WidgetItem = (props: Props) => {
     onExpire: () => setEtaExpired(true),
   });
 
-  // Side-effect to poll the transaction info from the respective API
-  useEffect(() => {
-    if (!transaction) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchTransaction = async () => {
-      setIsFetching(true);
-
-      try {
-        const res = await fetch(explorerInfo.apiUrl);
-        const resPayload = await res.json();
-
-        if (!cancelled) {
-          let txInProgress = true;
-          let txSenderTimestamp = '';
-          if (explorerInfo.apiUrl.startsWith(config.mayanApi)) {
-            txInProgress =
-              resPayload?.clientStatus?.toLowerCase() !== 'completed' &&
-              resPayload?.clientStatus?.toLowerCase() !== 'refunded';
-            txSenderTimestamp = resPayload?.initiatedAt;
-          } else {
-            const txData = resPayload?.operations?.[0];
-            if (txData) {
-              txInProgress =
-                txData.sourceChain?.status?.toLowerCase() === 'confirmed' &&
-                txData.targetChain?.status?.toLowerCase() !== 'completed';
-              txSenderTimestamp = txData.sourceChain?.timestamp;
-            }
-          }
-
-          setInProgress(txInProgress);
-          setSenderTimestamp(txSenderTimestamp);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.log(
-            `Error fetching transaction history from Mayan: ${error}`,
-          );
-        }
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    poll(fetchTransaction, 5000, () => cancelled || !inProgress);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [explorerInfo.apiUrl]);
+  const {
+    isCompleted,
+    isReadyToClaim,
+    receipt: trackingReceipt,
+  } = useTrackTransfer({
+    eta,
+    receipt: initialReceipt,
+    route,
+  });
 
   useEffect(() => {
-    if (!inProgress && txHash) {
+    if (isCompleted && txHash) {
       // Remove this transaction from local storage
       removeTxFromLocalStorage(txHash);
     }
-  }, [inProgress, txHash]);
+  }, [isCompleted, txHash]);
 
-  // Sender time in milliseconds
-  const senderTime = useMemo(() => {
-    if (!senderTimestamp) {
-      return 0;
-    }
-
-    return new Date(senderTimestamp).getTime();
-  }, [senderTimestamp]);
+  // We have the initial receipt from local storage,
+  // but the receipt from useTrackTransfer is more up-to-date,
+  // so we need to use that one first.
+  const receipt = trackingReceipt || initialReceipt;
 
   // Remaining from the original ETA since the creation of this transaction
   const etaRemaining = useMemo(() => {
-    if (!senderTime) {
+    if (!eta || !timestamp) {
       // We need the sender timestamp to be able to calculate the remaining time
       // Otherwise do not render the remaining eta counter
       return 0;
     }
 
-    const timePassed = Date.now() - senderTime;
+    const timePassed = Date.now() - timestamp;
 
     if (eta < timePassed) {
       return 0;
     }
 
     return eta - timePassed;
-  }, [senderTime, eta, totalSeconds]);
+  }, [eta, timestamp, totalSeconds]);
 
   // Displays the countdown
   const etaCountdown = useMemo(() => {
-    if (etaExpired) {
+    if (isReadyToClaim || transaction.isReadyToClaim) {
+      return 'Ready to claim...';
+    }
+
+    if (etaExpired || etaRemaining === 0) {
       return 'Wrapping up...';
     }
 
@@ -182,13 +159,21 @@ const WidgetItem = (props: Props) => {
     }
 
     return <CircularProgress size={16} />;
-  }, [etaExpired, isRunning, minutes, seconds, senderTime, isFetching]);
+  }, [
+    etaExpired,
+    etaRemaining,
+    isReadyToClaim,
+    isRunning,
+    minutes,
+    seconds,
+    transaction,
+  ]);
 
   // A number value between 0-100
   const progressBarValue = useMemo(() => {
     // etaRemaining is guaranteed to be smaller than or equal to eta,
     // but we still check here as well to be on the safe side.
-    if (etaRemaining > eta) {
+    if (!eta || etaRemaining > eta) {
       return 0;
     }
 
@@ -203,18 +188,54 @@ const WidgetItem = (props: Props) => {
     }
 
     return ((eta - etaRemaining) / eta) * 100;
-  }, [eta, etaRemaining, inProgress]);
+  }, [eta, etaRemaining, isCompleted]);
 
   // Start the countdown timer
   useEffect(() => {
-    if (!isRunning && inProgress && etaRemaining) {
+    if (!isRunning && !isCompleted && etaRemaining) {
       // Start only when:
       //   1- the timer hasn't been started yet and
       //   2- transaction is in progress and
       //   3- we have the remaining eta
       restart(new Date(Date.now() + etaRemaining), true);
     }
-  }, [etaRemaining, inProgress]);
+  }, [etaRemaining, isCompleted, isRunning]);
+
+  // Action handler to navigate user to the Redeem view of this transaction
+  const resumeTransaction = useCallback(async () => {
+    // Clear previous errors when user clicks on the widget again
+    setError('');
+
+    if (!receipt) {
+      setError('No receipt found for this transaction');
+      return;
+    }
+
+    try {
+      const wh = await getWormholeContextV2();
+      const sdkRoute = new (config.routes.get(route).rc)(wh);
+
+      // Set the start time of the transaction
+      dispatch(setTimestamp(timestamp));
+      // Set transaction details required to display Redeem view
+      dispatch(setTxDetails(txDetails));
+      // Set to avoid send transfer.success event in Resume Transaction case
+      dispatch(setIsResumeTx(true));
+      // Set transaction route
+      dispatch(setRedeemRoute(route));
+      // Set transaction destination chain
+      dispatch(setToChain(txDetails.toChain));
+      // Set the App route to navigate user to Redeem view
+      dispatch(setAppRoute('redeem'));
+
+      // Setting the receipt for Redeem view
+      routeContext.setReceipt(receipt);
+      // Navigate user to Redeem view
+      routeContext.setRoute(sdkRoute);
+    } catch (e: unknown) {
+      setError(`Error resuming transaction: ${txDetails.sendTx}`);
+    }
+  }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
   if (!transaction) {
     return <></>;
@@ -225,10 +246,9 @@ const WidgetItem = (props: Props) => {
       <Card className={classes.card}>
         <CardActionArea
           disableTouchRipple
+          disabled={!txDetails}
           className={classes.cardActionArea}
-          onClick={() => {
-            window.open(explorerInfo.url, '_blank');
-          }}
+          onClick={resumeTransaction}
         >
           <CardContent>
             <Stack
@@ -237,10 +257,10 @@ const WidgetItem = (props: Props) => {
               justifyContent="space-between"
             >
               <Typography display="flex" justifyContent="space-between">
-                {inProgress ? (
-                  etaCountdown
-                ) : (
+                {isCompleted ? (
                   <TxCompleteIcon className={classes.completedIcon} />
+                ) : (
+                  etaCountdown
                 )}
               </Typography>
               <Stack direction="row" alignItems="center">
@@ -251,20 +271,17 @@ const WidgetItem = (props: Props) => {
                 </Typography>
                 <Box className={classes.chainIcon}>
                   <TokenIcon
-                    icon={config.chains[sourceChain]?.icon}
+                    icon={config.chains[fromChain]?.icon}
                     height={24}
                   />
                 </Box>
                 <ArrowRight className={classes.arrowIcon} />
                 <Box className={classes.chainIcon}>
-                  <TokenIcon
-                    icon={config.chains[destChain]?.icon}
-                    height={24}
-                  />
+                  <TokenIcon icon={config.chains[toChain]?.icon} height={24} />
                 </Box>
               </Stack>
             </Stack>
-            {inProgress && (
+            {!isCompleted && (
               <LinearProgress
                 className={classes.progressBar}
                 variant="determinate"
@@ -274,6 +291,13 @@ const WidgetItem = (props: Props) => {
           </CardContent>
         </CardActionArea>
       </Card>
+      <AlertBannerV2
+        className={classes.alertBanner}
+        color={error ? theme.palette.error.light : theme.palette.grey.A400}
+        content={error}
+        error={!!error}
+        show={!!error}
+      />
     </div>
   );
 };

@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import WormholeConnect from './WormholeConnect';
 import ErrorBoundary from './components/ErrorBoundary';
-export * from './theme';
 
 // This is the entry point that runs when integrators add the Connect widget
 // to their websites by pasting <script> and <link> tags pointing to the

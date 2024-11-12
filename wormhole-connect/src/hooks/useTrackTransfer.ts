@@ -1,37 +1,64 @@
-import { isCompleted } from '@wormhole-foundation/sdk';
-import { RouteContext } from 'contexts/RouteContext';
-import { useContext, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setRedeemTx, setTransferComplete } from 'store/redeem';
-import type { RootState } from 'store';
+import { useEffect, useState } from 'react';
+import { isCompleted, routes, TransferState } from '@wormhole-foundation/sdk';
+
+import config, { getWormholeContextV2 } from 'config';
 import { sleep } from 'utils';
 
+import type { AttestationReceipt } from '@wormhole-foundation/sdk';
+
+const TRACK_INTERVAL = 5000;
+const TRACK_INTERVAL_FAST = 1000;
 const TRACK_TIMEOUT = 120 * 1000;
 
-// TODO: document this hook, especially since it sets and depends on the receipt state
-const useTrackTransfer = (): void => {
-  const dispatch = useDispatch();
+type Props = {
+  route: string | undefined;
+  receipt: routes.Receipt<AttestationReceipt> | null;
+  eta?: number;
+};
 
-  const routeContext = useContext(RouteContext);
+type ReturnProps = {
+  isCompleted: boolean;
+  isReadyToClaim: boolean;
+  receipt: routes.Receipt<AttestationReceipt> | undefined;
+};
 
-  const { txData, timestamp } = useSelector((state: RootState) => state.redeem);
+const useTrackTransfer = (props: Props): ReturnProps => {
+  const [completed, setCompleted] = useState(false);
+  const [readyToClaim, setReadyToClaim] = useState(false);
+  const [receipt, setReceipt] = useState<routes.Receipt<AttestationReceipt>>();
+
+  const { eta, route: routeName } = props;
+
+  // Set initial receipt from the caller
+  useEffect(() => {
+    if (props.receipt) {
+      setReceipt(props.receipt);
+    }
+  }, [props.receipt]);
 
   useEffect(() => {
     let isActive = true;
 
-    let sleepTime = 5000;
+    let sleepTime = TRACK_INTERVAL;
 
-    if (txData && txData.eta && txData.eta < 30_000) {
+    if (eta && eta < 30_000) {
       // Poll aggressively for very fast transfers
-      sleepTime = 1000;
+      sleepTime = TRACK_INTERVAL_FAST;
     }
 
     const track = async () => {
-      const { route, receipt } = routeContext;
-
-      if (!route || !receipt) {
+      if (!routeName || !receipt) {
         return;
       }
+
+      const route = config.routes.get(routeName);
+
+      if (!route) {
+        return;
+      }
+
+      const wh = await getWormholeContextV2();
+      const sdkRoute = new route.rc(wh);
 
       let stateChanged = false;
 
@@ -39,11 +66,7 @@ const useTrackTransfer = (): void => {
         try {
           // We need to consume all of the values the track generator yields in case any of them
           // update the receipt state.
-          // When the receipt state is updated, we set the new receipt in the route context
-          // and break out of the loop.
-          // The hook will then be re-run and the new receipt will be used to continue tracking
-          // unless the transfer is completed.
-          for await (const currentReceipt of route.track(
+          for await (const currentReceipt of sdkRoute.track(
             receipt,
             TRACK_TIMEOUT,
           )) {
@@ -51,28 +74,34 @@ const useTrackTransfer = (): void => {
               break;
             }
 
+            // When the receipt state is updated, we set the new receipt in the local state
+            // and break out of the loop.
+            // The hook will then be re-run and the new receipt will be used to continue tracking
+            // until the transfer is completed.
             if (currentReceipt.state !== receipt.state) {
-              routeContext.setReceipt(currentReceipt);
+              setReceipt(currentReceipt);
 
               if (isCompleted(currentReceipt)) {
-                dispatch(setTransferComplete(true));
-
-                const lastTx = currentReceipt.destinationTxs?.slice(-1)[0];
-                if (lastTx) {
-                  dispatch(setRedeemTx(lastTx.txid));
-                }
+                setCompleted(true);
+                stateChanged = true;
+                break;
               }
 
-              stateChanged = true;
-              break;
+              // Check whether this is a manual transaction ready to claim
+              if (
+                !route.AUTOMATIC_DEPOSIT &&
+                currentReceipt.state >= TransferState.Attested
+              ) {
+                setReadyToClaim(true);
+              }
             }
           }
         } catch (e) {
           console.error('Error tracking transfer:', e);
-          sleepTime = 5000; // Back off if we were polling aggressively
+          sleepTime = TRACK_INTERVAL; // Back off if we were polling aggressively
         }
 
-        // retry
+        // Retry
         // TODO: exponential backoff depending on the current state?
         await sleep(sleepTime);
       }
@@ -83,7 +112,13 @@ const useTrackTransfer = (): void => {
     return () => {
       isActive = false;
     };
-  }, [routeContext, txData?.eta, timestamp]);
+  }, [eta, receipt, routeName]);
+
+  return {
+    isCompleted: completed,
+    isReadyToClaim: readyToClaim,
+    receipt,
+  };
 };
 
 export default useTrackTransfer;

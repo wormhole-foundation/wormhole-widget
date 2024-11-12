@@ -27,7 +27,6 @@ import { setRoute as setAppRoute } from 'store/router';
 import { setAmount, setIsTransactionInProgress } from 'store/transferInput';
 import { getTokenDecimals, getWrappedToken, getWrappedTokenId } from 'utils';
 import { interpretTransferError } from 'utils/errors';
-import { getExplorerInfo } from 'utils/sdkv2';
 import { validate, isTransferValid } from 'utils/transferValidation';
 import {
   registerWalletSigner,
@@ -120,6 +119,11 @@ const ReviewTransaction = (props: Props) => {
   const send = async () => {
     setSendError(undefined);
 
+    if (config.ui.previewMode) {
+      setSendError('Connect is in preview mode');
+      return;
+    }
+
     // Pre-check of required values
     if (
       !sourceChain ||
@@ -189,10 +193,6 @@ const ReviewTransaction = (props: Props) => {
         await registerWalletSigner(sourceChain, TransferWallet.SENDING);
       }
 
-      if (fromConfig?.context === Context.COSMOS) {
-        await switchChain(fromConfig.chainId, TransferWallet.SENDING);
-      }
-
       config.triggerEvent({
         type: 'transfer.initiate',
         details: transferDetails,
@@ -241,48 +241,47 @@ const ReviewTransaction = (props: Props) => {
         };
       }
 
+      const txTimestamp = Date.now();
+      const txDetails = {
+        sendTx: txId,
+        sender: sendingWallet.address,
+        amount,
+        recipient: receivingWallet.address,
+        toChain: receipt.to,
+        fromChain: receipt.from,
+        tokenAddress: getWrappedToken(sourceTokenConfig).tokenId!.address,
+        tokenKey: sourceTokenConfig.key,
+        tokenDecimals: getTokenDecimals(
+          sourceChain,
+          getWrappedTokenId(sourceTokenConfig),
+        ),
+        receivedTokenKey: config.tokens[destToken].key, // TODO: possibly wrong (e..g if portico swap fails)
+        relayerFee,
+        receiveAmount: sdkAmount
+          .whole(quote.destinationToken.amount)
+          .toString(),
+        receiveNativeAmount,
+        eta: quote.eta || 0,
+      };
+
+      // Add the new transaction to local storage
+      addTxToLocalStorage({
+        txDetails,
+        txHash: txId,
+        timestamp: txTimestamp,
+        receipt,
+        route,
+      });
+
       // Set the start time of the transaction
-      dispatch(setTimestamp(Date.now()));
+      dispatch(setTimestamp(txTimestamp));
 
       // TODO: SDKV2 set the tx details using on-chain data
       // because they might be different than what we have in memory (relayer fee)
       // or we may not have all the data (e.g. block)
       // TODO: we don't need all of these details
       // The SDK should provide a way to get the details from the chain (e.g. route.lookupSourceTxDetails)
-      dispatch(
-        setTxDetails({
-          sendTx: txId,
-          sender: sendingWallet.address,
-          amount,
-          recipient: receivingWallet.address,
-          toChain: receipt.to,
-          fromChain: receipt.from,
-          tokenAddress: getWrappedToken(sourceTokenConfig).tokenId!.address,
-          tokenKey: sourceTokenConfig.key,
-          tokenDecimals: getTokenDecimals(
-            sourceChain,
-            getWrappedTokenId(sourceTokenConfig),
-          ),
-          receivedTokenKey: config.tokens[destToken].key, // TODO: possibly wrong (e..g if portico swap fails)
-          relayerFee,
-          receiveAmount: sdkAmount
-            .whole(quote.destinationToken.amount)
-            .toString(),
-          receiveNativeAmount,
-          eta: quote.eta || 0,
-        }),
-      );
-
-      // Add the new transaction to local storage
-      addTxToLocalStorage({
-        txHash: txId,
-        amount,
-        tokenKey: sourceTokenConfig.key,
-        sourceChain: receipt.from,
-        destChain: receipt.to,
-        eta: quote.eta || 0,
-        explorerInfo: getExplorerInfo(sdkRoute, txId),
-      });
+      dispatch(setTxDetails(txDetails));
 
       // Reset the amount for a successful transaction
       dispatch(setAmount(''));
@@ -295,7 +294,10 @@ const ReviewTransaction = (props: Props) => {
       dispatch(setAppRoute('redeem'));
       setSendError(undefined);
     } catch (e: any) {
-      const [uiError, transferError] = interpretTransferError(e, sourceChain);
+      const [uiError, transferError] = interpretTransferError(
+        e,
+        transferDetails,
+      );
 
       if (transferError.type === ERR_USER_REJECTED) {
         // User intentionally rejected in their wallet. This is not an error in the sense
@@ -351,7 +353,10 @@ const ReviewTransaction = (props: Props) => {
             gap={1}
             textTransform="none"
           >
-            <CircularProgress color="secondary" size={16} />
+            <CircularProgress
+              size={16}
+              sx={{ color: theme.palette.primary.contrastText }}
+            />
             {mobile ? 'Preparing' : 'Preparing transaction'}
           </Typography>
         ) : !isTransactionInProgress && props.isFetchingQuotes ? (
@@ -390,7 +395,11 @@ const ReviewTransaction = (props: Props) => {
   return (
     <Stack className={classes.container}>
       <div>
-        <IconButton sx={{ padding: 0 }} onClick={() => props.onClose?.()}>
+        <IconButton
+          disabled={isTransactionInProgress}
+          sx={{ padding: 0 }}
+          onClick={() => props.onClose?.()}
+        >
           <ChevronLeft sx={{ fontSize: '32px' }} />
         </IconButton>
       </div>

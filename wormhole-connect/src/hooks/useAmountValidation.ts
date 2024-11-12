@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { QuoteResult } from 'routes/operator';
 import { RootState } from 'store';
-import { RouteState } from 'store/transferInput';
 import { isMinAmountError } from 'utils/sdkv2';
 
 type HookReturn = {
@@ -13,7 +12,7 @@ type HookReturn = {
 
 type Props = {
   balance?: string | null;
-  routes: RouteState[];
+  routes: string[];
   quotesMap: Record<string, QuoteResult | undefined>;
   tokenSymbol: string;
   isLoading: boolean;
@@ -51,14 +50,15 @@ export const useAmountValidation = (props: Props): HookReturn => {
   );
 
   const allRoutesFailed = useMemo(
-    () => props.routes.every((route) => !props.quotesMap[route.name]?.success),
+    () =>
+      props.routes.every((route) => props.quotesMap[route]?.success === false),
     [props.routes, props.quotesMap],
   );
 
   const numAmount = Number.parseFloat(amount);
 
   // Don't show errors when no amount is set or it's loading
-  if (!amount || !numAmount || props.isLoading || props.disabled) {
+  if (!amount || !numAmount || props.disabled) {
     return {};
   }
 

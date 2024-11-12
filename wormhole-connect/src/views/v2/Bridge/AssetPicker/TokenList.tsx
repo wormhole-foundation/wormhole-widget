@@ -46,6 +46,7 @@ type Props = {
   isFetching?: boolean;
   selectedChainConfig: ChainConfig;
   selectedToken?: string;
+  selectedTokenChain?: string;
   sourceToken?: string;
   wallet: WalletData;
   onSelectToken: (key: string) => void;
@@ -63,21 +64,24 @@ const TokenList = (props: Props) => {
   );
 
   const sortedTokens = useMemo(() => {
-    const { selectedToken, selectedChainConfig } = props;
-
-    const selectedTokenConfig = selectedToken
-      ? config.tokens[selectedToken]
-      : undefined;
+    const selectedTokenConfig = props.tokenList?.find(
+      (t) => t.key === props.selectedToken,
+    );
 
     const nativeTokenConfig = props.tokenList?.find(
-      (t) => t.key === selectedChainConfig.gasToken,
+      (t) => t.key === props.selectedChainConfig.gasToken,
     );
 
     const tokenSet: Set<string> = new Set();
     const tokens: Array<TokenConfig> = [];
 
-    // First: Add previously selected token at the top of the list
-    if (selectedTokenConfig && !tokenSet.has(selectedTokenConfig.key)) {
+    // First: Add previously selected token at the top of the list,
+    // only if it's the selected token's chain
+    if (
+      selectedTokenConfig &&
+      props.selectedTokenChain === props.selectedChainConfig.key &&
+      !tokenSet.has(selectedTokenConfig.key)
+    ) {
       tokenSet.add(selectedTokenConfig.key);
       tokens.push(selectedTokenConfig);
     }
@@ -95,14 +99,14 @@ const TokenList = (props: Props) => {
               // Only add the wrapped token if it actually exists on the destination chain
               !!getTokenBridgeWrappedTokenAddressSync(
                 t,
-                selectedChainConfig.key,
+                props.selectedChainConfig.key,
               ),
           );
 
           if (
             destTokenConfig &&
             !tokenSet.has(destTokenConfig.key) &&
-            !isFrankensteinToken(destTokenConfig, selectedChainConfig.key)
+            !isFrankensteinToken(destTokenConfig, props.selectedChainConfig.key)
           ) {
             tokenSet.add(destTokenConfig.key);
             tokens.push(destTokenConfig);
@@ -143,15 +147,15 @@ const TokenList = (props: Props) => {
         }
 
         // Exclude frankenstein tokens
-        if (isFrankensteinToken(t, selectedChainConfig.key)) {
+        if (isFrankensteinToken(t, props.selectedChainConfig.key)) {
           return;
         }
 
         // Exclude wormhole-wrapped tokens, unless it's canonical
         if (
           props.isSource &&
-          isWrappedToken(t, selectedChainConfig.key) &&
-          !isCanonicalToken(t, selectedChainConfig.key)
+          isWrappedToken(t, props.selectedChainConfig.key) &&
+          !isCanonicalToken(t, props.selectedChainConfig.key)
         ) {
           return;
         }
@@ -162,7 +166,17 @@ const TokenList = (props: Props) => {
     }
 
     return tokens;
-  }, [balances, props.tokenList, props.sourceToken]);
+  }, [
+    balances,
+    props.tokenList,
+    props.selectedChainConfig.key,
+    props.selectedChainConfig.gasToken,
+    props.sourceToken,
+    props.isSource,
+    props.wallet?.address,
+    props.selectedToken,
+    props.selectedTokenChain,
+  ]);
 
   const noTokensMessage = useMemo(
     () => (
@@ -170,7 +184,7 @@ const TokenList = (props: Props) => {
         No supported tokens found in wallet
       </Typography>
     ),
-    [],
+    [theme.palette.grey.A400],
   );
 
   const shouldShowEmptyMessage =
@@ -221,7 +235,9 @@ const TokenList = (props: Props) => {
 
         const queryLC = query.toLowerCase();
 
-        const symbolMatch = token.symbol?.toLowerCase().includes(queryLC);
+        const symbolMatch = [token.symbol, token.coinGeckoId].some((criteria) =>
+          criteria?.toLowerCase()?.includes?.(queryLC),
+        );
         if (symbolMatch) return true;
 
         const displayNameMatch = getDisplayName(token, chain)

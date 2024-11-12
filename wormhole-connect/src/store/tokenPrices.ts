@@ -35,19 +35,10 @@ export const tokenPricesSlice = createSlice({
     ) => {
       state.usdPrices = errorDataWrapper(payload);
     },
-    resetPrices: (state: TokenPricesState) => {
-      state.usdPrices = getEmptyDataWrapper();
-    },
-    clearTokenPrices: () => initialState,
   },
 });
 
-export const {
-  setPrices,
-  setFetchingPrices,
-  setPricesError,
-  resetPrices,
-  clearTokenPrices,
-} = tokenPricesSlice.actions;
+export const { setPrices, setFetchingPrices, setPricesError } =
+  tokenPricesSlice.actions;
 
 export default tokenPricesSlice.reducer;

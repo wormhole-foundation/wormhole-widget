@@ -140,7 +140,7 @@ const ChainList = (props: Props) => {
   const searchList = useMemo(
     () => (
       <SearchableList<ChainConfig>
-        searchPlaceholder="Search for a network"
+        searchPlaceholder="Search for a chain"
         className={classes.chainSearch}
         items={props.chainList ?? []}
         filterFn={(chain, query) =>

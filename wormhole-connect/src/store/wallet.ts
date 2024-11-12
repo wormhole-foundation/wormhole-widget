@@ -101,14 +101,6 @@ export const walletSlice = createSlice({
         state[key] = initialState[key];
       });
     },
-    disconnectWallets: (state: WalletState) => {
-      disconnect(TransferWallet.SENDING);
-      disconnect(TransferWallet.RECEIVING);
-      Object.keys(state).forEach((key) => {
-        // @ts-ignore
-        state[key] = initialState[key];
-      });
-    },
     swapWallets: (state: WalletState) => {
       const tmp = state.sending;
       state.sending = state.receiving;
@@ -126,7 +118,6 @@ export const {
   setWalletError,
   clearWallets,
   disconnectWallet,
-  disconnectWallets,
   swapWallets,
 } = walletSlice.actions;
 

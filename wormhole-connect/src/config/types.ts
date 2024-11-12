@@ -13,6 +13,8 @@ import {
   Wormhole as WormholeV2,
   Chain,
   TokenAddress as TokenAddressV2,
+  AttestationReceipt,
+  routes,
 } from '@wormhole-foundation/sdk';
 
 import {
@@ -22,9 +24,9 @@ import {
 } from 'telemetry/types';
 import { SDKConverter } from './converter';
 
-import { routes } from '@wormhole-foundation/sdk';
 import RouteOperator from 'routes/operator';
 import { UiConfig } from './ui';
+import { TransferInfo } from 'utils/sdkv2';
 
 export enum Icon {
   'AVAX' = 1,
@@ -300,15 +302,10 @@ export interface Transaction {
 }
 // Transanction data in local storage
 export interface TransactionLocal {
+  receipt: routes.Receipt<AttestationReceipt>;
+  route: string;
+  timestamp: number;
   txHash: string;
-  amount: string;
-  tokenKey: string;
-  sourceChain: string;
-  destChain: string;
-  eta: number;
-  explorerInfo: {
-    name: string;
-    url: string;
-    apiUrl: string;
-  };
+  txDetails: TransferInfo;
+  isReadyToClaim?: boolean;
 }

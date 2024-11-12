@@ -64,6 +64,7 @@ export const useAvailableWallets = (props: Props): ReturnProps => {
           });
         }
       } catch (e) {
+        console.error(`Error loading wallet options for ${chain}: ${e}`);
         setWalletOptionsResult({ state: 'error', error: FAILED_TO_LOAD_ERR });
       }
     })();

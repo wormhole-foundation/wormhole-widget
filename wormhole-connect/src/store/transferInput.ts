@@ -1,22 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Context } from 'sdklegacy';
 import config from 'config';
 import { TokenConfig } from 'config/types';
-import { getTokenDecimals } from 'utils';
-import {
-  switchChain,
-  TransferWallet,
-  walletAcceptedChains,
-} from 'utils/wallet';
-import { clearWallet, setAddress, setWalletError, WalletData } from './wallet';
-import {
-  DataWrapper,
-  errorDataWrapper,
-  fetchDataWrapper,
-  getEmptyDataWrapper,
-  receiveDataWrapper,
-} from './helpers';
-import { amount, Chain } from '@wormhole-foundation/sdk';
+import { TransferWallet, walletAcceptedChains } from 'utils/wallet';
+import { clearWallet, setWalletError, WalletData } from './wallet';
+import { DataWrapper, getEmptyDataWrapper } from './helpers';
+import { Chain } from '@wormhole-foundation/sdk';
 
 export type Balance = {
   lastUpdated: number;
@@ -29,24 +17,6 @@ export type ChainBalances = {
 export type BalancesCache = { [key in Chain]?: ChainBalances };
 type WalletAddress = string;
 export type WalletBalances = { [key: WalletAddress]: BalancesCache };
-
-export const formatBalance = (
-  chain: Chain,
-  token: TokenConfig,
-  balance: string | bigint | null,
-): string | null => {
-  if (!balance) {
-    return null;
-  }
-  const decimals = getTokenDecimals(chain, token.tokenId);
-  const balanceNum = amount.whole({
-    amount: balance.toString(),
-    decimals,
-  });
-  return balanceNum.toLocaleString('en', {
-    maximumFractionDigits: 6,
-  });
-};
 
 export const formatStringAmount = (amountStr = '0'): string => {
   const amountNum = parseFloat(amountStr);
@@ -108,15 +78,9 @@ export type TransferValidations = {
   receiveAmount: ValidationErr;
 };
 
-export type RouteState = {
-  name: string;
-  supported: boolean;
-};
-
 export interface TransferInputState {
   showValidationState: boolean;
   validations: TransferValidations;
-  routeStates: RouteState[] | undefined;
   fromChain: Chain | undefined;
   toChain: Chain | undefined;
   token: string;
@@ -124,6 +88,7 @@ export interface TransferInputState {
   amount: string;
   receiveAmount: DataWrapper<string>;
   route?: string;
+  preferredRouteName?: string | undefined;
   balances: WalletBalances;
   foreignAsset: string;
   associatedTokenAddress: string;
@@ -153,13 +118,13 @@ function getInitialState(): TransferInputState {
       relayerFee: '',
       receiveAmount: '',
     },
-    routeStates: undefined,
     fromChain: config.ui.defaultInputs?.fromChain || undefined,
     toChain: config.ui.defaultInputs?.toChain || undefined,
     token: config.ui.defaultInputs?.tokenKey || '',
-    destToken: '',
+    destToken: config.ui.defaultInputs?.toTokenKey || '',
     amount: '',
     receiveAmount: getEmptyDataWrapper(),
+    preferredRouteName: config.ui.defaultInputs?.preferredRouteName,
     route: undefined,
     balances: {},
     foreignAsset: '',
@@ -246,18 +211,6 @@ export const transferInputSlice = createSlice({
       });
       state.showValidationState = showValidationState;
     },
-    setRoute: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.route = payload;
-    },
-    setRoutes: (
-      state: TransferInputState,
-      { payload }: PayloadAction<RouteState[]>,
-    ) => {
-      state.routeStates = payload;
-    },
     // user input
     setToken: (
       state: TransferInputState,
@@ -291,21 +244,6 @@ export const transferInputSlice = createSlice({
     ) => {
       state.amount = payload;
     },
-    setReceiveAmount: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiveAmount = receiveDataWrapper(payload);
-    },
-    setFetchingReceiveAmount: (state: TransferInputState) => {
-      state.receiveAmount = fetchDataWrapper();
-    },
-    setReceiveAmountError: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiveAmount = errorDataWrapper(payload);
-    },
     updateBalances: (
       state: TransferInputState,
       {
@@ -327,24 +265,6 @@ export const transferInputSlice = createSlice({
         ...balances,
       };
     },
-    setReceiverNativeBalance: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiverNativeBalance = payload;
-    },
-    setForeignAsset: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.foreignAsset = payload;
-    },
-    setAssociatedTokenAddress: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.associatedTokenAddress = payload;
-    },
     setTransferRoute: (
       state: TransferInputState,
       { payload }: PayloadAction<string | undefined>,
@@ -353,14 +273,7 @@ export const transferInputSlice = createSlice({
         state.route = undefined;
         return;
       }
-      if (
-        state.routeStates &&
-        state.routeStates.some((rs) => rs.name === payload && rs.supported)
-      ) {
-        state.route = payload;
-      } else {
-        state.route = undefined;
-      }
+      state.route = payload;
     },
     // clear inputs
     clearTransfer: (state: TransferInputState) => {
@@ -446,12 +359,6 @@ export const selectChain = async (
   // vary depending on the chain)
   const chainConfig = config.chains[chain];
   if (!chainConfig) return;
-  if (chainConfig.context === wallet.type && wallet.type === Context.COSMOS) {
-    const address = await switchChain(chainConfig.chainId, type);
-    if (address) {
-      dispatch(setAddress({ type, address }));
-    }
-  }
 
   dispatch(
     type === TransferWallet.SENDING ? setFromChain(chain) : setToChain(chain),
@@ -460,23 +367,15 @@ export const selectChain = async (
 
 export const {
   setValidations,
-  setRoute,
-  setRoutes,
   setToken,
   setDestToken,
   setFromChain,
   setToChain,
   setAmount,
-  setReceiveAmount,
-  setFetchingReceiveAmount,
-  setReceiveAmountError,
-  setForeignAsset,
-  setAssociatedTokenAddress,
   setTransferRoute,
   updateBalances,
   clearTransfer,
   setIsTransactionInProgress,
-  setReceiverNativeBalance,
   setSupportedDestTokens,
   setSupportedSourceTokens,
   swapInputs,

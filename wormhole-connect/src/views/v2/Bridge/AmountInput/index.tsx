@@ -42,7 +42,10 @@ const DebouncedTextField = memo(
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
-        const numValue = Number(e.target.value);
+        let value = e.target.value;
+        if (value === '.') value = '0.';
+
+        const numValue = Number(value);
 
         if (isNaN(numValue) || numValue < 0) {
           // allows all but negative numbers
@@ -67,6 +70,9 @@ const useStyles = makeStyles()((theme) => ({
   amountContainer: {
     width: '100%',
     maxWidth: '420px',
+  },
+  amountCard: {
+    borderRadius: '8px',
   },
   amountCardContent: {
     display: 'flex',
@@ -118,7 +124,7 @@ const AmountInput = (props: Props) => {
   );
 
   const tokenBalance = useMemo(
-    () => balances?.[sourceToken]?.balance || '',
+    () => balances?.[sourceToken]?.balance || '0',
     [balances, sourceToken],
   );
 
@@ -145,12 +151,15 @@ const AmountInput = (props: Props) => {
         {isFetching ? (
           <CircularProgress size={14} />
         ) : (
+          // TODO AMOUNT HACK... fix amount formatting in amount.Amount balance refactor
           <Typography
             fontSize={14}
             textAlign="right"
             className={classes.balance}
           >
-            {tokenBalance}
+            {parseFloat(tokenBalance).toLocaleString('en', {
+              maximumFractionDigits: 6,
+            })}
           </Typography>
         )}
       </Stack>
@@ -186,8 +195,11 @@ const AmountInput = (props: Props) => {
       <div className={classes.amountTitle}>
         <Typography variant="body2">Amount</Typography>
       </div>
-      <Card variant="elevation">
-        <CardContent className={classes.amountCardContent}>
+      <Card className={classes.amountCard} variant="elevation">
+        <CardContent
+          className={classes.amountCardContent}
+          style={{ paddingBottom: '16px' }}
+        >
           <DebouncedTextField
             fullWidth
             disabled={isInputDisabled}

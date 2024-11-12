@@ -98,7 +98,7 @@ const useTransactionHistory = (
     if (hasMoreWHScan && whScanPage !== page) {
       setWHScanPage(page);
     }
-  }, [hasMoreMayan, hasMoreWHScan, page]);
+  }, [hasMoreMayan, hasMoreWHScan, mayanPage, page, whScanPage]);
 
   // Side-effect to merge transactions in time-order whenever there is new data
   useEffect(() => {
@@ -180,6 +180,8 @@ const useTransactionHistory = (
     updateMayanIndex(mayanLocalIdx);
     // Append the merged transactions and exit
     setTransactions((txs) => appendTxs(txs, mergedTxs));
+    // We only need to re-run this side-effect when either of the transaction data changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [whScanTxs, mayanTxs]);
 
   return {

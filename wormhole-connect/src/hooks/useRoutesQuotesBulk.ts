@@ -43,16 +43,17 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
   const [quotes, setQuotes] = useState<QuoteResult[]>([]);
 
   // TODO temporary
-  // Calculate USD amount for temporary $1000 Mayan limit
-  const tokenConfig = config.tokens[params.sourceToken];
+  // Calculate USD amount for temporary $10,000 Mayan limit
+  const sourceTokenConfig = config.tokens[params.sourceToken];
+  const destTokenConfig = config.tokens[params.destToken];
   const { usdPrices } = useSelector((state: RootState) => state.tokenPrices);
   const { isTransactionInProgress } = useSelector(
     (state: RootState) => state.transferInput,
   );
-  const usdAmount = calculateUSDPriceRaw(
+  const usdValue = calculateUSDPriceRaw(
     params.amount,
     usdPrices.data,
-    tokenConfig,
+    sourceTokenConfig,
   );
 
   useEffect(() => {
@@ -62,7 +63,8 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
       !params.sourceToken ||
       !params.destChain ||
       !params.destToken ||
-      !parseFloat(params.amount)
+      !parseFloat(params.amount) ||
+      routes.length === 0
     ) {
       return;
     }
@@ -99,8 +101,11 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
         clearTimeout(refreshTimeout);
       }
     };
+    // Important: We should not include routes property in deps. See routes.join() below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    routes.join(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    routes.join(), // .join() is necessary to prevent unnecessary updates when routes array's ref changed but its content did not
     params.sourceChain,
     params.sourceToken,
     params.destChain,
@@ -109,6 +114,7 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
     params.nativeGas,
     nonce,
     isTransactionInProgress,
+    params,
   ]);
 
   const quotesMap = useMemo(
@@ -117,8 +123,34 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
         acc[route] = quotes[index];
         return acc;
       }, {} as Record<string, QuoteResult | undefined>),
-    [routes.join(), quotes],
+    // Important: We should not include routes property in deps. See routes.join() below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      routes.join(), // .join() is necessary to prevent unnecessary updates when routes array's ref changed but its content did not
+      quotes,
+    ],
   );
+
+  // Filter out quotes that would result in a large instant loss
+  // (Transfers >=$1000 with >=10% value loss)
+  for (const name in quotesMap) {
+    const quote = quotesMap[name];
+    if (quote !== undefined && quote.success) {
+      const usdValueOut = calculateUSDPriceRaw(
+        amount.whole(quote.destinationToken.amount),
+        usdPrices.data,
+        destTokenConfig,
+      );
+
+      if (usdValue && usdValueOut) {
+        const valueRatio = usdValueOut / usdValue;
+        if (usdValue >= 1000 && valueRatio <= 0.9) {
+          delete quotesMap[name];
+        }
+      }
+    }
+  }
 
   // TODO temporary logic for beta Mayan support
   for (const name in quotesMap) {
@@ -132,14 +164,14 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
       ) {
         // There are two special cases here for Mayan Swift transfers
         //
-        // 1) Disallow transfers >$1000 (temporary, while in beta)
-        // 2) For transfers <=$1000, calculate network costs manually, because Mayan API doesn't
+        // 1) Disallow transfers >$10,000 (temporary, while in beta)
+        // 2) For transfers <=$10,000, calculate network costs manually, because Mayan API doesn't
         //    expose relayer fee info for Swift quotes.
         //
         // TODO all of the code here is horrible and would ideally not exist
 
-        if (usdAmount !== undefined && usdAmount > MAYAN_BETA_LIMIT) {
-          // Temporarily disallow Swift quotes above $1000
+        if (usdValue !== undefined && usdValue > MAYAN_BETA_LIMIT) {
+          // Temporarily disallow Swift quotes above $10,000
           // TODO revisit this
           quotesMap[name] = {
             success: false,
@@ -151,7 +183,7 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
           const approxInputUsdValue = calculateUSDPriceRaw(
             params.amount,
             usdPrices.data,
-            tokenConfig,
+            sourceTokenConfig,
           );
           const approxOutputUsdValue = calculateUSDPriceRaw(
             amount.display(mayanQuote.destinationToken.amount),

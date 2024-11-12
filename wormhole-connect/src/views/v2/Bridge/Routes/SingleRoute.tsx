@@ -17,24 +17,30 @@ import TokenIcon from 'icons/TokenIcons';
 import {
   isEmptyObject,
   calculateUSDPrice,
+  calculateUSDPriceRaw,
+  getUSDFormat,
   millisToHumanString,
   formatDuration,
 } from 'utils';
 
 import type { RouteData } from 'config/routes';
 import type { RootState } from 'store';
-import { formatBalance } from 'store/transferInput';
+import { formatAmount } from 'utils/amount';
 import { toFixedDecimals } from 'utils/balance';
 import { TokenConfig } from 'config/types';
 import FastestRoute from 'icons/FastestRoute';
 import CheapestRoute from 'icons/CheapestRoute';
 
+const HIGH_FEE_THRESHOLD = 20; // dollhairs
+
 const useStyles = makeStyles()((theme: any) => ({
   container: {
     width: '100%',
     maxWidth: '420px',
+    marginBottom: '8px',
   },
   card: {
+    borderRadius: '8px',
     width: '100%',
     maxWidth: '420px',
   },
@@ -95,46 +101,53 @@ const SingleRoute = (props: Props) => {
     [destToken],
   );
 
+  const [feePrice, isHighFee, feeTokenConfig]: [
+    number | undefined,
+    boolean,
+    TokenConfig | undefined,
+  ] = useMemo(() => {
+    if (!quote?.relayFee) {
+      return [undefined, false, undefined];
+    }
+
+    const relayFee = amount.whole(quote.relayFee.amount);
+    const feeToken = quote.relayFee.token;
+    const feeTokenConfig = config.sdkConverter.findTokenConfigV1(
+      feeToken,
+      Object.values(config.tokens),
+    );
+    const feePrice = calculateUSDPriceRaw(
+      relayFee,
+      tokenPrices.data,
+      feeTokenConfig,
+    );
+
+    if (feePrice === undefined) {
+      return [undefined, false, undefined];
+    }
+
+    return [feePrice, feePrice > HIGH_FEE_THRESHOLD, feeTokenConfig];
+  }, [quote]);
+
   const relayerFee = useMemo(() => {
     if (!routeConfig.AUTOMATIC_DEPOSIT) {
       return <>You pay gas on {destChain}</>;
     }
 
-    if (!quote?.relayFee) {
+    if (!quote || !feePrice || !feeTokenConfig) {
       return <></>;
     }
 
-    const relayFee = amount.whole(quote.relayFee.amount);
-    const feeToken = quote.relayFee.token;
+    const feePriceFormatted = getUSDFormat(feePrice);
 
-    const feeTokenConfig = config.sdkConverter.findTokenConfigV1(
-      feeToken,
-      Object.values(config.tokens),
-    );
-
-    if (!feeTokenConfig) {
-      return <></>;
-    }
-
-    const feePrice = calculateUSDPrice(
-      relayFee,
-      tokenPrices.data,
-      feeTokenConfig,
-      true,
-    );
-
-    if (!feePrice) {
-      return <></>;
-    }
-
-    let feeValue = `${toFixedDecimals(relayFee.toString(), 4)} ${
+    let feeValue = `${amount.display(quote!.relayFee!.amount, 4)} ${
       feeTokenConfig.symbol
-    } (${feePrice})`;
+    } (${feePriceFormatted})`;
 
     // Wesley made me do it
     // Them PMs :-/
     if (props.route.name.startsWith('MayanSwap')) {
-      feeValue = feePrice;
+      feeValue = feePriceFormatted;
     }
 
     return (
@@ -181,7 +194,7 @@ const SingleRoute = (props: Props) => {
         <Typography
           color={theme.palette.text.secondary}
           fontSize={14}
-        >{`${gasTokenAmount} ${gasTokenConfig.symbol} ${gasTokenPrice}`}</Typography>
+        >{`${gasTokenAmount} ${gasTokenConfig.symbol} (${gasTokenPrice})`}</Typography>
       </Stack>
     );
   }, [destChain, props.destinationGasDrop]);
@@ -272,7 +285,7 @@ const SingleRoute = (props: Props) => {
             <Divider flexItem sx={{ marginTop: '8px' }} />
             <Stack direction="row" alignItems="center">
               <WarningIcon htmlColor={theme.palette.warning.main} />
-              <Stack sx={{ padding: '16px' }}>
+              <Stack sx={{ padding: '16px 16px 0 16px' }}>
                 <Typography color={theme.palette.warning.main} fontSize={14}>
                   {`Your transfer to ${destChain} may be delayed due to rate limits set by ${symbol}. If your transfer is delayed, you will need to return after ${duration} to complete the transfer. Please consider this before proceeding.`}
                 </Typography>
@@ -281,6 +294,23 @@ const SingleRoute = (props: Props) => {
           </div>,
         );
       }
+    }
+
+    if (isHighFee) {
+      messages.push(
+        <div key="HighFee">
+          <Divider flexItem sx={{ marginTop: '8px' }} />
+          <Stack direction="row" alignItems="center">
+            <WarningIcon htmlColor={theme.palette.warning.main} />
+            <Stack sx={{ padding: '16px 16px 0 16px' }}>
+              <Typography color={theme.palette.warning.main} fontSize={14}>
+                Output amount is much lower than input amount. Double check
+                before proceeding.
+              </Typography>
+            </Stack>
+          </Stack>
+        </div>,
+      );
     }
 
     return messages;
@@ -326,10 +356,11 @@ const SingleRoute = (props: Props) => {
 
   const receiveAmountTrunc = useMemo(() => {
     return quote && destChain && destTokenConfig
-      ? formatBalance(
+      ? formatAmount(
           destChain,
           destTokenConfig,
           quote.destinationToken.amount.amount,
+          6,
         )
       : undefined;
   }, [quote]);
@@ -343,8 +374,12 @@ const SingleRoute = (props: Props) => {
       return null;
     }
 
+    const color = isHighFee
+      ? theme.palette.warning.main
+      : theme.palette.text.primary;
+
     return (
-      <Typography fontSize={18}>
+      <Typography fontSize={18} color={color}>
         {receiveAmountTrunc} {destTokenConfig.symbol}
       </Typography>
     );
@@ -359,17 +394,19 @@ const SingleRoute = (props: Props) => {
       return null;
     }
 
-    const receiveAmountPrice = calculateUSDPrice(
+    let usdValue = calculateUSDPrice(
       receiveAmount,
       tokenPrices.data,
       destTokenConfig,
     );
 
+    if (usdValue !== '') usdValue = `(${usdValue})`;
+
     return (
       <Typography
         fontSize={14}
         color={theme.palette.text.secondary}
-      >{`${receiveAmountPrice} ${providerText}`}</Typography>
+      >{`${usdValue} ${providerText}`}</Typography>
     );
   }, [destTokenConfig, providerText, receiveAmount, tokenPrices]);
 
@@ -387,10 +424,6 @@ const SingleRoute = (props: Props) => {
 
     return 'pointer';
   }, [props.error, props.isSelected, props.onSelect]);
-
-  if (isEmptyObject(props.route)) {
-    return <></>;
-  }
 
   const routeCardBadge = useMemo(() => {
     if (props.isFastest) {
@@ -410,6 +443,10 @@ const SingleRoute = (props: Props) => {
       return null;
     }
   }, [props.isFastest, props.isCheapest]);
+
+  if (isEmptyObject(props.route)) {
+    return <></>;
+  }
 
   return (
     <div key={name} className={classes.container}>
