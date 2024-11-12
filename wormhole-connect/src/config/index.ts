@@ -184,19 +184,6 @@ export function getLegacyWormholeContext(
   return wh;
 }
 
-export function getDefaultWormholeContext(
-  network: Network,
-): LegacyWormholeContext {
-  const sdkConfig = LegacyWormholeContext.getConfig(network);
-  const networkData = { Mainnet: MAINNET, Devnet: DEVNET, Testnet: TESTNET }[
-    network
-  ]!;
-
-  const rpcs = Object.assign({}, sdkConfig.rpcs, networkData.rpcs);
-
-  return getLegacyWormholeContext(network, sdkConfig, rpcs);
-}
-
 export async function getWormholeContextV2(): Promise<WormholeV2<Network>> {
   if (config._v2Wormhole) return config._v2Wormhole;
   config._v2Wormhole = await newWormholeContextV2();

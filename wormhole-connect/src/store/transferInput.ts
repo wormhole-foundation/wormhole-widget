@@ -3,13 +3,7 @@ import config from 'config';
 import { TokenConfig } from 'config/types';
 import { TransferWallet, walletAcceptedChains } from 'utils/wallet';
 import { clearWallet, setWalletError, WalletData } from './wallet';
-import {
-  DataWrapper,
-  errorDataWrapper,
-  fetchDataWrapper,
-  getEmptyDataWrapper,
-  receiveDataWrapper,
-} from './helpers';
+import { DataWrapper, getEmptyDataWrapper } from './helpers';
 import { Chain } from '@wormhole-foundation/sdk';
 
 export type Balance = {
@@ -217,12 +211,6 @@ export const transferInputSlice = createSlice({
       });
       state.showValidationState = showValidationState;
     },
-    setRoute: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.route = payload;
-    },
     // user input
     setToken: (
       state: TransferInputState,
@@ -256,21 +244,6 @@ export const transferInputSlice = createSlice({
     ) => {
       state.amount = payload;
     },
-    setReceiveAmount: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiveAmount = receiveDataWrapper(payload);
-    },
-    setFetchingReceiveAmount: (state: TransferInputState) => {
-      state.receiveAmount = fetchDataWrapper();
-    },
-    setReceiveAmountError: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiveAmount = errorDataWrapper(payload);
-    },
     updateBalances: (
       state: TransferInputState,
       {
@@ -291,24 +264,6 @@ export const transferInputSlice = createSlice({
         ...state.balances[address][chain]!.balances,
         ...balances,
       };
-    },
-    setReceiverNativeBalance: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.receiverNativeBalance = payload;
-    },
-    setForeignAsset: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.foreignAsset = payload;
-    },
-    setAssociatedTokenAddress: (
-      state: TransferInputState,
-      { payload }: PayloadAction<string>,
-    ) => {
-      state.associatedTokenAddress = payload;
     },
     setTransferRoute: (
       state: TransferInputState,
@@ -412,22 +367,15 @@ export const selectChain = async (
 
 export const {
   setValidations,
-  setRoute,
   setToken,
   setDestToken,
   setFromChain,
   setToChain,
   setAmount,
-  setReceiveAmount,
-  setFetchingReceiveAmount,
-  setReceiveAmountError,
-  setForeignAsset,
-  setAssociatedTokenAddress,
   setTransferRoute,
   updateBalances,
   clearTransfer,
   setIsTransactionInProgress,
-  setReceiverNativeBalance,
   setSupportedDestTokens,
   setSupportedSourceTokens,
   swapInputs,
