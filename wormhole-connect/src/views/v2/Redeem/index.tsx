@@ -15,6 +15,7 @@ import {
   isRefunded,
   isFailed,
   routes,
+  isRedeemed,
 } from '@wormhole-foundation/sdk';
 import { getTokenDetails, getTransferDetails } from 'telemetry';
 import { makeStyles } from 'tss-react/mui';
@@ -167,6 +168,7 @@ const Redeem = () => {
   const isTxFailed =
     (receipt && isFailed(receipt)) || !!unhandledManualClaimError;
   const isTxDestQueued = receipt && isDestinationQueued(receipt);
+  const isTxRedeemed = receipt && isRedeemed(receipt);
 
   const {
     recipient,
@@ -570,7 +572,7 @@ const Redeem = () => {
           sx={{ color: theme.palette.error.light }}
         />
       );
-    } else if (!isAutomaticRoute && isTxAttested) {
+    } else if (!isAutomaticRoute && (isTxAttested || isTxRedeemed)) {
       // Waiting for manual redeem
       return (
         <TxReadyForClaim
@@ -807,7 +809,7 @@ const Redeem = () => {
     }
 
     const canBeManuallyClaimed =
-      isTxDestQueued || (!isAutomaticRoute && isTxAttested);
+      isTxDestQueued || (!isAutomaticRoute && (isTxAttested || isTxRedeemed));
 
     if (canBeManuallyClaimed) {
       if (!isConnectedToReceivingWallet) {
@@ -859,6 +861,7 @@ const Redeem = () => {
     isTxCompleted,
     isTxDestQueued,
     isTxRefunded,
+    isTxRedeemed,
     theme.palette.primary.contrastText,
   ]);
 
