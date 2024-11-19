@@ -1,8 +1,6 @@
 import React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
-import { chainToIcon } from '@wormhole-foundation/sdk-icons';
-
 import { CENTER } from 'utils/style';
 import { Icon } from 'config/types';
 import WBTC from './Tokens/WBTC';
@@ -20,7 +18,7 @@ import APT from './Tokens/APT';
 import SUI from './Tokens/SUI';
 import SEI from './Tokens/SEI';
 import BASE from './Tokens/BASE';
-import MATIC from './Tokens/MATIC';
+import POLY from './Tokens/POLY';
 import BSC from './Tokens/BSC';
 import USDC from './Tokens/USDC';
 import noIcon from './Tokens/noIcon';
@@ -38,6 +36,8 @@ import INJ from './Tokens/INJ';
 import NTT from './Tokens/NTT';
 import SCROLL from './Tokens/SCROLL';
 import BLAST from './Tokens/BLAST';
+import MANTLE from './Tokens/MANTLE';
+import XLAYER from './Tokens/XLAYER';
 
 const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   container: {
@@ -67,7 +67,7 @@ const iconMap: { [key in Icon]: React.JSX.Element } = {
   [Icon.CELO]: CELO(),
   [Icon.ETH]: ETH(),
   [Icon.FANTOM]: FTM(),
-  [Icon.POLYGON]: MATIC(),
+  [Icon.POLYGON]: POLY(),
   [Icon.SOLANA]: SOL(),
   [Icon.USDC]: USDC(),
   [Icon.SUI]: SUI(),
@@ -88,18 +88,8 @@ const iconMap: { [key in Icon]: React.JSX.Element } = {
   [Icon.NTT]: NTT(),
   [Icon.SCROLL]: SCROLL(),
   [Icon.BLAST]: BLAST(),
-  [Icon.XLAYER]: (
-    <img
-      style={{ maxHeight: '100%', maxWidth: '100%' }}
-      src={chainToIcon('Xlayer')}
-    />
-  ),
-  [Icon.MANTLE]: (
-    <img
-      style={{ maxHeight: '100%', maxWidth: '100%' }}
-      src={chainToIcon('Mantle')}
-    />
-  ),
+  [Icon.XLAYER]: XLAYER(),
+  [Icon.MANTLE]: MANTLE(),
 };
 
 function isBuiltinIcon(icon?: Icon | string): icon is Icon {
@@ -112,7 +102,7 @@ type Props = {
 };
 
 function TokenIcon(props: Props) {
-  const size = props.height || 32;
+  const size = props.height || 36;
   const { classes } = useStyles({ size });
 
   // Default, if icon is undefined

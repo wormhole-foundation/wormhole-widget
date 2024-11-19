@@ -54,6 +54,8 @@ const useStyles = makeStyles()((theme) => ({
       border: '1px solid',
       borderColor: theme.palette.primary.main,
     },
+    padding: '8px',
+    width: '72px',
   },
   chainItem: {
     display: 'flex',
@@ -113,8 +115,8 @@ const ChainList = (props: Props) => {
             className={classes.chainButton}
             onClick={() => props.onChainSelect(chain.key)}
           >
-            <TokenIcon icon={chain.icon} height={32} />
-            <Typography fontSize={12} whiteSpace="nowrap">
+            <TokenIcon icon={chain.icon} />
+            <Typography fontSize={12} marginTop="8px" whiteSpace="nowrap">
               {chain.displayName}
             </Typography>
           </ListItemButton>
