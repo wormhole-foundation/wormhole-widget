@@ -161,7 +161,11 @@ const SingleRoute = (props: Props) => {
   }, [destToken, quote?.relayFee, tokenPrices]);
 
   const destinationGas = useMemo(() => {
-    if (!destChain || !props.destinationGasDrop) {
+    if (
+      !destChain ||
+      props.destinationGasDrop === undefined ||
+      amount.units(props.destinationGasDrop) === 0n
+    ) {
       return <></>;
     }
 
