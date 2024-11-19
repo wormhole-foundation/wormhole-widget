@@ -40,7 +40,6 @@ const useFetchSupportedRoutes = (): HookReturn => {
           supported = await route.isRouteSupported(
             token,
             destToken,
-            amount,
             fromChain,
             toChain,
           );

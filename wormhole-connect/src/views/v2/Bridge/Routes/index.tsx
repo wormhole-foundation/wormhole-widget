@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { makeStyles } from 'tss-react/mui';
@@ -8,7 +7,6 @@ import config from 'config';
 import { RoutesConfig } from 'config/routes';
 import SingleRoute from 'views/v2/Bridge/Routes/SingleRoute';
 
-import type { RootState } from 'store';
 import { routes } from '@wormhole-foundation/sdk';
 import { Box, CircularProgress, Skeleton } from '@mui/material';
 
@@ -40,20 +38,9 @@ const Routes = ({ ...props }: Props) => {
   const { classes } = useStyles();
   const [showAll, setShowAll] = useState(false);
 
-  const { amount } = useSelector((state: RootState) => state.transferInput);
-
-  const { sending: sendingWallet, receiving: receivingWallet } = useSelector(
-    (state: RootState) => state.wallet,
-  );
-
   const routes = useMemo(() => {
     return props.routes.filter((rs) => props.quotes[rs] !== undefined);
   }, [props.routes, props.quotes]);
-
-  const walletsConnected = useMemo(
-    () => !!sendingWallet.address && !!receivingWallet.address,
-    [sendingWallet.address, receivingWallet.address],
-  );
 
   const renderRoutes = useMemo(() => {
     if (showAll) {
@@ -103,7 +90,7 @@ const Routes = ({ ...props }: Props) => {
     );
   }, [routes, props.quotes]);
 
-  if ((walletsConnected && !(Number(amount) > 0)) || props.hasError) {
+  if (props.hasError) {
     return null;
   }
 

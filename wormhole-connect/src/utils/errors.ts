@@ -13,6 +13,7 @@ import {
   ERR_AMOUNT_TOO_LARGE,
 } from 'telemetry/types';
 import { InsufficientFundsForGasError } from 'sdklegacy';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 // TODO SDKV2
 // attempt to capture errors using regex
@@ -55,7 +56,7 @@ export function interpretTransferError(
       const assumedCircleLimit = 1_000_000;
       const { amount } = transferDetails;
       const limitString =
-        amount !== undefined && amount > assumedCircleLimit
+        amount !== undefined && sdkAmount.whole(amount) > assumedCircleLimit
           ? ` of 1,000,000`
           : '';
       uiErrorMessage = `Amount exceeds Circle limit${limitString}. Please reduce transfer amount.`;

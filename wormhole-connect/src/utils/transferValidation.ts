@@ -17,7 +17,7 @@ import { RelayState } from 'store/relay';
 import { walletAcceptedChains } from './wallet';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDebounce } from 'use-debounce';
-import { Chain } from '@wormhole-foundation/sdk';
+import { Chain, amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 export const validateFromChain = (chain: Chain | undefined): ValidationErr => {
   if (!chain) return 'Select a source chain';
@@ -90,16 +90,23 @@ export const validateDestToken = (
 };
 
 export const validateAmount = (
-  amount: string,
-  balance: string | null,
+  amount: sdkAmount.Amount | undefined,
+  balance: sdkAmount.Amount | null,
 ): ValidationErr => {
-  if (amount === '') return '';
-  const numAmount = Number.parseFloat(amount);
-  if (isNaN(numAmount)) return 'Amount must be a number';
-  if (numAmount <= 0) return 'Amount must be greater than 0';
+  if (!amount) return '';
+
+  // If user has selected chain, token, and has a balance entry, we can compare
+  // their amount input to their balance (using base units)
+  const amountBaseUnits = sdkAmount.units(amount);
+  if (amountBaseUnits === 0n) {
+    return 'Amount must be greater than 0';
+  }
+
   if (balance) {
-    const b = Number.parseFloat(balance.replaceAll(',', ''));
-    if (numAmount > b) return 'Amount exceeds available balance.';
+    const balanceBaseUnits = sdkAmount.units(balance);
+    if (amountBaseUnits > balanceBaseUnits) {
+      return 'Amount exceeds available balance';
+    }
   }
   return '';
 };
@@ -113,7 +120,7 @@ export const validateWallet = async (
 ): Promise<ValidationErr> => {
   if (!wallet.address) return 'Wallet not connected';
   try {
-    const isSanctioned = await checkAddressIsSanctioned(wallet.address);
+    const isSanctioned = checkAddressIsSanctioned(wallet.address);
     if (isSanctioned)
       return 'This address is sanctioned, bridging is not available';
   } catch (e) {
@@ -227,8 +234,7 @@ export const validate = async (
     transferInput.toChain &&
     transferInput.token &&
     transferInput.destToken &&
-    transferInput.amount &&
-    Number.parseFloat(transferInput.amount) >= 0;
+    transferInput.amount;
 
   if (!isCanceled()) {
     dispatch(
