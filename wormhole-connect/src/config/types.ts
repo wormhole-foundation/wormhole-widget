@@ -182,6 +182,7 @@ export interface ChainConfig extends BaseChainConfig {
   chainId: number | string;
   icon: Icon;
   maxBlockSearch: number;
+  symbol?: string;
 }
 
 export type ChainsConfig = {

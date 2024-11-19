@@ -48,14 +48,13 @@ const useStyles = makeStyles()((theme) => ({
   chainButton: {
     display: 'flex',
     flexDirection: 'column',
+    padding: '8px',
     border: '1px solid transparent',
     borderRadius: 8,
     '&.Mui-selected': {
       border: '1px solid',
       borderColor: theme.palette.primary.main,
     },
-    padding: '8px',
-    width: '72px',
   },
   chainItem: {
     display: 'flex',
@@ -107,7 +106,7 @@ const ChainList = (props: Props) => {
 
   const shortList = useMemo(() => {
     return (
-      <List component={Stack} direction="row" gap={1}>
+      <List component={Stack} direction="row">
         {topChains.map((chain: ChainConfig) => (
           <ListItemButton
             key={chain.key}
@@ -116,8 +115,13 @@ const ChainList = (props: Props) => {
             onClick={() => props.onChainSelect(chain.key)}
           >
             <TokenIcon icon={chain.icon} />
-            <Typography fontSize={12} marginTop="8px" whiteSpace="nowrap">
-              {chain.displayName}
+            <Typography
+              fontSize={12}
+              lineHeight="12px"
+              marginTop="8px"
+              whiteSpace="nowrap"
+            >
+              {chain.symbol}
             </Typography>
           </ListItemButton>
         ))}
@@ -129,11 +133,18 @@ const ChainList = (props: Props) => {
         >
           <AddIcon
             sx={{
-              width: '32px',
-              height: '32px',
+              width: '36px',
+              height: '36px',
             }}
           />
-          <Typography fontSize={12}>other</Typography>
+          <Typography
+            fontSize={12}
+            lineHeight="12px"
+            marginTop="8px"
+            whiteSpace="nowrap"
+          >
+            other
+          </Typography>
         </ListItemButton>
       </List>
     );
