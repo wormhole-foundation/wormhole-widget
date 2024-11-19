@@ -187,6 +187,8 @@ const SingleRoute = (props: Props) => {
       amount.truncate(props.destinationGasDrop, 6),
     );
 
+    const gasTokenPriceStr = gasTokenPrice ? ` (${gasTokenPrice})` : '';
+
     return (
       <Stack direction="row" justifyContent="space-between">
         <Typography color={theme.palette.text.secondary} fontSize={14}>
@@ -195,7 +197,7 @@ const SingleRoute = (props: Props) => {
         <Typography
           color={theme.palette.text.secondary}
           fontSize={14}
-        >{`${gasTokenAmount} ${gasTokenConfig.symbol} (${gasTokenPrice})`}</Typography>
+        >{`${gasTokenAmount} ${gasTokenConfig.symbol}${gasTokenPriceStr}`}</Typography>
       </Stack>
     );
   }, [destChain, props.destinationGasDrop]);
