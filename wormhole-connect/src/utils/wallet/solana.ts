@@ -226,17 +226,17 @@ async function createPriorityFeeInstructions(
       : connection.simulateTransaction(transaction));
 
     if (response.value.err) {
+      if (response.value.err === 'BlockhashNotFound') {
+        console.info('Blockhash not found during simulation. Trying again.');
+        sleep(1000);
+        continue simulationLoop;
+      }
+
       // In some cases which aren't deterministic, like a slippage error, we can retry the
       // simulation a few times to get a successful response.
       if (response.value.logs) {
         for (const line of response.value.logs) {
-          if (line.includes('BlockhashNotFound')) {
-            console.info(
-              'Blockhash not found during simulation. Trying again.',
-            );
-            sleep(1000);
-            continue simulationLoop;
-          } else if (line.includes('SlippageToleranceExceeded')) {
+          if (line.includes('SlippageToleranceExceeded')) {
             console.info('Slippage failure during simulation. Trying again.');
             sleep(1000);
             continue simulationLoop;
