@@ -28,7 +28,30 @@ import RouteOperator from 'routes/operator';
 import { UiConfig } from './ui';
 import { TransferInfo } from 'utils/sdkv2';
 
-export enum Icon {
+export enum ChainIcon {
+  'AVAX' = 1,
+  'BSC',
+  'CELO',
+  'ETH',
+  'FANTOM',
+  'POLYGON',
+  'SOLANA',
+  'GLMR',
+  'SUI',
+  'APT',
+  'BASE',
+  'ARBITRUM',
+  'OPTIMISM',
+  'KAIA',
+  'KLAY',
+  'SCROLL',
+  'BLAST',
+  'XLAYER',
+  'MANTLE',
+  'OSMO',
+}
+
+export enum TokenIcon {
   'AVAX' = 1,
   'BNB',
   'BSC',
@@ -163,7 +186,7 @@ export type TokenConfig = {
   key: string;
   symbol: string;
   nativeChain: Chain;
-  icon: Icon | string;
+  icon: TokenIcon | string;
   tokenId?: TokenId; // if no token id, it is the native token
   coinGeckoId: string;
   color?: string;
@@ -180,7 +203,7 @@ export interface ChainConfig extends BaseChainConfig {
   explorerName: string;
   gasToken: string;
   chainId: number | string;
-  icon: Icon;
+  icon: ChainIcon;
   maxBlockSearch: number;
   symbol?: string;
 }

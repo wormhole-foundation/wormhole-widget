@@ -1,11 +1,11 @@
-import { Icon, TokensConfig, TokenAddressesByChain } from '../types';
+import { TokenIcon, TokensConfig, TokenAddressesByChain } from '../types';
 
 export const DEVNET_TOKENS: TokensConfig = {
   ETH: {
     key: 'ETH',
     symbol: 'ETH',
     nativeChain: 'Ethereum',
-    icon: Icon.ETH,
+    icon: TokenIcon.ETH,
     coinGeckoId: 'ethereum',
     color: '#62688F',
     decimals: 18,
@@ -15,7 +15,7 @@ export const DEVNET_TOKENS: TokensConfig = {
     key: 'WETH',
     symbol: 'WETH',
     nativeChain: 'Ethereum',
-    icon: Icon.ETH,
+    icon: TokenIcon.ETH,
     tokenId: {
       chain: 'Ethereum',
       address: '0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E',
@@ -28,7 +28,7 @@ export const DEVNET_TOKENS: TokensConfig = {
     key: 'TKN',
     symbol: 'TKN',
     nativeChain: 'Ethereum',
-    icon: Icon.ETH,
+    icon: TokenIcon.ETH,
     tokenId: {
       chain: 'Ethereum',
       address: '0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A',

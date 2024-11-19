@@ -9,7 +9,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
-import TokenIcon from 'icons/TokenIcons';
+import ChainIcon from 'icons/ChainIcons';
 
 import type { ChainConfig } from 'config/types';
 import type { WalletData } from 'store/wallet';
@@ -114,7 +114,7 @@ const ChainList = (props: Props) => {
             className={classes.chainButton}
             onClick={() => props.onChainSelect(chain.key)}
           >
-            <TokenIcon icon={chain.icon} />
+            <ChainIcon icon={chain.icon} />
             <Typography
               fontSize={12}
               lineHeight="12px"
@@ -171,7 +171,7 @@ const ChainList = (props: Props) => {
             }}
           >
             <ListItemIcon sx={{ minWidth: 50 }}>
-              <TokenIcon icon={chain.icon} height={36} />
+              <ChainIcon icon={chain.icon} height={36} />
             </ListItemIcon>
             <Typography fontSize={16} fontWeight={500}>
               {chain.displayName}

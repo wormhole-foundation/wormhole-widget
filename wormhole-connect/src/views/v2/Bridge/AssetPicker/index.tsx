@@ -15,6 +15,7 @@ import DownIcon from '@mui/icons-material/ExpandMore';
 import UpIcon from '@mui/icons-material/ExpandLess';
 
 import config from 'config';
+import ChainIcon from 'icons/ChainIcons';
 import TokenIcon from 'icons/TokenIcons';
 
 import type { ChainConfig, TokenConfig } from 'config/types';
@@ -128,7 +129,7 @@ const AssetPicker = (props: Props) => {
           <>
             {chainConfig ? (
               <Box className={classes.chainBadge}>
-                <TokenIcon icon={chainConfig?.icon} height={18} />
+                <ChainIcon icon={chainConfig?.icon} height={18} />
               </Box>
             ) : null}
           </>

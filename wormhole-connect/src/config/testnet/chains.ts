@@ -1,5 +1,5 @@
 import { CONFIG } from 'sdklegacy';
-import { ChainsConfig, Icon } from '../types';
+import { ChainsConfig, ChainIcon } from '../types';
 
 const { chains } = CONFIG.TESTNET;
 
@@ -11,8 +11,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'BscScan',
     gasToken: 'BNB',
     chainId: 97,
-    icon: Icon.BSC,
+    icon: ChainIcon.BSC,
     maxBlockSearch: 2000,
+    symbol: 'BSC',
   },
   Avalanche: {
     ...chains.Avalanche!,
@@ -21,8 +22,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Avascan',
     gasToken: 'AVAX',
     chainId: 43113,
-    icon: Icon.AVAX,
+    icon: ChainIcon.AVAX,
     maxBlockSearch: 2000,
+    symbol: 'AVAX',
   },
   Fantom: {
     ...chains.Fantom!,
@@ -31,8 +33,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'FtmScan',
     gasToken: 'FTM',
     chainId: 4002,
-    icon: Icon.FANTOM,
+    icon: ChainIcon.FANTOM,
     maxBlockSearch: 2000,
+    symbol: 'FTM',
   },
   Celo: {
     ...chains.Celo!,
@@ -41,8 +44,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Celo Explorer',
     gasToken: 'CELO',
     chainId: 44787,
-    icon: Icon.CELO,
+    icon: ChainIcon.CELO,
     maxBlockSearch: 2000,
+    symbol: 'CELO',
   },
   Moonbeam: {
     ...chains.Moonbeam!,
@@ -51,8 +55,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Moonscan',
     gasToken: 'GLMR',
     chainId: 1287,
-    icon: Icon.GLMR,
+    icon: ChainIcon.GLMR,
     maxBlockSearch: 2000,
+    symbol: 'GLMR',
   },
   Solana: {
     ...chains.Solana!,
@@ -61,8 +66,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Solana Explorer',
     gasToken: 'SOL',
     chainId: 0,
-    icon: Icon.SOLANA,
+    icon: ChainIcon.SOLANA,
     maxBlockSearch: 2000,
+    symbol: 'SOL',
   },
   Sui: {
     ...chains.Sui!,
@@ -71,8 +77,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Suiscan',
     gasToken: 'SUI',
     chainId: 0,
-    icon: Icon.SUI,
+    icon: ChainIcon.SUI,
     maxBlockSearch: 0,
+    symbol: 'SUI',
   },
   Aptos: {
     ...chains.Aptos!,
@@ -81,8 +88,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Aptos Explorer',
     gasToken: 'APT',
     chainId: 0,
-    icon: Icon.APT,
+    icon: ChainIcon.APT,
     maxBlockSearch: 0,
+    symbol: 'APT',
   },
   Klaytn: {
     ...chains.Klaytn!,
@@ -91,8 +99,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Kaia Scope',
     gasToken: 'KLAY',
     chainId: 1001,
-    icon: Icon.KLAY,
+    icon: ChainIcon.KLAY,
     maxBlockSearch: 2000,
+    symbol: 'KLAY',
   },
   // TODO: SDKV2 - re-enable cosmos chains once cosmos gateway route is implemented
   //Sei: {
@@ -102,7 +111,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'Sei Explorer',
   //  gasToken: 'SEI',
   //  chainId: 0,
-  //  icon: Icon.SEI,
+  //  icon: ChainIcon.SEI,
   //  maxBlockSearch: 0,
   //},
   //Osmosis: {
@@ -112,7 +121,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'MintScan',
   //  gasToken: 'OSMO',
   //  chainId: 'osmo-test-5',
-  //  icon: Icon.OSMO,
+  //  icon: ChainIcon.OSMO,
   //  maxBlockSearch: 0,
   //},
   //Wormchain: {
@@ -122,7 +131,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: '',
   //  gasToken: 'WORM',
   //  chainId: 'wormchain-testnet-0',
-  //  icon: Icon.OSMO,
+  //  icon: ChainIcon.OSMO,
   //  maxBlockSearch: 0,
   //},
   //Cosmoshub: {
@@ -132,7 +141,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'MintScan',
   //  gasToken: 'ATOM',
   //  chainId: 'theta-testnet-001',
-  //  icon: Icon.ATOM,
+  //  icon: ChainIcon.ATOM,
   //  maxBlockSearch: 0,
   //},
   //Evmos: {
@@ -142,7 +151,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'MintScan',
   //  gasToken: 'EVMOS',
   //  chainId: 'evmos_9000-4',
-  //  icon: Icon.EVMOS,
+  //  icon: ChainIcon.EVMOS,
   //  maxBlockSearch: 0,
   //},
   //Kujira: {
@@ -152,7 +161,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'Kujira Finder',
   //  gasToken: 'KUJI',
   //  chainId: 'harpoon-4',
-  //  icon: Icon.KUJI,
+  //  icon: ChainIcon.KUJI,
   //  maxBlockSearch: 0,
   //},
   Sepolia: {
@@ -162,8 +171,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Etherscan',
     gasToken: 'ETHsepolia',
     chainId: 11155111,
-    icon: Icon.ETH,
+    icon: ChainIcon.ETH,
     maxBlockSearch: 2000,
+    symbol: 'ETH',
   },
   ArbitrumSepolia: {
     ...chains.ArbitrumSepolia!,
@@ -172,8 +182,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Etherscan',
     gasToken: 'ETHarbitrum_sepolia',
     chainId: 421614,
-    icon: Icon.ARBITRUM,
+    icon: ChainIcon.ARBITRUM,
     maxBlockSearch: 2000,
+    symbol: 'ARB',
   },
   BaseSepolia: {
     ...chains.BaseSepolia!,
@@ -182,8 +193,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Etherscan',
     gasToken: 'ETHbase_sepolia',
     chainId: 84532,
-    icon: Icon.BASE,
+    icon: ChainIcon.BASE,
     maxBlockSearch: 2000,
+    symbol: 'BASE',
   },
   OptimismSepolia: {
     ...chains.OptimismSepolia!,
@@ -192,8 +204,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Etherscan',
     gasToken: 'ETHoptimism_sepolia',
     chainId: 11155420,
-    icon: Icon.OPTIMISM,
+    icon: ChainIcon.OPTIMISM,
     maxBlockSearch: 2000,
+    symbol: 'OP',
   },
   //Injective: {
   //  ...chains.Injective!,
@@ -202,7 +215,7 @@ export const TESTNET_CHAINS: ChainsConfig = {
   //  explorerName: 'Injective Explorer',
   //  gasToken: 'INJ',
   //  chainId: 'injective-888',
-  //  icon: Icon.INJ,
+  //  icon: ChainIcon.INJ,
   //  maxBlockSearch: 0,
   //},
   Scroll: {
@@ -212,8 +225,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Scrollscan',
     gasToken: 'ETHscroll',
     chainId: 534351,
-    icon: Icon.SCROLL,
+    icon: ChainIcon.SCROLL,
     maxBlockSearch: 2000,
+    symbol: 'SCR',
   },
   Blast: {
     ...chains.Blast!,
@@ -222,8 +236,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Blastscan',
     gasToken: 'ETHblast',
     chainId: 168587773,
-    icon: Icon.BLAST,
+    icon: ChainIcon.BLAST,
     maxBlockSearch: 2000,
+    symbol: 'BLAST',
   },
   Xlayer: {
     ...chains.Xlayer!,
@@ -232,8 +247,9 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'OKX Explorer',
     gasToken: 'OKB',
     chainId: 195,
-    icon: Icon.XLAYER,
+    icon: ChainIcon.XLAYER,
     maxBlockSearch: 2000,
+    symbol: 'OKX',
   },
   Mantle: {
     ...chains.Mantle!,
@@ -242,7 +258,8 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'Mantle Explorer',
     gasToken: 'MNT',
     chainId: 5003,
-    icon: Icon.MANTLE,
+    icon: ChainIcon.MANTLE,
     maxBlockSearch: 2000,
+    symbol: 'MNT',
   },
 };
