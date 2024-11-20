@@ -24,9 +24,14 @@ export const getTxsFromLocalStorage = ():
         try {
           return JSON.parse(item);
         } catch (e: any) {
+          // We can get a SyntaxError from JSON.parse
+          // In that case we should debug log and remove the local storage entry completely,
+          // as we can't know which tx within entry causes the problem without parsing it.
           console.log(
             `Error while parsing localStorage item ${LOCAL_STORAGE_KEY}: ${e}`,
           );
+          // Remove item
+          ls.removeItem(LOCAL_STORAGE_KEY);
           return;
         }
       }
@@ -57,7 +62,17 @@ export const addTxToLocalStorage = (
   }
 
   // Update the list
-  ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newList, JSONReplacer));
+  try {
+    ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newList, JSONReplacer));
+  } catch (e: any) {
+    // We can get two different errors:
+    // 1- TypeError from JSON.stringify
+    // 2- DOMException from localStorage.setItem
+    // In each case, we should debug log and fail silently
+    console.log(
+      `Error while adding item to localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+    );
+  }
 };
 
 // Removes a transaction from localStorage
@@ -71,7 +86,17 @@ export const removeTxFromLocalStorage = (txHash: string) => {
     if (removeIndex > -1) {
       // remove the item and update localStorage
       items.splice(removeIndex, 1);
-      ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      try {
+        ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      } catch (e: any) {
+        // We can get two different errors:
+        // 1- TypeError from JSON.stringify
+        // 2- DOMException from localStorage.setItem
+        // In each case, we should debug log and fail silently
+        console.log(
+          `Error while removing item from localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+        );
+      }
     }
   }
 };
@@ -91,7 +116,17 @@ export const updateTxInLocalStorage = (
     if (idx > -1) {
       // Update item property and put back in local storage
       items[idx][key] = value;
-      ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      try {
+        ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      } catch (e: any) {
+        // We can get two different errors:
+        // 1- TypeError from JSON.stringify
+        // 2- DOMException from localStorage.setItem
+        // In each case, we should debug log and fail silently
+        console.log(
+          `Error while updating item in localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+        );
+      }
     }
   }
 };
