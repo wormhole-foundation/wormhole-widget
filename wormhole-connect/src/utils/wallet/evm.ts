@@ -7,6 +7,7 @@ import {
   InjectedWallet,
   InjectedWallets,
   WalletConnectWallet,
+  DEFAULT_CHAINS,
 } from '@xlabs-libs/wallet-aggregator-evm';
 
 import {
@@ -18,10 +19,49 @@ import { Network } from '@wormhole-foundation/sdk';
 import config from 'config';
 import { getBigInt } from 'ethers';
 
+type ChainRpcUrls = (typeof DEFAULT_CHAINS)[0]['rpcUrls']['default'];
+
+const getRpcForChain = (
+  wormholeChainName: string | undefined,
+  defaultRpc: ChainRpcUrls,
+) =>
+  wormholeChainName && wormholeChainName in config.rpcs
+    ? { ...defaultRpc, http: [config.rpcs[wormholeChainName]] }
+    : defaultRpc;
+/**
+ * Should be used to coalesce a wagmi chain name to a wormhole chain name.
+ * This is necessary because the wormhole chain names are different from the wagmi chain names.
+ *
+ * @param name a wagmi chain name
+ * @returns a wormhole chain name
+ */
+const coalesceWormholeChainName = (name: string) =>
+  ({
+    'BNB Smart Chain': 'Bsc',
+  }[name] || name);
+
+const CHAINS_CONFIG = DEFAULT_CHAINS.map((wagmiConfig) => ({
+  ...wagmiConfig,
+  rpcUrls: {
+    ...wagmiConfig.rpcUrls,
+    default: getRpcForChain(
+      coalesceWormholeChainName(wagmiConfig.name),
+      wagmiConfig.rpcUrls.default,
+    ),
+    public: getRpcForChain(
+      coalesceWormholeChainName(wagmiConfig.name),
+      wagmiConfig.rpcUrls.public,
+    ),
+  },
+}));
+
 const eip6963Wallets = Object.entries(Eip6963Wallets).reduce(
   (acc, [key, name]) => ({ [key]: new Eip6963Wallet(name), ...acc }),
   {},
 );
+
+// eslint-disable-next-line no-debugger
+debugger;
 
 export const wallets = {
   ...eip6963Wallets,
@@ -35,6 +75,7 @@ export const wallets = {
   ...(config.ui.walletConnectProjectId
     ? {
         walletConnect: new WalletConnectWallet({
+          chains: CHAINS_CONFIG,
           connectorOptions: {
             projectId: config.ui.walletConnectProjectId,
           },
