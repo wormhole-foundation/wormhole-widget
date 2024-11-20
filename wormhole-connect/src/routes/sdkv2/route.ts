@@ -439,6 +439,7 @@ export class SDKv2Route {
   }
 }
 
+// returns true if the token is supported by a NTT route, false otherwise
 const isNttSupportedToken = async (
   token: TokenIdV2,
   fromContext: ChainContext<Network, Chain>,
@@ -453,10 +454,8 @@ const isNttSupportedToken = async (
       route.rc.supportedDestinationTokens(token, fromContext, toContext),
     ]);
 
-    const isSourceTokenSupported = sourceTokens.some(
-      ({ chain, address }) =>
-        chain === token.chain &&
-        address.toString() === token.address.toString(),
+    const isSourceTokenSupported = sourceTokens.some((t) =>
+      isSameToken(t, token),
     );
 
     return isSourceTokenSupported && destTokens.length > 0;
