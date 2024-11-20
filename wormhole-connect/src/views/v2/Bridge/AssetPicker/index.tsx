@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { makeStyles } from 'tss-react/mui';
+import Box from '@mui/material/Box';
 import Badge from '@mui/material/Badge';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -24,7 +25,6 @@ import { isDisabledChain } from 'store/transferInput';
 import ChainList from './ChainList';
 import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
-import { Box } from '@mui/material';
 
 const useStyles = makeStyles()((theme: any) => ({
   container: {
@@ -56,11 +56,8 @@ const useStyles = makeStyles()((theme: any) => ({
     clickEvent: 'none',
   },
   chainBadge: {
-    padding: '2px',
-    background:
-      theme.palette.background.badge ?? theme.palette.background.default,
-    borderRadius: '6px',
     border: `2px solid ${theme.palette.modal.background}`,
+    borderRadius: '6px',
   },
 }));
 
