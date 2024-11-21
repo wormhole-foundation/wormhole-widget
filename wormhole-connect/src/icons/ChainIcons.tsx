@@ -64,7 +64,7 @@ const iconMap: { [key in ChainIcon]: React.JSX.Element } = {
   [ChainIcon.OSMO]: OSMO(),
 };
 
-function isBuiltinIcon(icon?: ChainIcon | string): icon is ChainIcon {
+function isBuiltinChainIcon(icon?: ChainIcon | string): icon is ChainIcon {
   return Object.values(ChainIcon).includes(icon as ChainIcon);
 }
 
@@ -73,14 +73,14 @@ type Props = {
   height?: number;
 };
 
-function TokenIcon(props: Props) {
+function ChainIconComponent(props: Props) {
   const size = props.height || 36;
   const { classes } = useStyles({ size });
 
   // Default, if icon is undefined
   let icon = noIcon;
 
-  if (isBuiltinIcon(props.icon)) {
+  if (isBuiltinChainIcon(props.icon)) {
     icon = iconMap[props.icon] || noIcon;
   } else if (typeof props.icon === 'string') {
     icon = <img className={classes.iconImage} src={props.icon} />;
@@ -89,4 +89,4 @@ function TokenIcon(props: Props) {
   return <div className={classes.container}>{icon}</div>;
 }
 
-export default TokenIcon;
+export default ChainIconComponent;

@@ -102,7 +102,7 @@ const iconMap: { [key in TokenIcon]: React.JSX.Element } = {
   ),
 };
 
-function isBuiltinIcon(icon?: TokenIcon | string): icon is TokenIcon {
+function isBuiltinTokenIcon(icon?: TokenIcon | string): icon is TokenIcon {
   return Object.values(TokenIcon).includes(icon as TokenIcon);
 }
 
@@ -118,7 +118,7 @@ function TokenIconComponent(props: Props) {
   // Default, if icon is undefined
   let icon = noIcon;
 
-  if (isBuiltinIcon(props.icon)) {
+  if (isBuiltinTokenIcon(props.icon)) {
     icon = iconMap[props.icon] || noIcon;
   } else if (typeof props.icon === 'string') {
     icon = <img className={classes.iconImage} src={props.icon} />;
