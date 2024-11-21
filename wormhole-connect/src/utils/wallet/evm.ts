@@ -60,9 +60,6 @@ const eip6963Wallets = Object.entries(Eip6963Wallets).reduce(
   {},
 );
 
-// eslint-disable-next-line no-debugger
-debugger;
-
 export const wallets = {
   ...eip6963Wallets,
   okxwallet: new Eip6963Wallet({
