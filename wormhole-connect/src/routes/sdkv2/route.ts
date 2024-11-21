@@ -90,6 +90,18 @@ export class SDKv2Route {
 
     if (!fromTokenIdV2 || !toTokenIdV2) return false;
 
+    // Do not allow tokens supported by NTT to be bridged via the token bridge
+    if (
+      this.IS_TOKEN_BRIDGE_ROUTE &&
+      (await isNttSupportedToken(
+        fromTokenIdV2,
+        fromContext.context,
+        toContext.context,
+      ))
+    ) {
+      return false;
+    }
+
     const fromTokenSupported = !!(
       await this.rc.supportedSourceTokens(fromContext.context)
     ).find((tokenId) => {
@@ -426,3 +438,33 @@ export class SDKv2Route {
     return false;
   }
 }
+
+// returns true if the token is supported by a NTT route, false otherwise
+const isNttSupportedToken = async (
+  token: TokenIdV2,
+  fromContext: ChainContext<Network, Chain>,
+  toContext: ChainContext<Network, Chain>,
+): Promise<boolean> => {
+  const checkRouteSupport = async (routeName: string): Promise<boolean> => {
+    const route: SDKv2Route | undefined = config.routes.get(routeName);
+    if (!route) return false;
+
+    const [sourceTokens, destTokens] = await Promise.all([
+      route.rc.supportedSourceTokens(fromContext),
+      route.rc.supportedDestinationTokens(token, fromContext, toContext),
+    ]);
+
+    const isSourceTokenSupported = sourceTokens.some((t) =>
+      isSameToken(t, token),
+    );
+
+    return isSourceTokenSupported && destTokens.length > 0;
+  };
+
+  const [isManualSupported, isAutomaticSupported] = await Promise.all([
+    checkRouteSupport('ManualNtt'),
+    checkRouteSupport('AutomaticNtt'),
+  ]);
+
+  return isManualSupported || isAutomaticSupported;
+};
