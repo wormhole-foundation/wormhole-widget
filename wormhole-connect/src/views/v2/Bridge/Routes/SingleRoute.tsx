@@ -161,7 +161,11 @@ const SingleRoute = (props: Props) => {
   }, [destToken, quote?.relayFee, tokenPrices]);
 
   const destinationGas = useMemo(() => {
-    if (!destChain || !props.destinationGasDrop) {
+    if (
+      !destChain ||
+      props.destinationGasDrop === undefined ||
+      amount.units(props.destinationGasDrop) === 0n
+    ) {
       return <></>;
     }
 
@@ -183,6 +187,8 @@ const SingleRoute = (props: Props) => {
       amount.truncate(props.destinationGasDrop, 6),
     );
 
+    const gasTokenPriceStr = gasTokenPrice ? ` (${gasTokenPrice})` : '';
+
     return (
       <Stack direction="row" justifyContent="space-between">
         <Typography color={theme.palette.text.secondary} fontSize={14}>
@@ -191,7 +197,7 @@ const SingleRoute = (props: Props) => {
         <Typography
           color={theme.palette.text.secondary}
           fontSize={14}
-        >{`${gasTokenAmount} ${gasTokenConfig.symbol} (${gasTokenPrice})`}</Typography>
+        >{`${gasTokenAmount} ${gasTokenConfig.symbol}${gasTokenPriceStr}`}</Typography>
       </Stack>
     );
   }, [destChain, props.destinationGasDrop]);
