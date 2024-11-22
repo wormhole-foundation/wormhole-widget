@@ -18,8 +18,12 @@ const getRpcForChain = (
   wormholeChainName: string,
   defaultRpc: ChainRpcUrls,
 ): ChainRpcUrls =>
-  wormholeChainName in config.rpcs && isChainResourceKey(wormholeChainName)
-    ? { ...defaultRpc, http: [config.rpcs[wormholeChainName]!] }
+  wormholeChainName in config.rpcs &&
+  isChainResourceKey(wormholeChainName) &&
+  config.rpcs[wormholeChainName] !== null &&
+  config.rpcs[wormholeChainName] !== undefined &&
+  config.rpcs[wormholeChainName] !== ''
+    ? { ...defaultRpc, http: [config.rpcs[wormholeChainName]] }
     : defaultRpc;
 
 /**
