@@ -219,7 +219,11 @@ const TransactionDetails = () => {
   }, [relayerFee, routeName, tokenPrices]);
 
   const destinationGas = useMemo(() => {
-    if (!receivedTokenKey || !receiveNativeAmount) {
+    if (
+      !receivedTokenKey ||
+      !receiveNativeAmount ||
+      sdkAmount.units(receiveNativeAmount) === 0n
+    ) {
       return <></>;
     }
 
