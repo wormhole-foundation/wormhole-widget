@@ -37,20 +37,7 @@ const getRpcForChain = (
  */
 const coalesceWormholeChainName = (name: string) =>
   ({
-    Ethereum: 'ethereum',
-    'BNB Smart Chain': 'bsc',
-    Polygon: 'polygon',
-    Avalanche: 'avalanche',
-    Fantom: 'fantom',
-    Celo: 'celo',
-    Moonbeam: 'moonbeam',
-    Arbitrum: 'arbitrum',
-    Optimism: 'optimism',
-    Base: 'base',
-    Scroll: 'scroll',
-    Mantle: 'mantle',
-    XLayer: 'xlayer',
-    Kujira: 'kujira',
+    'bnb smart chain': 'bsc',
   }[name] || name);
 
 const WAGMI_CONFIG_FOR_CHAINS = DEFAULT_CHAINS.map((wagmiConfig) => ({
@@ -58,11 +45,11 @@ const WAGMI_CONFIG_FOR_CHAINS = DEFAULT_CHAINS.map((wagmiConfig) => ({
   rpcUrls: {
     ...wagmiConfig.rpcUrls,
     default: getRpcForChain(
-      coalesceWormholeChainName(wagmiConfig.name),
+      coalesceWormholeChainName(wagmiConfig.name.toLowerCase()),
       wagmiConfig.rpcUrls.default,
     ),
     public: getRpcForChain(
-      coalesceWormholeChainName(wagmiConfig.name),
+      coalesceWormholeChainName(wagmiConfig.name.toLowerCase()),
       wagmiConfig.rpcUrls.public,
     ),
   },
