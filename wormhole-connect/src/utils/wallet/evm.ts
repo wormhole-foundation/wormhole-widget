@@ -23,7 +23,7 @@ const getRpcForChain = (
   config.rpcs[wormholeChainName] !== null &&
   config.rpcs[wormholeChainName] !== undefined &&
   config.rpcs[wormholeChainName] !== ''
-    ? { ...defaultRpc, http: [config.rpcs[wormholeChainName]] }
+    ? { ...defaultRpc, http: [config.rpcs[wormholeChainName]!] }
     : defaultRpc;
 
 /**
