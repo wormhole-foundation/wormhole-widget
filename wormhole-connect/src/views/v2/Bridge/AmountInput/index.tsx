@@ -127,6 +127,14 @@ const AmountInput = (props: Props) => {
     props.supportedSourceTokens || [],
   );
 
+  // Clear the amount input value if the amount is reset outside of this component
+  // This can happen if user swaps selected source and destination assets
+  useEffect(() => {
+    if (amountInput && !amount) {
+      setAmountInput('');
+    }
+  }, [amount, amountInput]);
+
   const tokenBalance = useMemo(
     () => balances?.[sourceToken]?.balance || null,
     [balances, sourceToken],

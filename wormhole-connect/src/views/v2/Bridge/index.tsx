@@ -421,26 +421,30 @@ const Bridge = () => {
 
   const hasError = !!amountValidation.error;
 
-  const showReviewTransactionButton =
-    sourceChain &&
-    sourceToken &&
-    destChain &&
-    destToken &&
-    sendingWallet.address &&
-    receivingWallet.address &&
-    amount &&
-    !hasError;
-
   const hasEnteredAmount = amount && sdkAmount.whole(amount) > 0;
+
+  const hasConnectedWallets = sendingWallet.address && receivingWallet.address;
+
+  const showRoutes = hasConnectedWallets && hasEnteredAmount && !hasError;
+
+  const reviewTransactionDisabled =
+    !sourceChain ||
+    !sourceToken ||
+    !destChain ||
+    !destToken ||
+    !hasConnectedWallets ||
+    !selectedRoute ||
+    !isValid ||
+    isFetchingQuotes ||
+    !hasEnteredAmount ||
+    hasError;
 
   // Review transaction button is shown only when everything is ready
   const reviewTransactionButton = (
     <Button
       variant="primary"
       className={classes.reviewTransaction}
-      disabled={
-        !isValid || isFetchingQuotes || !selectedRoute || !hasEnteredAmount
-      }
+      disabled={reviewTransactionDisabled}
       onClick={() => {
         dispatch(setTransferRoute(selectedRoute));
         setWillReviewTransaction(true);
@@ -452,13 +456,18 @@ const Bridge = () => {
     </Button>
   );
 
-  const reviewButtonTooltip = !hasEnteredAmount
-    ? 'Please enter an amount'
-    : isFetchingQuotes
-    ? 'Loading quotes...'
-    : !selectedRoute
-    ? 'Please select a quote'
-    : '';
+  const reviewButtonTooltip =
+    !sourceChain || !sourceToken
+      ? 'Please select a source asset'
+      : !destChain || !destToken
+      ? 'Please select a destination asset'
+      : !hasEnteredAmount
+      ? 'Please enter an amount'
+      : isFetchingQuotes
+      ? 'Loading quotes...'
+      : !selectedRoute
+      ? 'Please select a quote'
+      : '';
 
   if (willReviewTransaction) {
     return (
@@ -482,16 +491,18 @@ const Bridge = () => {
         error={amountValidation.error}
         warning={amountValidation.warning}
       />
-      <Routes
-        routes={sortedRoutes}
-        selectedRoute={selectedRoute}
-        onRouteChange={setSelectedRoute}
-        quotes={quotesMap}
-        isLoading={isFetchingQuotes || isFetchingBalances}
-        hasError={hasError}
-      />
+      {showRoutes && (
+        <Routes
+          routes={sortedRoutes}
+          selectedRoute={selectedRoute}
+          onRouteChange={setSelectedRoute}
+          quotes={quotesMap}
+          isLoading={isFetchingQuotes || isFetchingBalances}
+          hasError={hasError}
+        />
+      )}
       <span className={classes.ctaContainer}>
-        {showReviewTransactionButton ? (
+        {hasConnectedWallets ? (
           <Tooltip title={reviewButtonTooltip}>
             <span>{reviewTransactionButton}</span>
           </Tooltip>
