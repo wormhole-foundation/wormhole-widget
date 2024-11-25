@@ -17,9 +17,11 @@ export interface WalletData {
 export type OnConnectCallback = (wallet: DynamicWallet) => void
 
 export const useDynamicWalletOptions = () => {
+    const { sdkHasLoaded } = useDynamicContext();
     const { walletOptions, selectWalletOption }  = useWalletOptions()
 
-    const getWalletOptions = (chain: WormholeChain): WalletData[] => {
+    const getWalletOptions = React.useCallback((chain: WormholeChain): WalletData[] => {
+        if (!sdkHasLoaded) return []
         // FIXME: This wont work, we need to wait for dynamic team for the wallet chain filter feature
         // const dynamicChain: Chain = toDynamicChain(chain)
         return walletOptions.map((a) => ({
@@ -30,7 +32,7 @@ export const useDynamicWalletOptions = () => {
             type: Context.ETH,
             walletId: a.key,
         }))
-    }
+    }, [walletOptions, selectWalletOption, sdkHasLoaded])
 
     return {
         getWalletOptions,

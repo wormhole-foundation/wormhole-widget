@@ -91,7 +91,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 
         await createConnectedWallet(walletInfo.wallet as any)
         await connectWallet(walletConnection.nextTypeToConnect)
-    }, [createConnectedWallet])
+    }, [createConnectedWallet, selectDynamicWalletOption])
 
     const getWalletOptions = React.useCallback(async (chain: ChainConfig | undefined) => {
         if (chain && isChain(chain.key) && isChainSupportedByDynamicWallet(chain.key)) {

@@ -79,8 +79,8 @@ export const toConnectedWallet = (wallet: DynamicWallet): ConnectedWallet => {
                     }
                 },
                 getSigner: async () => {
-                    // @ts-expect-error FIXME: Check why this is giving issues
-                    return await getSigner(wallet)
+                    // TODO: Test this
+                    return await getSigner(wallet as any)
                 },
                 getWallet: () => wallet,
                 getNetworkInfo: async () => {
