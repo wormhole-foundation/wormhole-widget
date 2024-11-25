@@ -31,7 +31,7 @@ import PoweredByIcon from 'icons/PoweredBy';
 import { SDKv2Signer } from 'routes/sdkv2/signer';
 import { setRoute } from 'store/router';
 import { useUSDamountGetter } from 'hooks/useUSDamountGetter';
-import { useWalletManager } from 'utils/wallet/wallet-manager';
+import { useWalletManager } from 'contexts/WalletManager';
 import { interpretTransferError } from 'utils/errors';
 import {
   removeTxFromLocalStorage,
@@ -44,8 +44,6 @@ import {
 } from 'utils/transferValidation';
 import {
   TransferWallet,
-  registerWalletSigner,
-  switchChain,
 } from 'utils/wallet';
 import TransactionDetails from 'views/v2/Redeem/TransactionDetails';
 import { useConnectToLastUsedWallet } from 'utils/wallet';
@@ -144,7 +142,7 @@ const Redeem = () => {
   const [transferSuccessEventFired, setTransferSuccessEventFired] =
     useState(false);
   const [etaExpired, setEtaExpired] = useState(false);
-  const { connectWallet } = useWalletManager()
+  const { connectWallet, getConnectedWallet, switchChain, registerWalletSigner } = useWalletManager()
 
   const routeContext = React.useContext(RouteContext);
 
@@ -737,7 +735,7 @@ const Redeem = () => {
         toChain,
         receivingWallet.address,
         {},
-        TransferWallet.RECEIVING,
+        getConnectedWallet(TransferWallet.RECEIVING),
       );
 
       const finishPromise = (() => {

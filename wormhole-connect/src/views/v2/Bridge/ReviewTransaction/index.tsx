@@ -28,11 +28,7 @@ import { setAmount, setIsTransactionInProgress } from 'store/transferInput';
 import { getTokenDecimals, getWrappedToken, getWrappedTokenId } from 'utils';
 import { interpretTransferError } from 'utils/errors';
 import { validate, isTransferValid } from 'utils/transferValidation';
-import {
-  registerWalletSigner,
-  switchChain,
-  TransferWallet,
-} from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
 import GasSlider from 'views/v2/Bridge/ReviewTransaction/GasSlider';
 import SingleRoute from 'views/v2/Bridge/Routes/SingleRoute';
 
@@ -44,6 +40,7 @@ import { toDecimals } from 'utils/balance';
 import { useUSDamountGetter } from 'hooks/useUSDamountGetter';
 import SendError from './SendError';
 import { ERR_USER_REJECTED } from 'telemetry/types';
+import { useWalletManager } from 'contexts/WalletManager';
 
 const useStyles = makeStyles()((theme) => ({
   container: {
@@ -79,6 +76,8 @@ const ReviewTransaction = (props: Props) => {
   );
 
   const routeContext = useContext(RouteContext);
+
+  const { getConnectedWallet, switchChain, registerWalletSigner } = useWalletManager()
 
   const transferInput = useSelector((state: RootState) => state.transferInput);
 
@@ -198,6 +197,8 @@ const ReviewTransaction = (props: Props) => {
         details: transferDetails,
       });
 
+      const sendingWallet = getConnectedWallet(TransferWallet.SENDING);
+
       const [sdkRoute, receipt] = await config.routes
         .get(route)
         .send(
@@ -208,6 +209,7 @@ const ReviewTransaction = (props: Props) => {
           destChain,
           receivingWallet.address,
           destToken,
+          sendingWallet,
           { nativeGas: toNativeToken },
         );
 

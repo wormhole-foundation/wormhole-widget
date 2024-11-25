@@ -10,7 +10,7 @@ import Button from 'components/v2/Button';
 import { RootState } from 'store';
 import { displayWalletAddress } from 'utils';
 import { TransferWallet } from 'utils/wallet';
-import { useWalletManager } from 'utils/wallet/wallet-manager';
+import { useWalletManager } from 'contexts/WalletManager';
 
 import { TransferSide } from 'config/types';
 

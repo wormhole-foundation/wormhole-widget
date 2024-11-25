@@ -1,17 +1,15 @@
 import { Context } from 'sdklegacy';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-  disconnect,
-  swapWalletConnections,
-  TransferWallet,
-} from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
+
+export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
 
 export type WalletData = {
   type: Context | undefined;
   address: string;
   currentAddress: string;
   error: string;
-  icon?: string; // the wallet's icon encoded as a base64 string
+  icon?: IconType;
   name: string;
 };
 
@@ -37,7 +35,7 @@ const initialState: WalletState = {
 export type ConnectPayload = {
   address: string;
   type: Context;
-  icon?: string;
+  icon?: IconType;
   name: string;
 };
 
@@ -77,7 +75,7 @@ export const walletSlice = createSlice({
       state: WalletState,
       { payload }: PayloadAction<TransferWallet>,
     ) => {
-      disconnect(payload);
+      // disconnect(payload);
       state[payload] = NO_WALLET;
     },
     setWalletError: (
@@ -105,7 +103,6 @@ export const walletSlice = createSlice({
       const tmp = state.sending;
       state.sending = state.receiving;
       state.receiving = tmp;
-      swapWalletConnections();
     },
   },
 });

@@ -13,7 +13,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { WormholeConnectConfig } from './config/types';
 import { WormholeConnectTheme } from 'theme';
 import { RouteProvider } from './contexts/RouteContext';
-import { WalletManagerProvider } from 'utils/wallet/wallet-manager';
+import { WalletManagerProvider } from 'contexts/WalletManager';
 
 export interface WormholeConnectProps {
   // theme can be updated at any time to change the colors of Connect

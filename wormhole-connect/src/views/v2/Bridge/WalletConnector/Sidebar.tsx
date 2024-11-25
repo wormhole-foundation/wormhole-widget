@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { makeStyles } from 'tss-react/mui';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import CircularProgress from '@mui/material/CircularProgress';
 import Drawer from '@mui/material/Drawer';
@@ -18,11 +18,11 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import config from 'config';
 import { RootState } from 'store';
-import { TransferWallet, WalletData, connectWallet } from 'utils/wallet';
+import { TransferWallet, WalletData } from 'utils/wallet';
+import { Chain } from '@wormhole-foundation/sdk';
 
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
-import WalletIcon from 'icons/WalletIcons';
 
 const useStyles = makeStyles()((theme) => ({
   drawer: {
@@ -52,13 +52,13 @@ const useStyles = makeStyles()((theme) => ({
 type Props = {
   type: TransferWallet;
   open: boolean;
-  onClose?: () => any;
+  onClose: () => any;
+  onConnectWallet: (newWallet: WalletData, type: TransferWallet, chain: Chain) => void;
 };
 
 // Renders the sidebar on the right-side to display the list of available wallets
 // for the selected source or destination chain.
 const WalletSidebar = (props: Props) => {
-  const dispatch = useDispatch();
   const { classes } = useStyles();
 
   const { fromChain: sourceChain, toChain: destChain } = useSelector(
@@ -89,7 +89,7 @@ const WalletSidebar = (props: Props) => {
       }
 
       props.onClose?.();
-      await connectWallet(props.type, selectedChain, walletInfo, dispatch);
+      await props.onConnectWallet(walletInfo, props.type, selectedChain);
     },
     [props.type, props.onClose, selectedChain],
   );
@@ -105,7 +105,6 @@ const WalletSidebar = (props: Props) => {
               criteria.toLowerCase().includes(search.toLowerCase()),
             ),
           );
-
       return (
         <>
           {!walletsFiltered.length ? (
@@ -113,30 +112,33 @@ const WalletSidebar = (props: Props) => {
               <Typography>No results</Typography>
             </ListItem>
           ) : (
-            walletsFiltered.map((wallet) => (
-              <ListItemButton
-                key={wallet.name}
-                dense
-                sx={{ display: 'flex', flexDirection: 'row' }}
-                onClick={() =>
-                  wallet.isReady
-                    ? connect(wallet)
-                    : window.open(wallet.wallet.getUrl())
-                }
-              >
-                <ListItemIcon>
-                  <WalletIcon name={wallet.name} icon={wallet.icon} />
-                </ListItemIcon>
-                <Typography component="div" fontSize={14}>
-                  <div className={`${!wallet.isReady && classes.notInstalled}`}>
-                    {!wallet.isReady && 'Install'} {wallet.name}
-                  </div>
-                  <div className={classes.context}>
-                    {wallet.type.toUpperCase()}
-                  </div>
-                </Typography>
-              </ListItemButton>
-            ))
+            walletsFiltered.map((wallet, index) => {
+              const WalletIcon = wallet.icon
+              return (
+                <ListItemButton
+                  key={wallet.name + index.toString()}
+                  dense
+                  sx={{ display: 'flex', flexDirection: 'row' }}
+                  onClick={() =>
+                    wallet.isReady
+                      ? connect(wallet)
+                      : window.open((wallet as any).wallet.getUrl())
+                  }
+                >
+                  <ListItemIcon>
+                    <WalletIcon size={32}/>
+                  </ListItemIcon>
+                  <Typography component="div" fontSize={14}>
+                    <div className={`${!wallet.isReady && classes.notInstalled}`}>
+                      {!wallet.isReady && 'Install'} {wallet.name}
+                    </div>
+                    <div className={classes.context}>
+                      {wallet.type.toUpperCase()}
+                    </div>
+                  </Typography>
+                </ListItemButton>
+              )
+            })
           )}
         </>
       );
