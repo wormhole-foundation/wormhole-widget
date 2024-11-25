@@ -6,19 +6,11 @@ import { Chain } from '@wormhole-foundation/sdk';
 import config from 'config';
 import { WalletData, getWalletOptions } from 'utils/wallet';
 
-type GetWalletsLoading = {
-  state: 'loading';
+type walletOptions = {
+  state: 'result' | 'loading' | 'error';
+  options?: WalletData[];
+  error?: string;
 };
-type GetWalletsError = {
-  state: 'error';
-  error: string;
-};
-type GetWalletsResult = {
-  state: 'result';
-  options: WalletData[];
-};
-
-type GetWallets = GetWalletsLoading | GetWalletsError | GetWalletsResult;
 
 type Props = {
   chain: Chain | undefined;
@@ -26,7 +18,7 @@ type Props = {
 };
 
 type ReturnProps = {
-  walletOptionsResult: GetWallets;
+  walletOptionsResult: walletOptions;
 };
 
 const FAILED_TO_LOAD_ERR =
@@ -35,9 +27,11 @@ const FAILED_TO_LOAD_ERR =
 export const useAvailableWallets = (props: Props): ReturnProps => {
   const { chain, supportedChains } = props;
 
-  const [walletOptionsResult, setWalletOptionsResult] = useState<GetWallets>({
-    state: 'loading',
-  });
+  const [walletOptionsResult, setWalletOptionsResult] = useState<walletOptions>(
+    {
+      state: 'loading',
+    },
+  );
 
   useEffect(() => {
     let cancelled = false;

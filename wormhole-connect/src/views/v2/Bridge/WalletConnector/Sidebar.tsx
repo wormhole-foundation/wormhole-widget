@@ -25,11 +25,13 @@ import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
 
 const useStyles = makeStyles()((theme) => ({
+  listButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    padding: '12px 16px',
+  },
   drawer: {
     width: '360px',
-  },
-  context: {
-    opacity: 0.6,
   },
   notInstalled: {
     opacity: 0.6,
@@ -91,7 +93,7 @@ const WalletSidebar = (props: Props) => {
       props.onClose?.();
       await connectWallet(props.type, selectedChain, walletInfo, dispatch);
     },
-    [props.type, props.onClose, selectedChain],
+    [selectedChain, props, dispatch],
   );
 
   const renderWalletOptions = useCallback(
@@ -116,8 +118,8 @@ const WalletSidebar = (props: Props) => {
             walletsFiltered.map((wallet) => (
               <ListItemButton
                 key={wallet.name}
+                className={classes.listButton}
                 dense
-                sx={{ display: 'flex', flexDirection: 'row' }}
                 onClick={() =>
                   wallet.isReady
                     ? connect(wallet)
@@ -131,9 +133,6 @@ const WalletSidebar = (props: Props) => {
                   <div className={`${!wallet.isReady && classes.notInstalled}`}>
                     {!wallet.isReady && 'Install'} {wallet.name}
                   </div>
-                  <div className={classes.context}>
-                    {wallet.type.toUpperCase()}
-                  </div>
                 </Typography>
               </ListItemButton>
             ))
@@ -141,7 +140,7 @@ const WalletSidebar = (props: Props) => {
         </>
       );
     },
-    [connect, search],
+    [classes.listButton, classes.notInstalled, connect, search],
   );
 
   const sidebarContent = useMemo(() => {
@@ -191,7 +190,16 @@ const WalletSidebar = (props: Props) => {
         // TODO: Do we ever get to this case? If so, what should be the UI?
         return <></>;
     }
-  }, [walletOptionsResult, renderWalletOptions]);
+  }, [
+    walletOptionsResult.state,
+    walletOptionsResult.error,
+    walletOptionsResult.options,
+    classes.title,
+    classes.smOnly,
+    search,
+    props.onClose,
+    renderWalletOptions,
+  ]);
 
   return (
     <Drawer
