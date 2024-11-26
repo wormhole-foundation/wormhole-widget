@@ -1,5 +1,8 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 const WORK_ROOT = process.env['WORK_ROOT'];
 
@@ -31,53 +34,72 @@ for (let packageName in thirdPartyPkgs) {
   sdkPackages[packageName] = path.join(WORK_ROOT, packageDir);
 }
 
-const { execSync } = require('child_process');
-
 // This script builds, packs, and installs sdkv2 from a local directory
+async function main() {
+  const sdkPackageJsonPath = path.join(SDK_PATH, './package.json');
 
-const sdkPackageJsonPath = path.join(SDK_PATH, './package.json');
+  // Get SDKv2 version
+  const { workspaces } = JSON.parse(
+    await fs.readFile(sdkPackageJsonPath, 'utf8'),
+  );
 
-// Get SDKv2 version
-const { version, workspaces } = JSON.parse(
-  fs.readFileSync(sdkPackageJsonPath, 'utf8'),
-);
+  // Load all workspace package.json files in parallel
+  const workspacePromises = workspaces
+    .filter((workspace) => !workspace.includes('examples'))
+    .map(async (workspace) => {
+      const workspacePackageJson = path.join(
+        SDK_PATH,
+        workspace,
+        'package.json',
+      );
+      const { name } = JSON.parse(
+        await fs.readFile(workspacePackageJson, 'utf8'),
+      );
+      return { name, path: path.join(SDK_PATH, workspace) };
+    });
 
-for (const workspace of workspaces) {
-  if (workspace.includes('examples')) continue;
-  const workspacePackageJson = path.join(SDK_PATH, workspace, 'package.json');
-  const { name } = JSON.parse(fs.readFileSync(workspacePackageJson));
-  sdkPackages[name] = path.join(SDK_PATH, workspace);
+  const workspaceResults = await Promise.all(workspacePromises);
+  workspaceResults.forEach(({ name, path }) => {
+    sdkPackages[name] = path;
+  });
+
+  const validPackages = Object.entries(sdkPackages).filter(
+    ([name]) => !name.includes('examples'),
+  );
+
+  const total = validPackages.length * 2;
+  let progress = 0;
+
+  // Run first round of npm links concurrently
+  const firstLinkPromises = validPackages.map(async ([_, packagePath]) => {
+    await execAsync('npm link', { cwd: packagePath });
+    progress += 1;
+    progressBar(progress, total);
+  });
+
+  await Promise.all(firstLinkPromises);
+
+  // Run second round of npm links concurrently
+  const secondLinkPromises = validPackages.map(async ([_, packagePath]) => {
+    await linkLocalSdkPackages(packagePath);
+    progress += 1;
+    progressBar(progress, total);
+  });
+
+  await Promise.all(secondLinkPromises);
+
+  // Final link
+  await execAsync(`npm link ${Object.keys(sdkPackages).join(' ')}`, {
+    cwd: path.join(__dirname, '../'),
+  });
+
+  console.log('\nLinking complete!');
 }
 
-const total = Object.keys(sdkPackages).length * 2;
-let progress = 0;
-
-for (const name in sdkPackages) {
-  if (name.includes('examples')) {
-    continue;
-  }
-  execSync('npm link', { cwd: sdkPackages[name] });
-  progress += 1;
-  progressBar(progress, total);
-}
-
-for (const name in sdkPackages) {
-  if (name.includes('examples')) {
-    continue;
-  }
-  linkLocalSdkPackages(sdkPackages[name]);
-  progress += 1;
-  progressBar(progress, total);
-}
-
-execSync(`npm link ${Object.keys(sdkPackages).join(' ')}`, {
-  cwd: path.join(__dirname, '../'),
-});
-
-function linkLocalSdkPackages(dir) {
-  let keys = Object.keys(sdkPackages);
+async function linkLocalSdkPackages(dir) {
+  const keys = Object.keys(sdkPackages);
   if (keys.length === 0) return;
-  execSync(`npm link ${keys.join(' ')}`, { cwd: dir });
+  await execAsync(`npm link --force ${keys.join(' ')}`, { cwd: dir });
 }
 
 function progressBar(completed, total) {
@@ -87,3 +109,6 @@ function progressBar(completed, total) {
   const bar = '░'.repeat(filledLength) + '-'.repeat(barLength - filledLength);
   process.stdout.write(`\rLinking... [${bar}] ${percentage}%`);
 }
+
+// Run the main function
+main().catch(console.error);
