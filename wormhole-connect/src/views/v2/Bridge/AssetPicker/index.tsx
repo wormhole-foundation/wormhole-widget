@@ -56,8 +56,8 @@ const useStyles = makeStyles()((theme: any) => ({
     clickEvent: 'none',
   },
   chainBadge: {
-    border: `2px solid ${theme.palette.modal.background}`,
-    borderRadius: '6px',
+    border: `1.5px solid ${theme.palette.modal.background}`,
+    borderRadius: '4px',
   },
 }));
 
@@ -123,23 +123,19 @@ const AssetPicker = (props: Props) => {
     return (
       <Badge
         badgeContent={
-          <>
-            {chainConfig ? (
-              <Box className={classes.chainBadge}>
-                <ChainIcon icon={chainConfig?.icon} height={18} />
-              </Box>
-            ) : null}
-          </>
+          <Box className={classes.chainBadge}>
+            <ChainIcon icon={chainConfig?.icon} height={13} />
+          </Box>
         }
         sx={{
           marginRight: '8px',
           '& .MuiBadge-badge': {
             right: 2,
-            top: 44,
+            top: 32,
           },
         }}
       >
-        <TokenIcon icon={tokenConfig?.icon} height={48} />
+        <TokenIcon icon={tokenConfig?.icon} height={36} />
       </Badge>
     );
   }, [chainConfig, classes.chainBadge, tokenConfig?.icon]);

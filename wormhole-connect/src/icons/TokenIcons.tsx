@@ -23,7 +23,7 @@ import BASE from './Tokens/BASE';
 import POLY from './Tokens/POLY';
 import BSC from './Tokens/BSC';
 import USDC from './Tokens/USDC';
-import noIcon from './Tokens/noIcon';
+import emptyToken from './Tokens/empty';
 import ARBITRUM from './Tokens/ARBITRUM';
 import OPTIMISM from './Tokens/OPTIMISM';
 import OSMO from './Tokens/OSMO';
@@ -116,10 +116,10 @@ function TokenIconComponent(props: Props) {
   const { classes } = useStyles({ size });
 
   // Default, if icon is undefined
-  let icon = noIcon;
+  let icon = emptyToken;
 
   if (isBuiltinTokenIcon(props.icon)) {
-    icon = iconMap[props.icon] || noIcon;
+    icon = iconMap[props.icon] || emptyToken;
   } else if (typeof props.icon === 'string') {
     icon = <img className={classes.iconImage} src={props.icon} />;
   }

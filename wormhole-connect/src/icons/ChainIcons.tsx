@@ -14,7 +14,7 @@ import SUI from './Chains/SUI';
 import BASE from './Chains/BASE';
 import POLY from './Chains/POLY';
 import BSC from './Chains/BSC';
-import noIcon from './Chains/noIcon';
+import emptyChain from './Chains/empty';
 import ARBITRUM from './Chains/ARBITRUM';
 import OPTIMISM from './Chains/OPTIMISM';
 import KLAY from './Chains/KLAY';
@@ -78,10 +78,10 @@ function ChainIconComponent(props: Props) {
   const { classes } = useStyles({ size });
 
   // Default, if icon is undefined
-  let icon = noIcon;
+  let icon = emptyChain;
 
   if (isBuiltinChainIcon(props.icon)) {
-    icon = iconMap[props.icon] || noIcon;
+    icon = iconMap[props.icon] || emptyChain;
   } else if (typeof props.icon === 'string') {
     icon = <img className={classes.iconImage} src={props.icon} />;
   }
