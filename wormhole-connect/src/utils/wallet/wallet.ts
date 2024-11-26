@@ -1,11 +1,14 @@
 import { Wallet as WA_Wallet } from '@xlabs-libs/wallet-aggregator-core';
 import { ethers } from 'ethers';
 import { DynamicWallet, isDynamicWallet, toConnectedWallet as toConnectedDynamicWallet } from 'utils/dynamic-wallet/utils';
+import { IconType } from '.';
 
 
 export type Wallet = WA_Wallet | DynamicWallet
 
 export interface ConnectedWallet {
+  address: string
+  icon: IconType
   disconnect: () => void
   getSigner?: () => Promise<ethers.Signer>
   getWallet: () => Wallet

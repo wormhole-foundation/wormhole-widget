@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import List from '@mui/material/List';
@@ -14,7 +14,6 @@ import {
 } from 'material-ui-popup-state/hooks';
 
 import { RootState } from 'store';
-import { disconnectWallet as disconnectFromStore } from 'store/wallet';
 import { useWalletManager } from 'contexts/WalletManager';
 import { TransferWallet } from 'utils/wallet';
 import { copyTextToClipboard, displayWalletAddress } from 'utils';
@@ -71,11 +70,12 @@ const COPY_MESSAGE_TIMOUT = 1000;
 
 // Renders the connected state for a wallet given the type (sending | receiving)
 const ConnectedWallet = (props: Props) => {
-  const dispatch = useDispatch();
+  const { getConnectedWallet, disconnectWallet: disconnectFromStore } = useWalletManager();
 
   const { classes } = useStyles();
 
   const wallet = useSelector((state: RootState) => state.wallet[props.type]);
+  const connectedWallet = getConnectedWallet(props.type);
 
   const { connectWallet: _connectWallet } = useWalletManager();
   const [isCopied, setIsCopied] = useState(false);
@@ -96,10 +96,10 @@ const ConnectedWallet = (props: Props) => {
     setIsCopied(true);
   }, [wallet.address]);
 
-  const disconnectWallet = useCallback(() => {
-    dispatch(disconnectFromStore(props.type));
+  const disconnectWallet = useCallback(async () => {
+    await disconnectFromStore(props.type);
     popupState?.close();
-  }, [props.type]);
+  }, [props.type, disconnectFromStore]);
 
   useEffect(() => {
     if (isCopied) {
@@ -113,7 +113,8 @@ const ConnectedWallet = (props: Props) => {
     return <></>;
   }
 
-  const WalletIcon = wallet.icon
+  const WalletIcon = connectedWallet?.icon
+
   return (
     <>
       <div className={classes.connectWallet} {...bindTrigger(popupState)}>

@@ -21,9 +21,11 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { WalletData as DynamicWalletData } from "../dynamic-wallet/useDynamicWallet";
+import { DynamicWalletData } from "../dynamic-wallet/useDynamicWallet";
 import { WalletAggregatorData } from './legacy';
 import { ConnectedWallet } from './wallet';
+
+export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
 
 export enum TransferWallet {
   SENDING = 'sending',

@@ -4,9 +4,9 @@ import { DynamicWallet } from "./utils";
 import { useDynamicContext, useSwitchWallet, useUserWallets, useWalletOptions } from "@dynamic-labs/sdk-react-core";
 import { Chain as WormholeChain } from "@wormhole-foundation/sdk"
 import { Context } from "sdklegacy";
-import type { IconType } from "store/wallet";
+import type { IconType } from "utils/wallet";
 
-export interface WalletData {
+export interface DynamicWalletData {
     name: string;
     type: Context;
     icon: IconType;
@@ -20,7 +20,7 @@ export const useDynamicWalletOptions = () => {
     const { sdkHasLoaded } = useDynamicContext();
     const { walletOptions, selectWalletOption }  = useWalletOptions()
 
-    const getWalletOptions = React.useCallback((chain: WormholeChain): WalletData[] => {
+    const getWalletOptions = React.useCallback((chain: WormholeChain): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
         // FIXME: This wont work, we need to wait for dynamic team for the wallet chain filter feature
         // const dynamicChain: Chain = toDynamicChain(chain)
@@ -41,36 +41,23 @@ export const useDynamicWalletOptions = () => {
 }
 
 export const useDynamicWalletHelpers = () => {
-    const { primaryWallet, handleLogOut, handleUnlinkWallet, } = useDynamicContext();
+    const { primaryWallet, handleLogOut, handleUnlinkWallet, sdkHasLoaded } = useDynamicContext();
     const switchWallet = useSwitchWallet()
     const userWallets = useUserWallets()
 
-    const connectedWalletsFromDynamic = React.useMemo(() => {
-        const wallets: NonNullable<typeof primaryWallet>[] = []
-        if (primaryWallet) {
-            wallets.push(primaryWallet)
-        }
-        if (userWallets) {
-            wallets.push(...userWallets)
-        }
-        return wallets
-    }, [primaryWallet, userWallets])
-
-    const disconnectDynamicWallet = React.useCallback((walletToDisconnect: DynamicWallet) => {
-        if (connectedWalletsFromDynamic.length === 0) {
+    const disconnectDynamicWallet = React.useCallback(async (walletToDisconnect: DynamicWallet) => {
+        if (userWallets.length === 0) {
             return
         }
-        if (connectedWalletsFromDynamic.length === 1) {
-            return handleLogOut()
+        if (userWallets.length === 1) {
+            return await handleLogOut()
         }
-        if (primaryWallet && primaryWallet.id === walletToDisconnect.id) {
-            switchWallet(userWallets[0].id)
-            return handleUnlinkWallet(primaryWallet.id)
+        if (primaryWallet?.id === walletToDisconnect.id && userWallets.length > 1) {
+            await switchWallet(userWallets.filter((w) => w.id !== walletToDisconnect.id)[0].id)
         }
-        if (walletToDisconnect.id === userWallets[0].id) {
-            return handleUnlinkWallet(userWallets[0].id)
-        }
-    }, [connectedWalletsFromDynamic, handleUnlinkWallet, handleLogOut])
+
+        await handleUnlinkWallet(walletToDisconnect.id)
+    }, [primaryWallet, userWallets, handleUnlinkWallet, handleLogOut, sdkHasLoaded])
 
     return {
         disconnectDynamicWallet,

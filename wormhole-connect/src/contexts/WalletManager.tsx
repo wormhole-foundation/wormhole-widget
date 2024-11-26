@@ -5,7 +5,7 @@ import { Theme } from "@mui/material"
 import WalletSidebar from "views/v2/Bridge/WalletConnector/Sidebar"
 import { TransferWallet, WalletData } from "../utils/wallet"
 import { useDispatch } from "react-redux";
-import { swapWallets } from 'store/wallet';
+import { swapWallets, disconnectWallet as disconnectWalletFromStore } from 'store/wallet';
 import { connectDynamicWallet, DynamicWallet, isChainSupportedByDynamicWallet, isDynamicWallet } from "utils/dynamic-wallet/utils";
 import { ConfiguredDynamicContext } from "utils/dynamic-wallet/DynamicContext";
 import { useDynamicWalletHelpers, useDynamicWalletOptions } from "utils/dynamic-wallet/useDynamicWallet";
@@ -15,13 +15,13 @@ import { ChainConfig } from "sdklegacy";
 import config from "config";
 
 interface WalletManagerProps {
-    // FIXME: These are not the correct types
-    connectWallet: (...args: any[]) => any
-    getConnectedWallet: (...args: any[]) => any
-    switchChain: (...args: any[]) => any
-    getWalletOptions: (...args: any[]) => any
-    registerWalletSigner: (...args: any[]) => any
-    swapWalletConnections: (...args: any[]) => any
+    connectWallet: (type: TransferWallet) => any;
+    getConnectedWallet: (type: TransferWallet) => ConnectedWallet | undefined;
+    switchChain: (chainId: number, type: TransferWallet) => Promise<void>;
+    getWalletOptions: (chain: ChainConfig | undefined) => Promise<WalletData[]>;
+    registerWalletSigner: (chain: Chain, type: TransferWallet) => Promise<void>;
+    swapWalletConnections: () => void;
+    disconnectWallet: (type: TransferWallet) => Promise<void>;
 }
 interface ConnectedWallets {
     sending?: ConnectedWallet;
@@ -29,14 +29,17 @@ interface ConnectedWallets {
     nextTypeToConnect: TransferWallet
 }
 
-const WalletManager = React.createContext<WalletManagerProps>({
-    connectWallet: (...args: any[]) => {},
-    getConnectedWallet: (...args: any[]) => {},
-    switchChain: (...args: any[]) => {},
-    getWalletOptions: (...args: any[]) => {},
-    registerWalletSigner: (...args: any[]) => {},
-    swapWalletConnections: (...args: any[]) => {},
-})
+const WALLET_MANAGER_INITIAL_STATE: WalletManagerProps = {
+    connectWallet: (type: TransferWallet) => {},
+    getConnectedWallet: (type: TransferWallet) => undefined,
+    switchChain: (chainId: number, type: TransferWallet) => Promise.resolve(),
+    getWalletOptions: (chain: ChainConfig | undefined) => Promise.resolve([]),
+    registerWalletSigner: (chain: Chain, type: TransferWallet) => Promise.resolve(),
+    swapWalletConnections: () => undefined,
+    disconnectWallet: (type: TransferWallet) => Promise.resolve(),
+} as const
+const WalletManager = React.createContext<WalletManagerProps>(WALLET_MANAGER_INITIAL_STATE)
+
 const useWalletManager = () => {
     const context = React.useContext(WalletManager)
     return context
@@ -129,6 +132,18 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         return walletConnection[type]
     }, [walletConnection])
 
+    const disconnectWallet = React.useCallback(async (type: TransferWallet) => {
+        if (walletConnection[type]) {
+            const wallet = walletConnection[type].getWallet()
+            if (isDynamicWallet(wallet)) {
+                await disconnectDynamicWallet(wallet)
+            }
+            await walletConnection[type].disconnect()
+            walletConnection[type] = undefined
+            dispatch(disconnectWalletFromStore(type))
+        }
+    }, [walletConnection, disconnectDynamicWallet])
+
     const walletManager = React.useMemo(() => ({
         connectWallet,
         getConnectedWallet,
@@ -136,6 +151,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         getWalletOptions,
         registerWalletSigner,
         swapWalletConnections,
+        disconnectWallet,
     }), [
         connectWallet,
         getConnectedWallet,
@@ -143,14 +159,17 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         registerWalletSigner,
         getWalletOptions,
         swapWalletConnections,
+        disconnectWallet,
     ])
 
     React.useEffect(() => {
         onConnectCallbackRef.current = async (wallet) => {
+            console.log("onConnectCallbackRef", wallet)
             try {
                 await createConnectedWallet(wallet)
                 await connectDynamicWallet(walletConnection.nextTypeToConnect, dynamicwormholeChainRef.current, wallet, dispatch)
             } catch (err) {
+                console.log(err)
                 // Something wrong happened here
                 // TODO: Handle this error
             }

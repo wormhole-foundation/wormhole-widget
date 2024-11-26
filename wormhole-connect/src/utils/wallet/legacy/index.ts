@@ -1,10 +1,10 @@
 import { Wallet, WalletState } from '@xlabs-libs/wallet-aggregator-core';
 import { ChainConfig, Context } from 'sdklegacy';
-import { TransferWallet } from '..';
+import { IconType, TransferWallet } from '..';
 import React, { Dispatch } from 'react';
 import { WalletAggregatorIcon } from './walletAggregatorIcon';
 import config from 'config';
-import { connectWallet as connectSourceWallet, connectReceivingWallet, clearWallet, IconType } from 'store/wallet';
+import { connectWallet as connectSourceWallet, connectReceivingWallet, clearWallet } from 'store/wallet';
 import { isWalletAggregatorWallet } from '../wallet';
 import { Chain } from '@wormhole-foundation/sdk';
 
@@ -51,7 +51,7 @@ export const connectWallet = async (
     const payload = {
       address,
       type: walletInfo.type,
-      icon: walletInfo.icon,
+      // icon: walletInfo.icon,
       name: wallet.getName(),
     };
   

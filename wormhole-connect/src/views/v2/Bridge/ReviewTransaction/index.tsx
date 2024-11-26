@@ -197,7 +197,8 @@ const ReviewTransaction = (props: Props) => {
         details: transferDetails,
       });
 
-      const sendingWallet = getConnectedWallet(TransferWallet.SENDING);
+      // TODO: Remove type assertion
+      const sendingWallet = getConnectedWallet(TransferWallet.SENDING)!;
 
       const [sdkRoute, receipt] = await config.routes
         .get(route)

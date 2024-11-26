@@ -731,11 +731,17 @@ const Redeem = () => {
         throw new Error('Route is not manual or finalizable');
       }
 
+      const receivingConnectedWallet = getConnectedWallet(TransferWallet.RECEIVING)
+
+      if (!receivingConnectedWallet) {
+        throw new Error('Could not get receiving connected wallet');
+      }
+
       const signer = await SDKv2Signer.fromChain(
         toChain,
         receivingWallet.address,
         {},
-        getConnectedWallet(TransferWallet.RECEIVING),
+        receivingConnectedWallet,
       );
 
       const finishPromise = (() => {

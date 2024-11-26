@@ -2,14 +2,11 @@ import { Context } from 'sdklegacy';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { TransferWallet } from 'utils/wallet';
 
-export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
-
 export type WalletData = {
   type: Context | undefined;
   address: string;
   currentAddress: string;
   error: string;
-  icon?: IconType;
   name: string;
 };
 
@@ -23,7 +20,6 @@ const NO_WALLET: WalletData = {
   type: undefined,
   currentAddress: '',
   error: '',
-  icon: undefined,
   name: '',
 };
 
@@ -35,7 +31,6 @@ const initialState: WalletState = {
 export type ConnectPayload = {
   address: string;
   type: Context;
-  icon?: IconType;
   name: string;
 };
 
@@ -52,7 +47,6 @@ export const walletSlice = createSlice({
       state.sending.type = payload.type;
       state.sending.name = payload.name;
       state.sending.error = '';
-      state.sending.icon = payload.icon;
     },
     connectReceivingWallet: (
       state: WalletState,
@@ -63,7 +57,6 @@ export const walletSlice = createSlice({
       state.receiving.type = payload.type;
       state.receiving.name = payload.name;
       state.receiving.error = '';
-      state.receiving.icon = payload.icon;
     },
     clearWallet: (
       state: WalletState,
@@ -75,7 +68,6 @@ export const walletSlice = createSlice({
       state: WalletState,
       { payload }: PayloadAction<TransferWallet>,
     ) => {
-      // disconnect(payload);
       state[payload] = NO_WALLET;
     },
     setWalletError: (

@@ -12,8 +12,7 @@ import { TransferWallet } from "utils/wallet";
 import { Dispatch } from "@reduxjs/toolkit";
 import { clearWallet, connectReceivingWallet, connectWallet as connectSourceWallet } from "store/wallet";
 import React from "react";
-import DynamicWalletIcon from "utils/dynamic-wallet/walletIcon";
-
+import DynamicWalletIcon from "./walletIcon";
 
 export type DynamicWallet = NonNullable<ReturnType<typeof useDynamicContext>["primaryWallet"]>
 
@@ -67,15 +66,20 @@ export const toDynamicChain = (wormholeChain: WormholeChain): Chain => {
 }
 
 export const toConnectedWallet = (wallet: DynamicWallet): ConnectedWallet => {
+    const address = wallet.address
+    const icon = (props) => React.createElement(DynamicWalletIcon, { size: props.size, walletKey: wallet.connector.key })
     switch (wallet.chain) {
         case "EVM":
             return {
+                address, icon, 
                 switchChain: async (chainId) => {
-                    const config = getChainByChainId(chainId)!;
-                    const currentChain = await wallet.connector.getNetwork()
-                    if (Number(currentChain || 0) === chainId) return;
-                    if (config.context === Context.ETH) {
-                        await wallet.connector.switchNetwork({ networkChainId: chainId });
+                    if (wallet.connector.supportsNetworkSwitching()) {
+                        const config = getChainByChainId(chainId)!;
+                        const currentChain = await wallet.connector.getNetwork()
+                        if (Number(currentChain || 0) === chainId) return;
+                        if (config.context === Context.ETH) {
+                            await wallet.connector.switchNetwork({ networkChainId: chainId });
+                        }
                     }
                 },
                 getSigner: async () => {
@@ -92,6 +96,7 @@ export const toConnectedWallet = (wallet: DynamicWallet): ConnectedWallet => {
             }
         case "SOL":
             return {
+                address, icon,
                 getNetworkInfo: async () => {
                     return config.isMainnet
                         ? SolanaNetwork.Mainnet
@@ -138,7 +143,7 @@ export const connectDynamicWallet = async (
     const payload = {
         address: address,
         type: dynamicChainToContext(wallet.chain as any),
-        icon: ({ size }: { size?: number }) => React.createElement(DynamicWalletIcon, { size, walletKey: wallet.connector.key }),
+        // icon: ({ size }: { size?: number }) => React.createElement(DynamicWalletIcon, { size, walletKey: wallet.connector.key }),
         name: wallet.connector.name
     }
     if (type === TransferWallet.SENDING) {
