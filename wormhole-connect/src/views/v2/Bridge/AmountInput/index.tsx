@@ -39,7 +39,7 @@ const DebouncedTextField = memo(
     onChange: (event: string) => void;
   }) => {
     const [innerValue, setInnerValue] = useState<string>(value);
-    const defferedOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
+    const deferredOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -54,13 +54,17 @@ const DebouncedTextField = memo(
         }
 
         setInnerValue(e.target.value);
-        defferedOnChange(e.target.value);
+        deferredOnChange(e.target.value);
       },
       [],
     );
 
+    // Propagate any outside changes to the inner TextField value.
+    // Please note that we need to compare Number values, because '' and 0 are the same in terms of the amount value.
     useEffect(() => {
-      setInnerValue(value);
+      if (Number(innerValue) !== Number(value)) {
+        setInnerValue(value);
+      }
     }, [value]);
 
     return <TextField {...props} value={innerValue} onChange={onInnerChange} />;
@@ -128,12 +132,13 @@ const AmountInput = (props: Props) => {
   );
 
   // Clear the amount input value if the amount is reset outside of this component
-  // This can happen if user swaps selected source and destination assets
+  // This can happen if user swaps selected source and destination assets.
+  // Please note that we need to compare Number values, because '' and 0 are the same in terms of the amount value.
   useEffect(() => {
-    if (amountInput && !amount) {
+    if (Number(amountInput) !== 0 && !amount) {
       setAmountInput('');
     }
-  }, [amount, amountInput]);
+  }, [amount]);
 
   const tokenBalance = useMemo(
     () => balances?.[sourceToken]?.balance || null,
