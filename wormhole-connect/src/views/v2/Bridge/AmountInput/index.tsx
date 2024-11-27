@@ -39,7 +39,8 @@ const DebouncedTextField = memo(
     onChange: (event: string) => void;
   }) => {
     const [innerValue, setInnerValue] = useState<string>(value);
-    const defferedOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
+    const [isFocused, setIsFocused] = useState(false);
+    const deferredOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -54,16 +55,31 @@ const DebouncedTextField = memo(
         }
 
         setInnerValue(e.target.value);
-        defferedOnChange(e.target.value);
+        deferredOnChange(e.target.value);
       },
       [],
     );
 
+    // Propagate any outside changes to the inner TextField value
+    // The way we do this is by checking when the focus is not on the input component
     useEffect(() => {
-      setInnerValue(value);
+      if (!isFocused) {
+        setInnerValue(value);
+      }
+      // We should run this sife-effect only when the value changes
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return <TextField {...props} value={innerValue} onChange={onInnerChange} />;
+    return (
+      <TextField
+        {...props}
+        value={innerValue}
+        focused={isFocused}
+        onChange={onInnerChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+    );
   },
 );
 
@@ -128,12 +144,14 @@ const AmountInput = (props: Props) => {
   );
 
   // Clear the amount input value if the amount is reset outside of this component
-  // This can happen if user swaps selected source and destination assets
+  // This can happen if user swaps selected source and destination assets.
   useEffect(() => {
-    if (amountInput && !amount) {
+    if (!amount && amountInput) {
       setAmountInput('');
     }
-  }, [amount, amountInput]);
+    // We should run this sife-effect only when the amount changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount]);
 
   const tokenBalance = useMemo(
     () => balances?.[sourceToken]?.balance || null,
