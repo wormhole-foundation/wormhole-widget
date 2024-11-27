@@ -39,6 +39,7 @@ const DebouncedTextField = memo(
     onChange: (event: string) => void;
   }) => {
     const [innerValue, setInnerValue] = useState<string>(value);
+    const [isFocused, setIsFocused] = useState(false);
     const deferredOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
@@ -59,17 +60,26 @@ const DebouncedTextField = memo(
       [],
     );
 
-    // Propagate any outside changes to the inner TextField value.
-    // Please note that we need to compare parsed values, because '' and 0 are the same in terms of the amount value.
+    // Propagate any outside changes to the inner TextField value
+    // The way we do this is by checking when the focus is not on the input component
     useEffect(() => {
-      const parsedInnerValue = sdkAmount.parse(innerValue, 0)?.amount;
-      const parsedValue = sdkAmount.parse(value, 0)?.amount;
-      if (parsedInnerValue !== parsedValue) {
+      if (!isFocused) {
         setInnerValue(value);
       }
+      // We should run this sife-effect only when the value changes
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return <TextField {...props} value={innerValue} onChange={onInnerChange} />;
+    return (
+      <TextField
+        {...props}
+        value={innerValue}
+        focused={isFocused}
+        onChange={onInnerChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+    );
   },
 );
 
@@ -135,12 +145,12 @@ const AmountInput = (props: Props) => {
 
   // Clear the amount input value if the amount is reset outside of this component
   // This can happen if user swaps selected source and destination assets.
-  // Please note that we need to compare parsed values, because '' and 0 are the same in terms of the amount value.
   useEffect(() => {
-    const parsedAmountInput = sdkAmount.parse(amountInput, 0)?.amount;
-    if (!amount && parsedAmountInput !== '0') {
+    if (!amount && amountInput) {
       setAmountInput('');
     }
+    // We should run this sife-effect only when the amount changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amount]);
 
   const tokenBalance = useMemo(
