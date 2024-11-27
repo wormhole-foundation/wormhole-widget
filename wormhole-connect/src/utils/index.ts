@@ -418,7 +418,13 @@ export const isWrappedToken = (token: TokenConfig, chain: Chain) => {
 // Canonical tokens may be Wormhole-wrapped tokens that are canonical on the chain
 // e.g., Wormhole-wrapped Ethereum USDC is canonical on Sui
 export const isCanonicalToken = (token: TokenConfig, chain: Chain) => {
-  return token.key === 'USDCeth' && chain === 'Sui';
+  if (token.key === 'USDCeth' && chain === 'Sui') return true;
+
+  // These tokens are highly liquid on Solana
+  if ((token.key === 'WETH' || token.key === 'WBTC') && chain === 'Solana')
+    return true;
+
+  return false;
 };
 
 export const isStableCoin = (token: TokenConfig) => {
