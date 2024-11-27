@@ -60,9 +60,11 @@ const DebouncedTextField = memo(
     );
 
     // Propagate any outside changes to the inner TextField value.
-    // Please note that we need to compare Number values, because '' and 0 are the same in terms of the amount value.
+    // Please note that we need to compare parsed values, because '' and 0 are the same in terms of the amount value.
     useEffect(() => {
-      if (Number(innerValue) !== Number(value)) {
+      const parsedInnerValue = sdkAmount.parse(innerValue, 0)?.amount;
+      const parsedValue = sdkAmount.parse(value, 0)?.amount;
+      if (parsedInnerValue !== parsedValue) {
         setInnerValue(value);
       }
     }, [value]);
@@ -133,9 +135,10 @@ const AmountInput = (props: Props) => {
 
   // Clear the amount input value if the amount is reset outside of this component
   // This can happen if user swaps selected source and destination assets.
-  // Please note that we need to compare Number values, because '' and 0 are the same in terms of the amount value.
+  // Please note that we need to compare parsed values, because '' and 0 are the same in terms of the amount value.
   useEffect(() => {
-    if (Number(amountInput) !== 0 && !amount) {
+    const parsedAmountInput = sdkAmount.parse(amountInput, 0)?.amount;
+    if (!amount && parsedAmountInput !== '0') {
       setAmountInput('');
     }
   }, [amount]);
