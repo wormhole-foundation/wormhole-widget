@@ -1,32 +1,28 @@
-import { Wallet, WalletState } from '@xlabs-libs/wallet-aggregator-core';
+import { Wallet as WA_Wallet, WalletState } from '@xlabs-libs/wallet-aggregator-core';
 import { ChainConfig, Context } from 'sdklegacy';
 import { IconType, TransferWallet } from '..';
 import React, { Dispatch } from 'react';
 import { WalletAggregatorIcon } from './walletAggregatorIcon';
 import config from 'config';
 import { connectWallet as connectSourceWallet, connectReceivingWallet, clearWallet } from 'store/wallet';
-import { isWalletAggregatorWallet } from '../wallet';
-import { Chain } from '@wormhole-foundation/sdk';
+import { ConnectedWallet } from '../wallet';
+import { Chain as WormholeChain } from '@wormhole-foundation/sdk';
 
 export type WalletAggregatorData = {
   name: string;
   type: Context;
   icon: IconType;
   isReady: boolean;
-  wallet: Wallet;
+  wallet: WA_Wallet;
 };
 
-export const connectWallet = async (
+const connectWallet = async (
     type: TransferWallet,
-    chain: Chain,
+    chain: WormholeChain,
     walletInfo: WalletAggregatorData,
     dispatch: Dispatch<any>,
   ) => {
     const { wallet, name } = walletInfo;
-  
-    if (!isWalletAggregatorWallet(wallet)) {
-        return
-    }
 
     // setWalletConnection(type, wallet);
   
@@ -83,13 +79,13 @@ export const connectWallet = async (
     localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
   };
 
-const getReady = (wallet: Wallet) => {
+const getReady = (wallet: WA_Wallet) => {
     const ready = wallet.getWalletState();
     return ready !== WalletState.Unsupported && ready !== WalletState.NotDetected;
 };
 
 const mapWallets = (
-    wallets: Record<string, Wallet>,
+    wallets: Record<string, WA_Wallet>,
     type: Context,
     skip: string[] = [],
 ): WalletAggregatorData[] => {
@@ -124,3 +120,25 @@ export const getWalletOptions = async (
     }
     return [];
 };
+
+export const toConnectedWalletAggregator = async (wallet: WalletAggregatorData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch<any>): Promise<ConnectedWallet> => {
+  await connectWallet(type, chain, wallet, dispatch)
+  const connectedWallet: ConnectedWallet = {
+    address: wallet.wallet.getAddress()!,
+    disconnect: async () => {
+      wallet.wallet.removeAllListeners()
+      await wallet.wallet.disconnect()
+    },
+    getWallet: () => wallet,
+    getNetworkInfo: async () => {
+      return wallet.wallet.getNetworkInfo()
+    },
+    icon: ({ size }) => React.createElement(WalletAggregatorIcon, { iconSize: size, walletName: wallet.wallet.getName(), walletIcon: wallet.wallet.getIcon() }),
+  }
+  return connectedWallet
+};
+
+
+export const isWalletAggregatorWallet = (wallet: any): wallet is WalletAggregatorData => {
+  return "wallet" in wallet && wallet.wallet instanceof WA_Wallet
+}

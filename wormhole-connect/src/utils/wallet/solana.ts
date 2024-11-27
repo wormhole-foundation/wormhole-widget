@@ -22,7 +22,8 @@ import { ComputeBudgetProgram } from '@solana/web3.js';
 import { TransactionInstruction } from '@solana/web3.js';
 import { VersionedTransaction } from '@solana/web3.js';
 import { isSolanaWallet } from '@dynamic-labs/solana';
-import { ConnectedWallet, isWalletAggregatorWallet } from './wallet';
+import { ConnectedWallet } from './wallet';
+import { DynamicWallet } from 'utils/dynamic-wallet/utils';
 
 // This function signs and sends the transaction while constantly checking for confirmation
 // and resending the transaction if it hasn't been confirmed after the specified interval
@@ -34,8 +35,8 @@ export async function signAndSendTransaction(
 ) {
   if (!connectedWallet) throw new Error('Wallet not found');
   if (!config.rpcs.Solana) throw new Error('Solana RPC not found');
-  const wallet = connectedWallet.getWallet();
-  if (isWalletAggregatorWallet(wallet)) throw new Error('Wallet is a Wallet Aggregator wallet');
+  const wallet = connectedWallet.getWallet() as DynamicWallet;
+
   if (!isSolanaWallet(wallet)) throw new Error('Wallet is not a Solana wallet');
 
   const commitment = options?.commitment ?? 'finalized';

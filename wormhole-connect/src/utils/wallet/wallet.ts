@@ -1,10 +1,11 @@
-import { Wallet as WA_Wallet } from '@xlabs-libs/wallet-aggregator-core';
 import { ethers } from 'ethers';
 import { DynamicWallet, isDynamicWallet, toConnectedWallet as toConnectedDynamicWallet } from 'utils/dynamic-wallet/utils';
-import { IconType } from '.';
+import { IconType, TransferWallet } from '.';
+import { isWalletAggregatorWallet, toConnectedWalletAggregator, WalletAggregatorData } from './legacy';
+import { Dispatch } from '@reduxjs/toolkit';
 
 
-export type Wallet = WA_Wallet | DynamicWallet
+export type Wallet = WalletAggregatorData | DynamicWallet
 
 export interface ConnectedWallet {
   address: string
@@ -16,18 +17,14 @@ export interface ConnectedWallet {
   switchChain?: (evmChainId: number) => Promise<void>
 }
 
-export const isWalletAggregatorWallet = (wallet: Wallet): wallet is WA_Wallet => {
-  return "wallet" in wallet && wallet.wallet instanceof WA_Wallet
-}
-
-export async function toConnectedWallet (wallet: Wallet): Promise<ConnectedWallet> {
+export async function toConnectedWallet (wallet: Wallet, type: TransferWallet, chain: any, dispatch: Dispatch): Promise<ConnectedWallet> {
   // Wallet aggregator wallet exports the Wallet interface as a class, so we will check if the wallet is an instance of the class
   // Dynamic wallet exports the Wallet interface as a type, so we will identify it check if two of its methods are present
   if (isWalletAggregatorWallet(wallet)) {
-    // TODO: Wallet Aggregator Wallet
+    return await toConnectedWalletAggregator(wallet, type, chain, dispatch)
   }
   else if (isDynamicWallet(wallet)) {
-    return toConnectedDynamicWallet(wallet)
+    return await toConnectedDynamicWallet(wallet, type, chain, dispatch)
   }
 
   throw new Error("Unknown wallet type")

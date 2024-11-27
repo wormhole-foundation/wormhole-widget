@@ -1,12 +1,12 @@
 import React, { Fragment, useRef } from "react"
-import { Chain, isChain } from '@wormhole-foundation/sdk';
+import { Chain as WormholeChain, isChain } from '@wormhole-foundation/sdk';
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
 import { Theme } from "@mui/material"
 import WalletSidebar from "views/v2/Bridge/WalletConnector/Sidebar"
 import { TransferWallet, WalletData } from "../utils/wallet"
 import { useDispatch } from "react-redux";
 import { swapWallets, disconnectWallet as disconnectWalletFromStore } from 'store/wallet';
-import { connectDynamicWallet, DynamicWallet, isChainSupportedByDynamicWallet, isDynamicWallet } from "utils/dynamic-wallet/utils";
+import { DynamicWallet, isChainSupportedByDynamicWallet, isDynamicWallet } from "utils/dynamic-wallet/utils";
 import { ConfiguredDynamicContext } from "utils/dynamic-wallet/DynamicContext";
 import { useDynamicWalletHelpers, useDynamicWalletOptions } from "utils/dynamic-wallet/useDynamicWallet";
 import { ConnectedWallet, toConnectedWallet, Wallet } from "utils/wallet/wallet";
@@ -19,7 +19,7 @@ interface WalletManagerProps {
     getConnectedWallet: (type: TransferWallet) => ConnectedWallet | undefined;
     switchChain: (chainId: number, type: TransferWallet) => Promise<void>;
     getWalletOptions: (chain: ChainConfig | undefined) => Promise<WalletData[]>;
-    registerWalletSigner: (chain: Chain, type: TransferWallet) => Promise<void>;
+    registerWalletSigner: (chain: WormholeChain, type: TransferWallet) => Promise<void>;
     swapWalletConnections: () => void;
     disconnectWallet: (type: TransferWallet) => Promise<void>;
 }
@@ -34,7 +34,7 @@ const WALLET_MANAGER_INITIAL_STATE: WalletManagerProps = {
     getConnectedWallet: (type: TransferWallet) => undefined,
     switchChain: (chainId: number, type: TransferWallet) => Promise.resolve(),
     getWalletOptions: (chain: ChainConfig | undefined) => Promise.resolve([]),
-    registerWalletSigner: (chain: Chain, type: TransferWallet) => Promise.resolve(),
+    registerWalletSigner: (chain: WormholeChain, type: TransferWallet) => Promise.resolve(),
     swapWalletConnections: () => undefined,
     disconnectWallet: (type: TransferWallet) => Promise.resolve(),
 } as const
@@ -58,7 +58,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
     const { getWalletOptions: getDynamicWalletOptions, selectWalletOption: selectDynamicWalletOption } = useDynamicWalletOptions()
     const { disconnectDynamicWallet } = useDynamicWalletHelpers()
     const [walletSidebarProps, setWalletSidebarProps] = React.useState<{ isOpen: boolean, type: TransferWallet }>(defaultWalletSidebarConfig);
-    const dynamicwormholeChainRef = React.useRef<Chain>("Ethereum")
+    const dynamicwormholeChainRef = React.useRef<WormholeChain>("Ethereum")
     const dispatch = useDispatch();
 
     const walletConnection = React.useRef<ConnectedWallets>({ nextTypeToConnect: TransferWallet.SENDING }).current
@@ -71,7 +71,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
                 }
                 walletConnection.sending.disconnect()
             }
-            walletConnection.sending = await toConnectedWallet(wallet)
+            walletConnection.sending = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, dynamicwormholeChainRef.current, dispatch)
         } else {
             if (walletConnection.receiving) {
                 if (isDynamicWallet(walletConnection.receiving)) {
@@ -79,11 +79,11 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
                 }
                 walletConnection.receiving.disconnect()
             }
-            walletConnection.receiving = await toConnectedWallet(wallet)
+            walletConnection.receiving = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, dynamicwormholeChainRef.current, dispatch)
         }
     }, [walletConnection])
 
-    const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: Chain) => {
+    const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
         walletConnection.nextTypeToConnect = type
         if ("walletId" in walletInfo) {
             // Dynamic Wallet will continue the connection flow
@@ -92,7 +92,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
             return await selectDynamicWalletOption(walletInfo.walletId)
         }
 
-        await createConnectedWallet(walletInfo.wallet as any)
+        await createConnectedWallet(walletInfo)
         await connectWallet(walletConnection.nextTypeToConnect)
     }, [createConnectedWallet, selectDynamicWalletOption])
 
@@ -104,7 +104,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         return getWalletAgreggatorOptions(chain)
     }, [getDynamicWalletOptions])
 
-    const registerWalletSigner = React.useCallback(async (chain: Chain, type: TransferWallet) => {
+    const registerWalletSigner = React.useCallback(async (chain: WormholeChain, type: TransferWallet) => {
         const w = walletConnection[type]
         if (!w) throw new Error('must connect wallet');
         const signer = await w.getSigner?.();
@@ -167,7 +167,6 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
             console.log("onConnectCallbackRef", wallet)
             try {
                 await createConnectedWallet(wallet)
-                await connectDynamicWallet(walletConnection.nextTypeToConnect, dynamicwormholeChainRef.current, wallet, dispatch)
             } catch (err) {
                 console.log(err)
                 // Something wrong happened here
@@ -193,7 +192,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 }
 
 const WalletManagerProvider: React.FC<React.PropsWithChildren<{ theme?: Theme }>> = ({ children, theme }) => {
-    const chainRef = useRef<Chain | undefined>(undefined)
+    const chainRef = useRef<WormholeChain | undefined>(undefined)
     const onConnectRef = useRef<OnConnectCallback | undefined>(undefined)
     return <Fragment>
         <ConfiguredDynamicContext chainRef={chainRef} onConnectCallbackRef={onConnectRef}>

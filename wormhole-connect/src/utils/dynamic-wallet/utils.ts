@@ -65,26 +65,34 @@ export const toDynamicChain = (wormholeChain: WormholeChain): Chain => {
     }
 }
 
-export const toConnectedWallet = (wallet: DynamicWallet): ConnectedWallet => {
+const switchChain = async (wallet: DynamicWallet, chainId: number) => {
+    if (wallet.connector.supportsNetworkSwitching()) {
+        const config = getChainByChainId(chainId)!;
+        const currentChain = await wallet.connector.getNetwork()
+        if (Number(currentChain || 0) === chainId) return;
+        if (config.context === Context.ETH) {
+            console.log("Switching network to", chainId)
+            await wallet.switchNetwork(chainId)
+        }
+    }
+}
+
+export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWallet, chain: any, dispatch: Dispatch): Promise<ConnectedWallet> => {
+    await connectDynamicWallet(type, chain, wallet, dispatch)
     const address = wallet.address
     const icon = (props) => React.createElement(DynamicWalletIcon, { size: props.size, walletKey: wallet.connector.key })
     switch (wallet.chain) {
         case "EVM":
             return {
-                address, icon, 
+                address, icon,
                 switchChain: async (chainId) => {
-                    if (wallet.connector.supportsNetworkSwitching()) {
-                        const config = getChainByChainId(chainId)!;
-                        const currentChain = await wallet.connector.getNetwork()
-                        if (Number(currentChain || 0) === chainId) return;
-                        if (config.context === Context.ETH) {
-                            await wallet.connector.switchNetwork({ networkChainId: chainId });
-                        }
-                    }
+                    return await switchChain(wallet, chainId)
                 },
                 getSigner: async () => {
                     // TODO: Test this
-                    return await getSigner(wallet as any)
+                    const signer = await getSigner(wallet as any)
+                    console.log("Signer", signer)
+                    return signer
                 },
                 getWallet: () => wallet,
                 getNetworkInfo: async () => {
@@ -113,7 +121,7 @@ export const toConnectedWallet = (wallet: DynamicWallet): ConnectedWallet => {
 }
 
 
-export const connectDynamicWallet = async (
+const connectDynamicWallet = async (
     type: TransferWallet,
     chain: WormholeChain,
     wallet: DynamicWallet,
@@ -121,15 +129,14 @@ export const connectDynamicWallet = async (
 ) => {
     const name = wallet.connector.name
     const address = await wallet.connector.getAddress() || ""
-    // setWalletConnection(type, wallet);
 
     const chainConfig = config.chains[chain];
     if (!chainConfig) {
         throw new Error(`Unable to find wallets for chain ${chain}`);
     }
 
-      const { chainId } = chainConfig;
-      await wallet.switchNetwork(chainId);
+    const { chainId } = chainConfig;
+    await switchChain(wallet, Number(chainId));
 
     config.triggerEvent({
         type: 'wallet.connect',
@@ -143,7 +150,6 @@ export const connectDynamicWallet = async (
     const payload = {
         address: address,
         type: dynamicChainToContext(wallet.chain as any),
-        // icon: ({ size }: { size?: number }) => React.createElement(DynamicWalletIcon, { size, walletKey: wallet.connector.key }),
         name: wallet.connector.name
     }
     if (type === TransferWallet.SENDING) {
@@ -161,8 +167,8 @@ export const connectDynamicWallet = async (
 
     // when the user has multiple wallets connected and either changes
     // or disconnects the current wallet, clear the wallet
-    wallet.connector.on('accountChange', ({accounts}) => {
-        // disconnect only if there are no accounts, or if the new account is different from the current
+    wallet.connector.on('accountChange', ({ accounts }) => {
+        // disconnecexportt only if there are no accounts, or if the new account is different from the current
         const shouldDisconnect =
             accounts.length === 0 || (accounts.length && address && accounts[0] !== address);
 
