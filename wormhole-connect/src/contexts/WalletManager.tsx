@@ -164,13 +164,14 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 
     React.useEffect(() => {
         onConnectCallbackRef.current = async (wallet) => {
-            console.log("onConnectCallbackRef", wallet)
+            console.log("onConnectCallbackRef")
             try {
                 await createConnectedWallet(wallet)
             } catch (err) {
                 console.log(err)
                 // Something wrong happened here
                 // TODO: Handle this error
+                // Best option, ignore and allow the user to try again re-using the primaryWallet/wallets[i] reference
             }
         }
     }, [sdkHasLoaded, createConnectedWallet])

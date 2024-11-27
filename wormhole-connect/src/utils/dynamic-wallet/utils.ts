@@ -89,10 +89,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
                     return await switchChain(wallet, chainId)
                 },
                 getSigner: async () => {
-                    // TODO: Test this
-                    const signer = await getSigner(wallet as any)
-                    console.log("Signer", signer)
-                    return signer
+                    return await getSigner(wallet)
                 },
                 getWallet: () => wallet,
                 getNetworkInfo: async () => {
