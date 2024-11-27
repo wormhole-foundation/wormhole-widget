@@ -98,7 +98,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 
     const getWalletOptions = React.useCallback(async (chain: ChainConfig | undefined) => {
         if (chain && isChain(chain.key) && isChainSupportedByDynamicWallet(chain.key)) {
-            return getDynamicWalletOptions(chain.key)
+            return getDynamicWalletOptions(chain.key, walletConnection)
         }
 
         return getWalletAgreggatorOptions(chain)
