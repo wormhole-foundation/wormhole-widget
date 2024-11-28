@@ -6,7 +6,7 @@ import { Dispatch } from 'redux';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Network, Chain, UnsignedTransaction } from '@wormhole-foundation/sdk';
+import { Network, Chain as WormholeChain, UnsignedTransaction, chainToPlatform, chainIdToChain, toChainId } from '@wormhole-foundation/sdk';
 
 import {
   EvmUnsignedTransaction,
@@ -32,7 +32,27 @@ export enum TransferWallet {
   RECEIVING = 'receiving',
 }
 
-export const walletAcceptedChains = (context: Context | undefined): Chain[] => {
+export const isEVMChain = (chain: WormholeChain) => {
+  return chainToPlatform(chainIdToChain(toChainId(chain))) === "Evm"
+}
+
+export const fromWormholeChainToContext = (chain: WormholeChain): Context => {
+  if (isEVMChain(chain)) {
+    return Context.ETH;
+  }
+  switch(chain) {
+    case 'Solana':
+      return Context.SOLANA;
+    case 'Sui':
+      return Context.SUI;
+    case 'Aptos':
+      return Context.APTOS;
+    default:
+      throw new Error('unsupported chain');
+  }
+}
+
+export const walletAcceptedChains = (context: Context | undefined): WormholeChain[] => {
   if (!context) {
     return config.chainsArr.map((c) => c.key);
   }
@@ -47,7 +67,7 @@ export type WalletData = WalletAggregatorData | DynamicWalletData
 // and connects to it automatically if it exists.
 export const connectLastUsedWallet = async (
   type: TransferWallet,
-  chain: Chain,
+  chain: WormholeChain,
   dispatch: Dispatch<any>,
 ) => {
   // const chainConfig = config.chains[chain!]!;
@@ -101,15 +121,9 @@ export const useConnectToLastUsedWallet = (): void => {
 //   return w.getAddress();
 // };
 
-// export const disconnect = async (type: TransferWallet) => {
-//   const w = walletConnection[type]! as any;
-//   if (!w) return;
-//   await w.disconnect();
-// };
-
 export const signAndSendTransaction = async (
-  chain: Chain,
-  request: UnsignedTransaction<Network, Chain>,
+  chain: WormholeChain,
+  request: UnsignedTransaction<Network, WormholeChain>,
   wallet: ConnectedWallet,
   options: any = {},
 ): Promise<string> => {

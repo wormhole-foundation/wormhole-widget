@@ -1,6 +1,6 @@
 import { Chain, WalletOption, type useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { WalletAdapterNetwork as SolanaNetwork } from '@solana/wallet-adapter-base';
-import { Chain as WormholeChain, toChainId, chainIdToChain, chainToPlatform } from '@wormhole-foundation/sdk';
+import { Chain as WormholeChain } from '@wormhole-foundation/sdk';
 import { } from '@wormhole-foundation/sdk-base';
 import { getSigner } from '@dynamic-labs/ethers-v6'
 import { Signer } from "ethers";
@@ -8,7 +8,7 @@ import { Context } from "sdklegacy";
 import { ConnectedWallet } from "utils/wallet/wallet";
 import { getChainByChainId } from "utils";
 import config from "config";
-import { TransferWallet } from "utils/wallet";
+import { isEVMChain, TransferWallet } from "utils/wallet";
 import { Dispatch } from "@reduxjs/toolkit";
 import { clearWallet, connectReceivingWallet, connectWallet as connectSourceWallet } from "store/wallet";
 import React from "react";
@@ -29,10 +29,6 @@ export const dynamicChainToContext = (chain: Chain): Context => {
 
 export const isDynamicWallet = (wallet: any): wallet is DynamicWallet => {
     return "connector" in wallet && "isAuthenticated" in wallet
-}
-
-export const isEVMChain = (chain: WormholeChain) => {
-    return chainToPlatform(chainIdToChain(toChainId(chain))) === "Evm"
 }
 
 export const isChainSupportedByDynamicWallet = (chain: WormholeChain) => {

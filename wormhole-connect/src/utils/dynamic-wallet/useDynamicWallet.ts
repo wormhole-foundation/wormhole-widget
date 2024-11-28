@@ -1,10 +1,10 @@
 import React from "react"
 import DynamicWalletIcon from "utils/dynamic-wallet/walletIcon"
-import { DynamicWallet, isDynamicWallet } from "./utils";
+import { DynamicWallet } from "./utils";
 import { useDynamicContext, useSwitchWallet, useUserWallets, useWalletOptions } from "@dynamic-labs/sdk-react-core";
 import { Chain as WormholeChain } from "@wormhole-foundation/sdk"
 import { Context } from "sdklegacy";
-import type { IconType } from "utils/wallet";
+import { fromWormholeChainToContext, type IconType } from "utils/wallet";
 import type { ConnectedWallet } from "utils/wallet/wallet";
 
 export interface DynamicWalletData {
@@ -12,18 +12,16 @@ export interface DynamicWalletData {
     type: Context;
     icon: IconType;
     isReady: boolean;
-    walletId: string;
+    walletKey: string;
 }
 
 export type OnConnectCallback = (wallet: DynamicWallet) => void
 
-const isConnectedDynamicWallets = (walletId: string, wallet?: any): boolean => {
-    return wallet !== undefined && isDynamicWallet(wallet) && wallet.key === walletId
-}
 
 export const useDynamicWalletOptions = () => {
-    const { sdkHasLoaded } = useDynamicContext();
+    const { sdkHasLoaded, primaryWallet } = useDynamicContext();
     const { walletOptions, selectWalletOption }  = useWalletOptions()
+    const userWallets = useUserWallets()
 
     const getWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
@@ -33,18 +31,33 @@ export const useDynamicWalletOptions = () => {
             icon: ({ size }) => React.createElement(DynamicWalletIcon, { size, walletKey: a.key }),
             isReady: true,
             name: a.name,
-            // FIXME: This wont work, we need to wait for dynamic team for the wallet chain filter feature
-            type: Context.ETH,
-            walletId: a.key,
+            type: fromWormholeChainToContext(chain),
+            walletKey: a.key,
         })).filter((a) => 
-            (a.walletId.includes("metamask") || a.walletId.includes("phantom"))
-               && !(isConnectedDynamicWallets(a.walletId, wallets.sending?.getWallet()) || isConnectedDynamicWallets(a.walletId, wallets.receiving?.getWallet()))
+            // TODO: Add more wallets
+            (a.walletKey.includes("metamask") || a.walletKey.includes("phantom"))
         )
     }, [walletOptions, selectWalletOption, sdkHasLoaded])
 
+    const selectDynamicWalletOption = React.useCallback(async (walletId: string, connectCallback: (wallet: DynamicWallet) => Promise<void>) => {
+        if (!sdkHasLoaded) return
+
+        // Check if the wallet is already connected
+        if (primaryWallet?.key === walletId) {
+            return await connectCallback(primaryWallet)
+        }
+        const connectedWallet = userWallets.find((w) => w.key === walletId)
+        if (connectedWallet) {
+            return await connectCallback(connectedWallet)
+        }
+
+        console.log("Selecting wallet option", walletId)
+        await selectWalletOption(walletId)
+    }, [sdkHasLoaded, primaryWallet, selectWalletOption])
+
     return {
         getWalletOptions,
-        selectWalletOption,
+        selectDynamicWalletOption,
     }
 }
 

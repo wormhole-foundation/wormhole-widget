@@ -1,6 +1,5 @@
 import React, { Fragment, useRef } from "react"
 import { Chain as WormholeChain, isChain } from '@wormhole-foundation/sdk';
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
 import { Theme } from "@mui/material"
 import WalletSidebar from "views/v2/Bridge/WalletConnector/Sidebar"
 import { TransferWallet, WalletData } from "../utils/wallet"
@@ -54,8 +53,7 @@ interface InternalWMProviderProps {
 }
 
 const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderProps>> = ({ children, chainRef, onConnectCallbackRef }) => {
-    const { sdkHasLoaded } = useDynamicContext();
-    const { getWalletOptions: getDynamicWalletOptions, selectWalletOption: selectDynamicWalletOption } = useDynamicWalletOptions()
+    const { getWalletOptions: getDynamicWalletOptions, selectDynamicWalletOption } = useDynamicWalletOptions()
     const { disconnectDynamicWallet } = useDynamicWalletHelpers()
     const [walletSidebarProps, setWalletSidebarProps] = React.useState<{ isOpen: boolean, type: TransferWallet }>(defaultWalletSidebarConfig);
     const dynamicwormholeChainRef = React.useRef<WormholeChain>("Ethereum")
@@ -81,15 +79,15 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
             }
             walletConnection.receiving = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, dynamicwormholeChainRef.current, dispatch)
         }
-    }, [walletConnection])
+    }, [walletConnection, disconnectDynamicWallet])
 
     const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
         walletConnection.nextTypeToConnect = type
-        if ("walletId" in walletInfo) {
+        if ("walletKey" in walletInfo) {
             // Dynamic Wallet will continue the connection flow
             dynamicwormholeChainRef.current = chain
             console.log("Dynamic Wallet will continue the connection flow", walletInfo)
-            return await selectDynamicWalletOption(walletInfo.walletId)
+            return await selectDynamicWalletOption(walletInfo.walletKey, createConnectedWallet)
         }
 
         await createConnectedWallet(walletInfo)
@@ -164,7 +162,6 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 
     React.useEffect(() => {
         onConnectCallbackRef.current = async (wallet) => {
-            console.log("onConnectCallbackRef")
             try {
                 await createConnectedWallet(wallet)
             } catch (err) {
@@ -174,7 +171,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
                 // Best option, ignore and allow the user to try again re-using the primaryWallet/wallets[i] reference
             }
         }
-    }, [sdkHasLoaded, createConnectedWallet])
+    }, [createConnectedWallet])
 
     return <>
         <WalletManager.Provider value={walletManager}>
