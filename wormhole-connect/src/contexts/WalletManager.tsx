@@ -61,36 +61,27 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
 
     const walletConnection = React.useRef<ConnectedWallets>({ nextTypeToConnect: TransferWallet.SENDING }).current
 
-    const createConnectedWallet = React.useCallback(async (wallet: Wallet): Promise<void> => {
-        if (walletConnection.nextTypeToConnect === TransferWallet.SENDING) {
-            if (walletConnection.sending) {
-                if (isDynamicWallet(walletConnection.sending)) {
-                    disconnectDynamicWallet(walletConnection.sending)
-                }
-                walletConnection.sending.disconnect()
+    const createConnectedWallet = React.useCallback(async (wallet: Wallet, wormholeChain: WormholeChain): Promise<void> => {
+        if (walletConnection[walletConnection.nextTypeToConnect]) {
+            const previousWallet = walletConnection[walletConnection.nextTypeToConnect]!
+            if (isDynamicWallet(previousWallet)) {
+                disconnectDynamicWallet(previousWallet)
             }
-            walletConnection.sending = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, dynamicWormholeChainRef.current, dispatch)
-        } else {
-            if (walletConnection.receiving) {
-                if (isDynamicWallet(walletConnection.receiving)) {
-                    disconnectDynamicWallet(walletConnection.receiving)
-                }
-                walletConnection.receiving.disconnect()
-            }
-            walletConnection.receiving = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, dynamicWormholeChainRef.current, dispatch)
+            previousWallet.disconnect()
         }
+        walletConnection[walletConnection.nextTypeToConnect] = await toConnectedWallet(wallet, walletConnection.nextTypeToConnect, wormholeChain, dispatch)
     }, [walletConnection, disconnectDynamicWallet])
 
     const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
         walletConnection.nextTypeToConnect = type
         if ("walletKey" in walletInfo) {
-            // Dynamic Wallet will continue the connection flow
+            // Saving the chain for `onConnectCallbackRef` callback because it is not available in the DynamicWallet object
             dynamicWormholeChainRef.current = chain
             console.log("Dynamic Wallet will continue the connection flow", walletInfo)
-            return await selectDynamicWalletOption(walletInfo.walletKey, createConnectedWallet)
+            return await selectDynamicWalletOption(walletInfo.walletKey, (w) => createConnectedWallet(w, chain))
         }
 
-        await createConnectedWallet(walletInfo)
+        await createConnectedWallet(walletInfo, chain)
         await connectWallet(walletConnection.nextTypeToConnect)
         if (walletSidebarProps.isOpen) {
             setWalletSidebarProps(defaultWalletSidebarConfig)
@@ -166,12 +157,10 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
     React.useEffect(() => {
         onConnectCallbackRef.current = async (wallet) => {
             try {
-                await createConnectedWallet(wallet)
+                await createConnectedWallet(wallet, dynamicWormholeChainRef.current)
             } catch (err) {
-                console.log(err)
                 // Something wrong happened here
-                // TODO: Handle this error
-                // Best option, ignore and allow the user to try again re-using the primaryWallet/wallets[i] reference
+                console.log(err)
             }
         }
     }, [createConnectedWallet])
