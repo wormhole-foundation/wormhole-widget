@@ -9,6 +9,89 @@ const LOCAL_STORAGE_MAX = 3;
 const JSONReplacer = (_, value: any) =>
   typeof value === 'bigint' ? value.toString() : value;
 
+// Checks the existance of the given prop in a parent object
+const validateChildProp = (
+  parent: object,
+  propName: string,
+  propType: string,
+) => {
+  return (
+    propName in parent &&
+    parent[propName] !== null && // Line below is an explicit check for undefined values as well
+    typeof parent[propName] === propType
+  );
+};
+
+// Validates a single local transaction
+const validateSingleTransaction = (
+  tx: TransactionLocal,
+): tx is TransactionLocal => {
+  // Check first level required properties
+  const hasReceipt = validateChildProp(tx, 'receipt', 'object');
+  const hasRoute = validateChildProp(tx, 'route', 'string');
+  const hasTimestamp = validateChildProp(tx, 'timestamp', 'number');
+  const hasTxDetails = validateChildProp(tx, 'txDetails', 'object');
+  const hasTxHash = validateChildProp(tx, 'txHash', 'string');
+
+  if (
+    !hasReceipt ||
+    !hasRoute ||
+    !hasTimestamp ||
+    !hasTxDetails ||
+    !hasTxHash
+  ) {
+    return false;
+  }
+
+  // Check second level required properties
+  const hasAmount = validateChildProp(tx.txDetails, 'amount', 'object');
+  const hasEta = validateChildProp(tx.txDetails, 'eta', 'number');
+  const hasFromChain = validateChildProp(tx.txDetails, 'fromChain', 'string');
+  const hasToChain = validateChildProp(tx.txDetails, 'toChain', 'string');
+  const hasTokenKey = validateChildProp(tx.txDetails, 'tokenKey', 'string');
+
+  if (!hasAmount || !hasEta || !hasToChain || !hasFromChain || !hasTokenKey) {
+    return false;
+  }
+
+  // Check third level properties
+  const hasAmountValue = validateChildProp(
+    tx.txDetails.amount,
+    'amount',
+    'string',
+  );
+  const hasDecimals = validateChildProp(
+    tx.txDetails.amount,
+    'decimals',
+    'number',
+  );
+
+  if (!hasAmountValue || !hasDecimals) {
+    return false;
+  }
+
+  // All validation steps passed
+  return true;
+};
+
+// Validates a given array of local transactions
+const validateTransactions = (
+  parsedTxs: Array<TransactionLocal>,
+): parsedTxs is Array<TransactionLocal> => {
+  if (!Array.isArray(parsedTxs)) {
+    return false;
+  }
+
+  for (const tx of parsedTxs) {
+    if (!validateSingleTransaction(tx)) {
+      return false;
+    }
+  }
+
+  // All transactions are valid
+  return true;
+};
+
 // Retrieves all in-progress transactions from localStorage
 export const getTxsFromLocalStorage = ():
   | Array<TransactionLocal>
@@ -22,7 +105,17 @@ export const getTxsFromLocalStorage = ():
       const item = ls.getItem(itemKey);
       if (item) {
         try {
-          return JSON.parse(item);
+          const parsedTxs = JSON.parse(item);
+          if (validateTransactions(parsedTxs)) {
+            return parsedTxs;
+          } else {
+            console.log(
+              `Error while parsing localStorage item ${LOCAL_STORAGE_KEY}: Not an array of valid transactions`,
+            );
+            // Remove invalid transactions entry
+            ls.removeItem(LOCAL_STORAGE_KEY);
+            return;
+          }
         } catch (e: any) {
           // We can get a SyntaxError from JSON.parse
           // In that case we should debug log and remove the local storage entry completely,
