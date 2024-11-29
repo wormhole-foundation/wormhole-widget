@@ -120,7 +120,6 @@ const connectDynamicWallet = async (
     wallet: DynamicWallet,
     dispatch: Dispatch<any>,
 ) => {
-    const name = wallet.connector.name
     const address = await wallet.connector.getAddress() || ""
 
     const chainConfig = config.chains[chain];
@@ -128,7 +127,7 @@ const connectDynamicWallet = async (
         throw new Error(`Unable to find wallets for chain ${chain}`);
     }
 
-    const { chainId } = chainConfig;
+    const { chainId, context } = chainConfig;
     await switchChain(wallet, Number(chainId));
 
     config.triggerEvent({
@@ -136,7 +135,7 @@ const connectDynamicWallet = async (
         details: {
             side: type,
             chain: chain,
-            wallet: name.toLowerCase(),
+            wallet: wallet.connector.name.toLowerCase(),
         },
     });
 
@@ -155,7 +154,7 @@ const connectDynamicWallet = async (
     wallet.connector.on('disconnect', () => {
         wallet.connector.removeAllListeners();
         dispatch(clearWallet(type));
-        // localStorage.removeItem(`wormhole-connect:wallet:${context}`);
+        localStorage.removeItem(`wormhole-connect:wallet:${context}`);
     });
 
     // when the user has multiple wallets connected and either changes
@@ -168,8 +167,9 @@ const connectDynamicWallet = async (
         // TODO: Test this 
         if (shouldDisconnect) {
             wallet.connector.removeAllListeners()
+            localStorage.removeItem(`wormhole-connect:wallet:${context}`);
         }
     });
 
-    // localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+    localStorage.setItem(`wormhole-connect:wallet:${context}`, wallet.connector.key);
 };

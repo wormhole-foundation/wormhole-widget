@@ -29,7 +29,7 @@ import {
   setDestToken,
 } from 'store/transferInput';
 import { isTransferValid, useValidate } from 'utils/transferValidation';
-import { TransferWallet, useConnectToLastUsedWallet } from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
 import WalletConnector from 'views/v2/Bridge/WalletConnector';
 import AssetPicker from 'views/v2/Bridge/AssetPicker';
 import WalletController from 'views/v2/Bridge/WalletConnector/Controller';
@@ -194,9 +194,6 @@ const Bridge = () => {
 
   // Pre-fetch available routes
   useFetchSupportedRoutes();
-
-  // Connect to any previously used wallets for the selected networks
-  useConnectToLastUsedWallet();
 
   // Call to initiate transfer inputs validations
   useValidate();

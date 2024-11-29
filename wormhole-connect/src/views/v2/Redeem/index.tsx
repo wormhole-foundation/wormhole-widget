@@ -46,7 +46,6 @@ import {
   TransferWallet,
 } from 'utils/wallet';
 import TransactionDetails from 'views/v2/Redeem/TransactionDetails';
-import { useConnectToLastUsedWallet } from 'utils/wallet';
 
 import type { RootState } from 'store';
 import TxCompleteIcon from 'icons/TxComplete';
@@ -145,8 +144,6 @@ const Redeem = () => {
   const { connectWallet, getConnectedWallet, switchChain, registerWalletSigner } = useWalletManager()
 
   const routeContext = React.useContext(RouteContext);
-
-  useConnectToLastUsedWallet();
 
   const {
     route: routeName,

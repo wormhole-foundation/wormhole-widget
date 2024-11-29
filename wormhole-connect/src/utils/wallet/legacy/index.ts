@@ -23,8 +23,6 @@ const connectWallet = async (
     dispatch: Dispatch<any>,
   ) => {
     const { wallet, name } = walletInfo;
-
-    // setWalletConnection(type, wallet);
   
     const chainConfig = config.chains[chain];
     if (!chainConfig) {

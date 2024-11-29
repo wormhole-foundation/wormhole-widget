@@ -23,7 +23,7 @@ export const useDynamicWalletOptions = () => {
     const { walletOptions, selectWalletOption }  = useWalletOptions()
     const userWallets = useUserWallets()
 
-    const getWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
+    const getDynamicWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
         // FIXME: This wont work, we need to wait for dynamic team for the wallet chain filter feature
         // const dynamicChain: Chain = toDynamicChain(chain)
@@ -56,7 +56,7 @@ export const useDynamicWalletOptions = () => {
     }, [sdkHasLoaded, primaryWallet, selectWalletOption])
 
     return {
-        getWalletOptions,
+        getDynamicWalletOptions,
         selectDynamicWalletOption,
     }
 }
@@ -65,6 +65,8 @@ export const useDynamicWalletHelpers = () => {
     const { primaryWallet, handleLogOut, handleUnlinkWallet, sdkHasLoaded } = useDynamicContext();
     const switchWallet = useSwitchWallet()
     const userWallets = useUserWallets()
+
+    const isDynamicWalletReady = React.useCallback(() => sdkHasLoaded, [sdkHasLoaded])
 
     const disconnectDynamicWallet = React.useCallback(async (walletToDisconnect: DynamicWallet) => {
         if (userWallets.length === 0) {
@@ -82,5 +84,6 @@ export const useDynamicWalletHelpers = () => {
 
     return {
         disconnectDynamicWallet,
+        isDynamicWalletReady,
     }
 }

@@ -3,7 +3,7 @@ import config from 'config';
 
 import { RootState } from 'store';
 import { Dispatch } from 'redux';
-import { useEffect } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Network, Chain as WormholeChain, UnsignedTransaction, chainToPlatform, chainIdToChain, toChainId } from '@wormhole-foundation/sdk';
@@ -21,9 +21,10 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { DynamicWalletData } from "../dynamic-wallet/useDynamicWallet";
-import { WalletAggregatorData } from './legacy';
+import { DynamicWalletData, useDynamicWalletHelpers, useDynamicWalletOptions } from "../dynamic-wallet/useDynamicWallet";
+import { getWalletOptions, WalletAggregatorData } from './legacy';
 import { ConnectedWallet } from './wallet';
+import { isChainSupportedByDynamicWallet } from 'utils/dynamic-wallet/utils';
 
 export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
 
@@ -63,63 +64,51 @@ export const walletAcceptedChains = (context: Context | undefined): WormholeChai
 
 export type WalletData = WalletAggregatorData | DynamicWalletData
 
-// Checks localStorage for previously used wallet for this chain
-// and connects to it automatically if it exists.
-export const connectLastUsedWallet = async (
-  type: TransferWallet,
-  chain: WormholeChain,
-  dispatch: Dispatch<any>,
-) => {
-  // const chainConfig = config.chains[chain!]!;
-  // const lastUsedWallet = localStorage.getItem(
-  //   `wormhole-connect:wallet:${chainConfig.context}`,
-  // );
-  // // if the last used wallet is not WalletConnect, try to connect to it
-  // if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
-  //   const options = await getWalletOptions(chainConfig);
-  //   const wallet = options.find((w) => w.name === lastUsedWallet);
-  //   if (wallet) {
-  //     await connectWallet(type, chain, wallet, dispatch);
-  //   }
-  // }
-};
-
-export const useConnectToLastUsedWallet = (): void => {
+export const useConnectToLastUsedWallet = (
+  connectWallet: (wallet: WalletData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch<any>) => void,
+): void => {
   const dispatch = useDispatch();
+  const { getDynamicWalletOptions } = useDynamicWalletOptions()
+  const { isDynamicWalletReady } = useDynamicWalletHelpers()
   const { toChain, fromChain } = useSelector(
     (state: RootState) => state.transferInput,
   );
+  
+  // Checks localStorage for previously used wallet for this chain
+  // and connects to it automatically if it exists.
+  const connectLastUsedWallet = React.useCallback(async (
+    type: TransferWallet,
+    chain: WormholeChain,
+    dispatch: Dispatch<any>,
+  ) => {
+    let wallet: WalletData | undefined;
+    const chainConfig = config.chains[chain!]!;
+    const lastUsedWallet = localStorage.getItem(
+      `wormhole-connect:wallet:${chainConfig.context}`,
+    );
 
-  useEffect(() => {
+    if (lastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
+      const walletOptions = await getDynamicWalletOptions(chain, {});
+      wallet = walletOptions.find((w) => w.walletKey === lastUsedWallet);
+    } else if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
+      const walletOptions = await getWalletOptions(chainConfig);
+      wallet = walletOptions.find((w) => w.name === lastUsedWallet);
+    }
+
+    if (wallet) {
+      await connectWallet(wallet, type, chain, dispatch);
+    }
+  }, [connectWallet, getWalletOptions])
+
+  React.useEffect(() => {
+    if (!isDynamicWalletReady()) return;
     if (fromChain)
       connectLastUsedWallet(TransferWallet.SENDING, fromChain, dispatch);
     if (toChain)
       connectLastUsedWallet(TransferWallet.RECEIVING, toChain, dispatch);
+    // TODO: Should we add `connectLastUsedWallet` function as a dependency?. It will trigger many times this useEffect
   }, [fromChain, toChain]);
 };
-
-// export const switchChain = async (
-//   chainId: number | string,
-//   type: TransferWallet,
-// ): Promise<string | undefined> => {
-//   const w: Wallet = walletConnection[type]! as any;
-//   if (!w) throw new Error('must connect wallet');
-
-//   const config = getChainByChainId(chainId)!;
-//   const currentChain = w.getNetworkInfo().chainId;
-//   if (currentChain === chainId) return;
-//   if (config.context === Context.ETH) {
-//     try {
-//       // some wallets may not support chain switching
-//       const evm = await import('utils/wallet/evm');
-//       await evm.switchChain(w, chainId as number);
-//     } catch (e) {
-//       if (e instanceof NotSupported) return;
-//       throw e;
-//     }
-//   }
-//   return w.getAddress();
-// };
 
 export const signAndSendTransaction = async (
   chain: WormholeChain,
