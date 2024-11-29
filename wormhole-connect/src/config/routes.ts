@@ -135,4 +135,11 @@ export const RoutesConfig: Record<string, RouteData> = {
     icon: XLabsIcon,
     pendingMessage: 'Waiting for Wormhole network consensus . . .',
   },
+  AutomaticTokenBridgeV3: {
+    name: 'AutomaticTokenBridgeV3',
+    displayName: 'Automatic Bridge V3',
+    link: 'https://xlabs.xyz',
+    icon: XLabsIcon,
+    pendingMessage: 'Waiting for Wormhole network consensus . . .',
+  },
 };

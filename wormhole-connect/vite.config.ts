@@ -60,6 +60,7 @@ const resolve = {
     'process/': 'process',
     'buffer/': 'buffer',
   },
+  preserveSymlinks: true,
 };
 
 const plugins = [
