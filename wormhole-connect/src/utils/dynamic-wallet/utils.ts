@@ -160,13 +160,13 @@ const connectDynamicWallet = async (
     // when the user has multiple wallets connected and either changes
     // or disconnects the current wallet, clear the wallet
     wallet.connector.on('accountChange', ({ accounts }) => {
-        // disconnecexportt only if there are no accounts, or if the new account is different from the current
+        // disconnec only if there are no accounts, or if the new account is different from the current
         const shouldDisconnect =
             accounts.length === 0 || (accounts.length && address && accounts[0] !== address);
 
-        // TODO: Test this 
         if (shouldDisconnect) {
             wallet.connector.removeAllListeners()
+            dispatch(clearWallet(type));
             localStorage.removeItem(`wormhole-connect:wallet:${context}`);
         }
     });
