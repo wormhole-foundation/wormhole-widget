@@ -82,7 +82,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         }
 
         await createConnectedWallet(walletInfo, chain)
-        await connectWallet(walletConnection.nextTypeToConnect)
+        walletConnection.nextTypeToConnect = type
         if (walletSidebarProps.isOpen) {
             setWalletSidebarProps(defaultWalletSidebarConfig)
         }
