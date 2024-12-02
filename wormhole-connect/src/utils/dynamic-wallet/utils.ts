@@ -77,6 +77,9 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
     await connectDynamicWallet(type, chain, wallet, dispatch)
     const address = wallet.address
     const icon = (props) => React.createElement(DynamicWalletIcon, { size: props.size, walletKey: wallet.connector.key })
+    const disconnect = () => {
+        wallet.connector.emit('disconnect')
+    }
     switch (wallet.chain) {
         case "EVM":
             return {
@@ -91,9 +94,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
                 getNetworkInfo: async () => {
                     return Number(await wallet.connector.getNetwork() || 0)
                 },
-                disconnect: () => {
-                    wallet.connector.removeAllListeners()
-                }
+                disconnect,
             }
         case "SOL":
             return {
@@ -104,9 +105,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
                         : SolanaNetwork.Devnet
                 },
                 getWallet: () => wallet,
-                disconnect: () => {
-                    wallet.connector.removeAllListeners()
-                }
+                disconnect,
             }
         default:
             throw new Error(`Wallet chain not implemented: ${wallet.chain}`)

@@ -57,7 +57,7 @@ const connectWallet = async (
   
     // clear wallet when the user manually disconnects from outside the app
     wallet.on('disconnect', () => {
-      wallet.removeAllListeners();
+      wallet.disconnect()
       dispatch(clearWallet(type));
       localStorage.removeItem(`wormhole-connect:wallet:${context}`);
     });
