@@ -1,4 +1,5 @@
 import { TransactionLocal } from 'config/types';
+import { isEmptyObject } from 'utils';
 
 const LOCAL_STORAGE_KEY = 'wormhole-connect:transactions:inprogress';
 const LOCAL_STORAGE_MAX = 3;
@@ -9,17 +10,26 @@ const LOCAL_STORAGE_MAX = 3;
 const JSONReplacer = (_, value: any) =>
   typeof value === 'bigint' ? value.toString() : value;
 
-// Checks the existance of the given prop in a parent object
-const validateChildProp = (
+// Checks the existance of the props with the given types in a parent object
+const validateChildPropTypes = (
   parent: object,
-  propName: string,
-  propType: string,
+  propTypes: { [key: string]: string },
 ) => {
-  return (
-    propName in parent &&
-    parent[propName] !== null && // Line below is an explicit check for undefined values as well
-    typeof parent[propName] === propType
-  );
+  if (isEmptyObject(parent)) {
+    return false;
+  }
+
+  // Iterate over each property and verify its type in the parent object
+  for (const key in propTypes) {
+    if (
+      parent[key] === null || // Line below is an explicit check for undefined values as well
+      typeof parent[key] !== propTypes[key]
+    ) {
+      return false;
+    }
+  }
+  // Prop type validations passed
+  return true;
 };
 
 // Validates a single local transaction
@@ -27,46 +37,38 @@ const validateSingleTransaction = (
   tx: TransactionLocal,
 ): tx is TransactionLocal => {
   // Check first level required properties
-  const hasReceipt = validateChildProp(tx, 'receipt', 'object');
-  const hasRoute = validateChildProp(tx, 'route', 'string');
-  const hasTimestamp = validateChildProp(tx, 'timestamp', 'number');
-  const hasTxDetails = validateChildProp(tx, 'txDetails', 'object');
-  const hasTxHash = validateChildProp(tx, 'txHash', 'string');
-
   if (
-    !hasReceipt ||
-    !hasRoute ||
-    !hasTimestamp ||
-    !hasTxDetails ||
-    !hasTxHash
+    !validateChildPropTypes(tx, {
+      receipt: 'object',
+      route: 'string',
+      timestamp: 'number',
+      txDetails: 'object',
+      txHash: 'string',
+    })
   ) {
     return false;
   }
 
   // Check second level required properties
-  const hasAmount = validateChildProp(tx.txDetails, 'amount', 'object');
-  const hasEta = validateChildProp(tx.txDetails, 'eta', 'number');
-  const hasFromChain = validateChildProp(tx.txDetails, 'fromChain', 'string');
-  const hasToChain = validateChildProp(tx.txDetails, 'toChain', 'string');
-  const hasTokenKey = validateChildProp(tx.txDetails, 'tokenKey', 'string');
-
-  if (!hasAmount || !hasEta || !hasToChain || !hasFromChain || !hasTokenKey) {
+  if (
+    !validateChildPropTypes(tx.txDetails, {
+      amount: 'object',
+      eta: 'number',
+      fromChain: 'string',
+      toChain: 'string',
+      tokenKey: 'string',
+    })
+  ) {
     return false;
   }
 
   // Check third level properties
-  const hasAmountValue = validateChildProp(
-    tx.txDetails.amount,
-    'amount',
-    'string',
-  );
-  const hasDecimals = validateChildProp(
-    tx.txDetails.amount,
-    'decimals',
-    'number',
-  );
-
-  if (!hasAmountValue || !hasDecimals) {
+  if (
+    !validateChildPropTypes(tx.txDetails.amount, {
+      amount: 'string',
+      decimals: 'number',
+    })
+  ) {
     return false;
   }
 
