@@ -54,7 +54,6 @@ export interface TokenDetails {
 }
 
 export const ERR_INSUFFICIENT_ALLOWANCE = 'insufficient_allowance';
-export const ERR_SWAP_FAILED = 'swap_failed';
 // NTT errors
 export const ERR_NOT_ENOUGH_CAPACITY = 'swap_failed';
 export const ERR_SOURCE_CONTRACT_PAUSED = 'source_contract_paused';
@@ -63,19 +62,22 @@ export const ERR_UNSUPPORTED_ABI_VERSION = 'unsupported_abi_version';
 export const ERR_INSUFFICIENT_GAS = 'insufficient_gas';
 export const ERR_AMOUNT_TOO_LARGE = 'amount_too_large';
 
+// Mayan errors
+export const ERR_AMOUNT_IN_TOO_SMALL = 'amount_too_small';
+
 export const ERR_USER_REJECTED = 'user_rejected';
 export const ERR_TIMEOUT = 'user_timeout';
 export const ERR_UNKNOWN = 'unknown';
 
 export type TransferErrorType =
   | typeof ERR_INSUFFICIENT_ALLOWANCE
-  | typeof ERR_SWAP_FAILED
   | typeof ERR_NOT_ENOUGH_CAPACITY
   | typeof ERR_SOURCE_CONTRACT_PAUSED
   | typeof ERR_DESTINATION_CONTRACT_PAUSED
   | typeof ERR_UNSUPPORTED_ABI_VERSION
   | typeof ERR_INSUFFICIENT_GAS
   | typeof ERR_AMOUNT_TOO_LARGE
+  | typeof ERR_AMOUNT_IN_TOO_SMALL
   | typeof ERR_USER_REJECTED
   | typeof ERR_TIMEOUT
   | typeof ERR_UNKNOWN;

@@ -5,12 +5,12 @@ import type {
 } from 'telemetry/types';
 import {
   ERR_INSUFFICIENT_ALLOWANCE,
-  //ERR_SWAP_FAILED,
   ERR_INSUFFICIENT_GAS,
   ERR_TIMEOUT,
   ERR_UNKNOWN,
   ERR_USER_REJECTED,
   ERR_AMOUNT_TOO_LARGE,
+  ERR_AMOUNT_IN_TOO_SMALL,
 } from 'telemetry/types';
 import { InsufficientFundsForGasError } from 'sdklegacy';
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
@@ -22,6 +22,7 @@ export const USER_REJECTED_REGEX = new RegExp(
   'user rejected|rejected the request|rejected from user|user cancel|aborted by user|plugin closed',
   'mi',
 );
+export const AMOUNT_IN_TOO_SMALL = new RegExp('AmountInTooSmall', 'm');
 
 export function interpretTransferError(
   e: any,
@@ -48,6 +49,9 @@ export function interpretTransferError(
     } else if (USER_REJECTED_REGEX.test(e?.message)) {
       uiErrorMessage = 'Transfer rejected in wallet, please try again';
       internalErrorCode = ERR_USER_REJECTED;
+    } else if (AMOUNT_IN_TOO_SMALL.test(e?.message)) {
+      uiErrorMessage = 'Amount is too small for the selected route';
+      internalErrorCode = ERR_AMOUNT_IN_TOO_SMALL;
     } else if (
       transferDetails.route.includes('CCTP') &&
       /burn.*exceed/i.test(e?.toString())
