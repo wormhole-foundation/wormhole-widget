@@ -1,4 +1,5 @@
 import { TransactionLocal } from 'config/types';
+import { isEmptyObject } from 'utils';
 
 const LOCAL_STORAGE_KEY = 'wormhole-connect:transactions:inprogress';
 const LOCAL_STORAGE_MAX = 3;
@@ -8,6 +9,90 @@ const LOCAL_STORAGE_MAX = 3;
 // Please see for details: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/BigInt_not_serializable
 const JSONReplacer = (_, value: any) =>
   typeof value === 'bigint' ? value.toString() : value;
+
+// Checks the existance of the props with the given types in a parent object
+const validateChildPropTypes = (
+  parent: object,
+  propTypes: { [key: string]: string },
+) => {
+  if (isEmptyObject(parent)) {
+    return false;
+  }
+
+  // Iterate over each property and verify its type in the parent object
+  for (const key in propTypes) {
+    if (
+      parent[key] === null || // Line below is an explicit check for undefined values as well
+      typeof parent[key] !== propTypes[key]
+    ) {
+      return false;
+    }
+  }
+  // Prop type validations passed
+  return true;
+};
+
+// Validates a single local transaction
+const validateSingleTransaction = (
+  tx: TransactionLocal,
+): tx is TransactionLocal => {
+  // Check first level required properties
+  if (
+    !validateChildPropTypes(tx, {
+      receipt: 'object',
+      route: 'string',
+      timestamp: 'number',
+      txDetails: 'object',
+      txHash: 'string',
+    })
+  ) {
+    return false;
+  }
+
+  // Check second level required properties
+  if (
+    !validateChildPropTypes(tx.txDetails, {
+      amount: 'object',
+      eta: 'number',
+      fromChain: 'string',
+      toChain: 'string',
+      tokenKey: 'string',
+    })
+  ) {
+    return false;
+  }
+
+  // Check third level properties
+  if (
+    !validateChildPropTypes(tx.txDetails.amount, {
+      amount: 'string',
+      decimals: 'number',
+    })
+  ) {
+    return false;
+  }
+
+  // All validation steps passed
+  return true;
+};
+
+// Validates a given array of local transactions
+const validateTransactions = (
+  parsedTxs: Array<TransactionLocal>,
+): parsedTxs is Array<TransactionLocal> => {
+  if (!Array.isArray(parsedTxs)) {
+    return false;
+  }
+
+  for (const tx of parsedTxs) {
+    if (!validateSingleTransaction(tx)) {
+      return false;
+    }
+  }
+
+  // All transactions are valid
+  return true;
+};
 
 // Retrieves all in-progress transactions from localStorage
 export const getTxsFromLocalStorage = ():
@@ -22,7 +107,17 @@ export const getTxsFromLocalStorage = ():
       const item = ls.getItem(itemKey);
       if (item) {
         try {
-          return JSON.parse(item);
+          const parsedTxs = JSON.parse(item);
+          if (validateTransactions(parsedTxs)) {
+            return parsedTxs;
+          } else {
+            console.log(
+              `Error while parsing localStorage item ${LOCAL_STORAGE_KEY}: Not an array of valid transactions`,
+            );
+            // Remove invalid transactions entry
+            ls.removeItem(LOCAL_STORAGE_KEY);
+            return;
+          }
         } catch (e: any) {
           // We can get a SyntaxError from JSON.parse
           // In that case we should debug log and remove the local storage entry completely,
