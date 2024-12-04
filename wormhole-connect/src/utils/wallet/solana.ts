@@ -244,6 +244,20 @@ async function createPriorityFeeInstructions(
         }
       }
 
+      // In this case a require_gte expression was violated during a Swap instruction.
+      // We can retry the simulation to get a successful response.
+      if (response.value.logs) {
+        for (const line of response.value.logs) {
+          if (line.includes('RequireGteViolated')) {
+            console.info(
+              'Swap instruction failure during simulation. Trying again.',
+            );
+            sleep(1000);
+            continue simulationLoop;
+          }
+        }
+      }
+
       // Logs didn't match an error case we would retry; throw
       throw new Error(
         `Simulation failed: ${JSON.stringify(response.value.err)}\nLogs:\n${(
