@@ -35,7 +35,10 @@ export function interpretTransferError(
     if (INSUFFICIENT_ALLOWANCE_REGEX.test(e?.message)) {
       uiErrorMessage = 'Error with transfer, please try again';
       internalErrorCode = ERR_INSUFFICIENT_ALLOWANCE;
-    } else if (e.name === 'TransactionExpiredTimeoutError') {
+    } else if (
+      e.name === 'TransactionExpiredTimeoutError' ||
+      e.name === 'TransactionExpiredBlockheightExceededError'
+    ) {
       // Solana timeout
       uiErrorMessage = 'Transfer timed out, please try again';
       internalErrorCode = ERR_TIMEOUT;
