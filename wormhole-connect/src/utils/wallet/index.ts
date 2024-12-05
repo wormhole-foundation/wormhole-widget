@@ -87,12 +87,13 @@ export const useConnectToLastUsedWallet = (
       `wormhole-connect:wallet:${chainConfig.context}`,
     );
 
-    const validLastUsedWallet = lastUsedWallet && lastUsedWallet !== "WalletConnect"
-
-    if (validLastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
+    if (lastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
       const walletOptions = await getDynamicWalletOptions(chain, {});
       wallet = walletOptions.find((w) => w.walletKey === lastUsedWallet);
-    } else if (validLastUsedWallet) {
+      if (wallet?.isWalletConnect) {
+        wallet = undefined;
+      }
+    } else if (lastUsedWallet && lastUsedWallet !== "WalletConnect") {
       const walletOptions = await getWalletOptions(chainConfig);
       wallet = walletOptions.find((w) => w.name === lastUsedWallet);
     }

@@ -1,7 +1,7 @@
 import React from "react"
 import DynamicWalletIcon from "utils/dynamic-wallet/walletIcon"
-import { DynamicWallet } from "./utils";
-import { useDynamicContext, useSwitchWallet, useUserWallets, useWalletOptions } from "@dynamic-labs/sdk-react-core";
+import { DynamicWallet, toDynamicChain } from "./utils";
+import { Chain, useDynamicContext, useSwitchWallet, useUserWallets, useWalletOptions } from "@dynamic-labs/sdk-react-core";
 import { Chain as WormholeChain } from "@wormhole-foundation/sdk"
 import { Context } from "sdklegacy";
 import { fromWormholeChainToContext, type IconType } from "utils/wallet";
@@ -13,6 +13,9 @@ export interface DynamicWalletData {
     icon: IconType;
     isReady: boolean;
     walletKey: string;
+    chain: Chain;
+    isInstalledOnBrowser: boolean;
+    isWalletConnect: boolean;
 }
 
 export type OnConnectCallback = (wallet: DynamicWallet) => void
@@ -25,18 +28,16 @@ export const useDynamicWalletOptions = () => {
 
     const getDynamicWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
-        // FIXME: This wont work, we need to wait for dynamic team for the wallet chain filter feature
-        // const dynamicChain: Chain = toDynamicChain(chain)
-        return walletOptions.map((a): DynamicWalletData => ({
+        return walletOptions.filter((a) => a.chain === toDynamicChain(chain) && a.group).map((a): DynamicWalletData => ({
             icon: ({ size }) => React.createElement(DynamicWalletIcon, { size, walletKey: a.key }),
             isReady: true,
             name: a.name,
             type: fromWormholeChainToContext(chain),
             walletKey: a.key,
-        })).filter((a) => 
-            // TODO: Add more wallets
-            (a.walletKey.includes("metamask") || a.walletKey.includes("phantom")) || a.walletKey.includes("connect")
-        )
+            chain: a.chain,
+            isInstalledOnBrowser: a.isInstalledOnBrowser,
+            isWalletConnect: a.isWalletConnect,
+        }))
     }, [walletOptions, selectWalletOption, sdkHasLoaded])
 
     const selectDynamicWalletOption = React.useCallback(async (walletId: string, connectCallback: (wallet: DynamicWallet) => Promise<void>) => {
