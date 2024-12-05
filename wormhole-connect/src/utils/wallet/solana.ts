@@ -247,9 +247,8 @@ async function createPriorityFeeInstructions(
 ) {
   let unitsUsed = 200_000;
   let simulationAttempts = 0;
-  let simulationAttemptsForKnownErrors = 0;
 
-  simulationLoop: while (simulationAttempts < 5) {
+  simulationLoop: while (true) {
     if (
       isVersionedTransaction(transaction) &&
       !transaction.message.recentBlockhash
@@ -269,16 +268,16 @@ async function createPriorityFeeInstructions(
 
     if (response.value.err) {
       if (checkKnownSimulationError(response.value)) {
-        // Number of attempts will be at least 5 for known errors
-        if (simulationAttemptsForKnownErrors < 5) {
-          simulationAttemptsForKnownErrors++;
-          sleep(1000);
+        // Number of attempts will be at most 5 for known errors
+        if (simulationAttempts < 5) {
+          simulationAttempts++;
+          await sleep(1000);
           continue simulationLoop;
         }
       } else if (simulationAttempts < 3) {
-        // Number of attempts will be at least 3 for all other errors
+        // Number of attempts will be at most 3 for unknown errors
         simulationAttempts++;
-        sleep(1000);
+        await sleep(1000);
         continue simulationLoop;
       }
 
