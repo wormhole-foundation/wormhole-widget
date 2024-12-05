@@ -262,4 +262,14 @@ export const TESTNET_CHAINS: ChainsConfig = {
     maxBlockSearch: 2000,
     symbol: 'MNT',
   },
+  Worldchain: {
+    ...chains.Worldchain!,
+    displayName: 'World Chain',
+    explorerUrl: 'https://worldchain-sepolia.explorer.alchemy.com/',
+    explorerName: 'World Scan',
+    gasToken: 'ETHworldchain',
+    chainId: 4801,
+    icon: Icon.WORLDCHAIN,
+    maxBlockSearch: 2000,
+  },
 };

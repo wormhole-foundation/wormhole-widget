@@ -137,7 +137,7 @@ const config: WormholeConnectConfig = {
 }
 ```
 
-See [`chains.ts`](https://github.com/wormhole-foundation/wormhole-sdk-ts/blob/main/core/base/src/constants/chains.ts) in the SDK. By default, Connect offers its full built-in list for both `mainnet` and `testnet`:
+See [`chains.ts`](https://github.com/wormhole-foundation/wormhole-sdk-ts/blob/main/core/base/src/constants/chains.ts) in the SDK. By default, Connect offers a subset of chains for both `mainnet` and `testnet`:
 
 | `mainnet` | `testnet` |
 | ---------- | ------------- |
@@ -151,17 +151,13 @@ See [`chains.ts`](https://github.com/wormhole-foundation/wormhole-sdk-ts/blob/ma
 | Sui | Sui |
 | Aptos | Aptos |
 | Base | BaseSepolia |
-| Osmosis | Osmosis |
-| Evmos | Evmos |
-| Kujira | Kujira |
-| Injective | Injective |
-| Kaia | Kaia |
 | Arbitrum | ArbitrumSepolia |
 | Optimism | OptimismSepolia |
 | Scroll | Scroll |
 | Blast | Blast |
 | Xlayer | Xlayer |
 | Mantle | Mantle |
+| Worldchain | Worldchain |
 
 ### RPC Endpoints (`rpcs`):
 

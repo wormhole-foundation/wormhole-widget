@@ -100,6 +100,12 @@ const iconMap: { [key in TokenIcon]: React.JSX.Element } = {
       src={chainToIcon('Mantle')}
     />
   ),
+  [Icon.WORLDCHAIN]: (
+    <img
+      style={{ maxHeight: '100%', maxWidth: '100%' }}
+      src={chainToIcon('Worldchain')}
+    />
+  ),
 };
 
 function isBuiltinTokenIcon(icon?: TokenIcon | string): icon is TokenIcon {

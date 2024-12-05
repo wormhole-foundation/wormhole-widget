@@ -840,6 +840,27 @@ export const MAINNET_TOKENS: TokensConfig = {
     color: '#000000',
     decimals: 8,
   },
+  ETHworldchain: {
+    key: 'ETHworldchain',
+    symbol: 'ETH',
+    nativeChain: 'Worldchain',
+    icon: Icon.WORLDCHAIN,
+    coinGeckoId: 'ethereum',
+    decimals: 18,
+    wrappedAsset: 'WETHworldchain',
+  },
+  WETHworldchain: {
+    key: 'WETHworldchain',
+    symbol: 'WETH',
+    nativeChain: 'Worldchain',
+    icon: Icon.WORLDCHAIN,
+    tokenId: {
+      chain: 'Worldchain',
+      address: '0x4200000000000000000000000000000000000006',
+    },
+    coinGeckoId: 'ethereum',
+    decimals: 18,
+  },
 };
 
 export const MAINNET_WRAPPED_TOKENS: TokenAddressesByChain = {
