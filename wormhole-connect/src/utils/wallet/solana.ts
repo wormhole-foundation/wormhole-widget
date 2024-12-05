@@ -29,7 +29,7 @@ import {
 } from '@xlabs-libs/wallet-aggregator-solana';
 
 import config from 'config';
-import { sleep } from 'utils';
+import { isEmptyObject, sleep } from 'utils';
 
 import {
   isVersionedTransaction,
@@ -50,39 +50,41 @@ const getWalletName = (wallet: Wallet) =>
 function checkKnownSimulationError(
   response: SimulatedTransactionResponse,
 ): boolean {
+  const errors = {};
+
   // This error occur when the blockhash included in a transaction is not deemed to be valid
   // when a validator processes a transaction. We can retry the simulation to get a valid blockhash.
   if (response.err === 'BlockhashNotFound') {
-    console.info('Blockhash not found during simulation. Trying again.');
-    return true;
+    errors['BlockhashNotFound'] =
+      'Blockhash not found during simulation. Trying again.';
   }
 
-  // In some cases which aren't deterministic, like a slippage error, we can retry the
-  // simulation a few times to get a successful response.
+  // Check the response logs for any known errors
   if (response.logs) {
     for (const line of response.logs) {
+      // In some cases which aren't deterministic, like a slippage error, we can retry the
+      // simulation a few times to get a successful response.
       if (line.includes('SlippageToleranceExceeded')) {
-        console.info('Slippage failure during simulation. Trying again.');
-        return true;
+        errors['SlippageToleranceExceeded'] =
+          'Slippage failure during simulation. Trying again.';
       }
-    }
-  }
 
-  // In this case a require_gte expression was violated during a Swap instruction.
-  // We can retry the simulation to get a successful response.
-  if (response.logs) {
-    for (const line of response.logs) {
+      // In this case a require_gte expression was violated during a Swap instruction.
+      // We can retry the simulation to get a successful response.
       if (line.includes('RequireGteViolated')) {
-        console.info(
-          'Swap instruction failure during simulation. Trying again.',
-        );
-        return true;
+        errors['RequireGteViolated'] =
+          'Swap instruction failure during simulation. Trying again.';
       }
     }
   }
 
   // No known simulation errors found
-  return false;
+  if (isEmptyObject(errors)) {
+    return false;
+  }
+
+  console.table(errors);
+  return true;
 }
 
 export function fetchOptions() {
