@@ -280,7 +280,7 @@ const useTransactionHistoryWHScan = (
       const nativeToken = config.tokens[nativeTokenKey];
       if (!nativeToken) return;
 
-      const startToken = flagSet.flags.shouldWrapNative
+      const startToken = flagSet.flags?.shouldWrapNative
         ? getGasToken(txData.fromChain)
         : nativeToken;
 
@@ -291,6 +291,7 @@ const useTransactionHistoryWHScan = (
         ),
         config.tokensArr,
       );
+
       if (!finalTokenConfig) return;
 
       const receiveAmount = BigInt(minAmountFinish) - BigInt(relayerFee);
@@ -298,7 +299,7 @@ const useTransactionHistoryWHScan = (
       // Override with Portico specific data
       txData.tokenKey = startToken.key;
       txData.tokenAddress = startToken.tokenId?.address || 'native';
-      txData.receivedTokenKey = flagSet.flags.shouldUnwrapNative
+      txData.receivedTokenKey = flagSet.flags?.shouldUnwrapNative
         ? getGasToken(txData.toChain).key
         : finalTokenConfig.key;
       txData.receiveAmount =
