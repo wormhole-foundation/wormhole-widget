@@ -24,6 +24,7 @@ import {
   getWrappedTokenId,
   isFrankensteinToken,
   isWrappedToken,
+  sleep,
 } from 'utils';
 import { TransferWallet } from 'utils/wallet';
 
@@ -396,10 +397,23 @@ export class SDKv2Route {
       return [route, receipt];
     }
 
-    // Otherwise track the transfer until it reaches a final state
-    for await (receipt of route.track(receipt, 120 * 1000)) {
-      if (receipt.state >= TransferState.SourceInitiated) {
-        return [route, receipt];
+    // Otherwise track the transfer until it reaches a final state,
+    // retrying up to 5 times if there are errors
+    let retries = 0;
+    while (retries < 5) {
+      try {
+        for await (receipt of route.track(receipt, 120 * 1000)) {
+          if (receipt.state >= TransferState.SourceInitiated) {
+            return [route, receipt];
+          }
+        }
+      } catch (e) {
+        console.error(
+          `Error tracking transfer (attempt ${retries + 1} / 5}):`,
+          e,
+        );
+        await sleep(1000);
+        retries++;
       }
     }
 
