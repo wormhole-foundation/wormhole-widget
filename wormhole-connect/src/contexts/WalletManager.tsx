@@ -29,7 +29,7 @@ interface ConnectedWallets {
 }
 
 const WALLET_MANAGER_INITIAL_STATE: WalletManagerProps = {
-    connectWallet: (type: TransferWallet) => {},
+    connectWallet: (type: TransferWallet) => { },
     getConnectedWallet: (type: TransferWallet) => undefined,
     switchChain: (chainId: number, type: TransferWallet) => Promise.resolve(),
     getWalletOptions: (chain: ChainConfig | undefined) => Promise.resolve([]),
@@ -75,6 +75,11 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
     const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
         walletConnection.nextTypeToConnect = type
         if ("walletKey" in walletInfo) {
+            // TODO: `useLastConnectedWallet` is calling `sidebarOnConnectWallet` when the user clicks on swap wallets connections.
+            // We should not allow to connect the same wallet twice. The connection must persist.
+            if (walletInfo.walletKey === walletConnection.sending?.getWalletKey() || walletInfo.walletKey === walletConnection.receiving?.getWalletKey()) {
+                return
+            }
             // Saving the chain for `onConnectCallbackRef` callback because it is not available in the DynamicWallet object
             dynamicWormholeChainRef.current = chain
             console.log("Dynamic Wallet will continue the connection flow", walletInfo)
@@ -108,6 +113,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         const temp = walletConnection.sending
         walletConnection.sending = walletConnection.receiving
         walletConnection.receiving = temp
+        walletConnection.nextTypeToConnect = walletConnection.nextTypeToConnect === TransferWallet.SENDING ? TransferWallet.RECEIVING : TransferWallet.SENDING
         dispatch(swapWallets())
     }, [walletConnection, dispatch])
 
@@ -175,8 +181,8 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
                 open={walletSidebarProps.isOpen}
                 type={walletSidebarProps.type}
                 onClose={() => {
-                        setWalletSidebarProps(defaultWalletSidebarConfig)
-                    }
+                    setWalletSidebarProps(defaultWalletSidebarConfig)
+                }
                 }
             />
         </WalletManager.Provider>

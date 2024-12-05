@@ -15,6 +15,7 @@ export interface ConnectedWallet {
   getWallet: () => Wallet
   getNetworkInfo: () => Promise<any>
   switchChain?: (evmChainId: number) => Promise<void>
+  getWalletKey: () => string
 }
 
 export async function toConnectedWallet (wallet: Wallet, type: TransferWallet, chain: any, dispatch: Dispatch): Promise<ConnectedWallet> {

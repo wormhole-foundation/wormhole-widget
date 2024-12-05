@@ -35,7 +35,7 @@ export const useDynamicWalletOptions = () => {
             walletKey: a.key,
         })).filter((a) => 
             // TODO: Add more wallets
-            (a.walletKey.includes("metamask") || a.walletKey.includes("phantom"))
+            (a.walletKey.includes("metamask") || a.walletKey.includes("phantom")) || a.walletKey.includes("connect")
         )
     }, [walletOptions, selectWalletOption, sdkHasLoaded])
 

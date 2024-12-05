@@ -132,6 +132,7 @@ export const toConnectedWalletAggregator = async (wallet: WalletAggregatorData, 
       return wallet.wallet.getNetworkInfo()
     },
     icon: ({ size }) => React.createElement(WalletAggregatorIcon, { iconSize: size, walletName: wallet.wallet.getName(), walletIcon: wallet.wallet.getIcon() }),
+    getWalletKey: () => wallet.wallet.getName()
   }
   return connectedWallet
 };

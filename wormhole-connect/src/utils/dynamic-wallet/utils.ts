@@ -80,6 +80,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
     const disconnect = () => {
         wallet.connector.emit('disconnect')
     }
+    const getWalletKey = () => wallet.key
     switch (wallet.chain) {
         case "EVM":
             return {
@@ -94,7 +95,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
                 getNetworkInfo: async () => {
                     return Number(await wallet.connector.getNetwork() || 0)
                 },
-                disconnect,
+                disconnect, getWalletKey,
             }
         case "SOL":
             return {
@@ -105,7 +106,7 @@ export const toConnectedWallet = async (wallet: DynamicWallet, type: TransferWal
                         : SolanaNetwork.Devnet
                 },
                 getWallet: () => wallet,
-                disconnect,
+                disconnect, getWalletKey,
             }
         default:
             throw new Error(`Wallet chain not implemented: ${wallet.chain}`)
