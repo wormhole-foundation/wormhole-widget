@@ -233,7 +233,22 @@ export async function signAndSendTransaction(
   }
 
   if (confirmedTx.value.err) {
-    throw new Error(`Transaction failed: ${confirmedTx.value.err}`);
+    let errorMessage = `Transaction failed: ${confirmedTx.value.err}`;
+    if (typeof confirmedTx.value.err === 'object') {
+      try {
+        errorMessage = `Transaction failed: ${JSON.stringify(
+          confirmedTx.value.err,
+          (_key, value) =>
+            typeof value === 'bigint' ? value.toString() : value, // Handle bigint props
+        )}`;
+      } catch (e: unknown) {
+        // Most likely a circular reference error, we can't stringify this error object.
+        // See for more details:
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#exceptions
+        errorMessage = `Transaction failed: Unknown error`;
+      }
+    }
+    throw new Error(`Transaction failed: ${errorMessage}`);
   }
 
   return signature;
