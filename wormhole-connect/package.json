@@ -21,7 +21,6 @@
     "@cosmjs/cosmwasm-stargate": "^0.31.3",
     "@cosmjs/stargate": "^0.31.3",
     "@cosmjs/tendermint-rpc": "^0.31.3",
-    "@dynamic-labs/cosmos": "^3.9.0",
     "@dynamic-labs/ethereum": "^3.9.0",
     "@dynamic-labs/ethers-v6": "^3.9.0",
     "@dynamic-labs/sdk-react-core": "^3.9.0",

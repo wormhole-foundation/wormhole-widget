@@ -2,7 +2,6 @@ import React, { Fragment, PropsWithChildren } from "react"
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core"
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum"
 import { SolanaWalletConnectors } from "@dynamic-labs/solana"
-import { CosmosWalletConnectors } from "@dynamic-labs/cosmos"
 import { OnConnectCallback } from "./useDynamicWallet"
 import { Theme } from "@mui/material"
 
@@ -25,7 +24,6 @@ export const ConfiguredDynamicContext: React.FC<PropsWithChildren<ConfiguredDyna
                 walletConnectors: [
                     EthereumWalletConnectors,
                     SolanaWalletConnectors,
-                    CosmosWalletConnectors,
                 ],
                 events: {
                     onAuthSuccess: ({ primaryWallet }) => {
