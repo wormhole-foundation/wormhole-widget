@@ -178,6 +178,20 @@ export const TESTNET_TOKENS: TokensConfig = {
     color: '#8457EF',
     decimals: 9,
   },
+  USDCsui: {
+    key: 'USDCsui',
+    symbol: 'USDC',
+    nativeChain: 'Sui',
+    tokenId: {
+      chain: 'Sui',
+      address:
+        '0xa1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC',
+    },
+    icon: TokenIcon.USDC,
+    coinGeckoId: 'usd-coin',
+    color: '#2774CA',
+    decimals: 6,
+  },
   APT: {
     key: 'APT',
     symbol: 'APT',
