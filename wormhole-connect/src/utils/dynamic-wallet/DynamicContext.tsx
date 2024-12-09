@@ -42,11 +42,17 @@ export const ConfiguredDynamicContext: React.FC<PropsWithChildren<ConfiguredDyna
                         console.log("onWalletRemoved", w.wallet.connector.name)
                     }
                 },
-                // // TODO: Config networks
-                // overrides: {
-                //     evmNetworks: [],
-                // },
-                // walletConnectPreferredChains: [],
+                walletConnectPreferredChains: [
+                    'eip155:1',
+                    'eip155:56',
+                    'eip155:8456',
+                    'eip155:42161',
+                    'eip155:43114',
+                    'eip155:10',
+                    'eip155:137',
+                    'eip155:250',
+                    'eip155:5000',
+                ],
             }}
         >
             {children}

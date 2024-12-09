@@ -67,16 +67,10 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
     }, [walletConnection, disconnectDynamicWallet])
 
     const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
+        // TODO: `useLastConnectedWallet` is calling `sidebarOnConnectWallet` when the user clicks on swap wallets connections.
+        // We should not allow to connect the same wallet twice. The connection must persist.
         walletConnection.nextTypeToConnect = type
         if ("walletKey" in walletInfo) {
-            // TODO: `useLastConnectedWallet` is calling `sidebarOnConnectWallet` when the user clicks on swap wallets connections.
-            // We should not allow to connect the same wallet twice. The connection must persist.
-            if (
-                walletInfo.walletKey === walletConnection.sending?.getWalletKey() ||
-                walletInfo.walletKey === walletConnection.receiving?.getWalletKey()) {
-                return
-            }
-
             // Saving the chain for `onConnectCallbackRef` callback because it is not available in the DynamicWallet object
             dynamicWormholeChainRef.current = chain
             console.log("Dynamic Wallet will continue the connection flow", walletInfo)

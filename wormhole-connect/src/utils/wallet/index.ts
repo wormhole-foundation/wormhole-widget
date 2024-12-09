@@ -142,14 +142,14 @@ export const signAndSendTransaction = async (
     const sui = await import('utils/wallet/legacy/sui');
     const tx = await sui.signAndSendTransaction(
       request as SuiUnsignedTransaction<Network, SuiChains>,
-      wallet.getWallet() as any,
+      (wallet.getWallet() as WalletAggregatorData).wallet,
     );
     return tx.id;
   } else if (chainConfig.context === Context.APTOS) {
     const aptos = await import('utils/wallet/legacy/aptos');
     const tx = await aptos.signAndSendTransaction(
       request as AptosUnsignedTransaction<Network, AptosChains>,
-      wallet.getWallet() as any,
+      (wallet.getWallet() as WalletAggregatorData).wallet,
     );
     return tx.id;
   } else {
