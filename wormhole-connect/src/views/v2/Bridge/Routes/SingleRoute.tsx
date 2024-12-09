@@ -25,8 +25,6 @@ import {
 
 import type { RouteData } from 'config/routes';
 import type { RootState } from 'store';
-import { formatAmount } from 'utils/amount';
-import { toFixedDecimals } from 'utils/balance';
 import { TokenConfig } from 'config/types';
 import FastestRoute from 'icons/FastestRoute';
 import CheapestRoute from 'icons/CheapestRoute';
@@ -69,7 +67,7 @@ type Props = {
   route: RouteData;
   isSelected: boolean;
   error?: string;
-  destinationGasDrop?: number;
+  destinationGasDrop?: amount.Amount;
   isFastest?: boolean;
   isCheapest?: boolean;
   isOnlyChoice?: boolean;
@@ -140,9 +138,9 @@ const SingleRoute = (props: Props) => {
 
     const feePriceFormatted = getUSDFormat(feePrice);
 
-    let feeValue = `${amount.display(quote!.relayFee!.amount, 4)} ${
-      feeTokenConfig.symbol
-    } (${feePriceFormatted})`;
+    let feeValue = `${amount.display(
+      amount.truncate(quote!.relayFee!.amount, 6),
+    )} ${feeTokenConfig.symbol} (${feePriceFormatted})`;
 
     // Wesley made me do it
     // Them PMs :-/
@@ -163,7 +161,11 @@ const SingleRoute = (props: Props) => {
   }, [destToken, quote?.relayFee, tokenPrices]);
 
   const destinationGas = useMemo(() => {
-    if (!destChain || !props.destinationGasDrop) {
+    if (
+      !destChain ||
+      props.destinationGasDrop === undefined ||
+      amount.units(props.destinationGasDrop) === 0n
+    ) {
       return <></>;
     }
 
@@ -181,10 +183,11 @@ const SingleRoute = (props: Props) => {
       gasTokenConfig,
     );
 
-    const gasTokenAmount = toFixedDecimals(
-      props.destinationGasDrop?.toString() || '0',
-      4,
+    const gasTokenAmount = amount.display(
+      amount.truncate(props.destinationGasDrop, 6),
     );
+
+    const gasTokenPriceStr = gasTokenPrice ? ` (${gasTokenPrice})` : '';
 
     return (
       <Stack direction="row" justifyContent="space-between">
@@ -194,7 +197,7 @@ const SingleRoute = (props: Props) => {
         <Typography
           color={theme.palette.text.secondary}
           fontSize={14}
-        >{`${gasTokenAmount} ${gasTokenConfig.symbol} (${gasTokenPrice})`}</Typography>
+        >{`${gasTokenAmount} ${gasTokenConfig.symbol}${gasTokenPriceStr}`}</Typography>
       </Stack>
     );
   }, [destChain, props.destinationGasDrop]);
@@ -355,14 +358,11 @@ const SingleRoute = (props: Props) => {
   }, [quote]);
 
   const receiveAmountTrunc = useMemo(() => {
-    return quote && destChain && destTokenConfig
-      ? formatAmount(
-          destChain,
-          destTokenConfig,
-          quote.destinationToken.amount.amount,
-          6,
-        )
-      : undefined;
+    if (quote) {
+      return amount.display(amount.truncate(quote.destinationToken.amount, 6));
+    } else {
+      return undefined;
+    }
   }, [quote]);
 
   const routeCardHeader = useMemo(() => {

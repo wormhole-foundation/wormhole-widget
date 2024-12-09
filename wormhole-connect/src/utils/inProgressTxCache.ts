@@ -1,4 +1,5 @@
 import { TransactionLocal } from 'config/types';
+import { isEmptyObject } from 'utils';
 
 const LOCAL_STORAGE_KEY = 'wormhole-connect:transactions:inprogress';
 const LOCAL_STORAGE_MAX = 3;
@@ -8,6 +9,90 @@ const LOCAL_STORAGE_MAX = 3;
 // Please see for details: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/BigInt_not_serializable
 const JSONReplacer = (_, value: any) =>
   typeof value === 'bigint' ? value.toString() : value;
+
+// Checks the existance of the props with the given types in a parent object
+const validateChildPropTypes = (
+  parent: object,
+  propTypes: { [key: string]: string },
+) => {
+  if (isEmptyObject(parent)) {
+    return false;
+  }
+
+  // Iterate over each property and verify its type in the parent object
+  for (const key in propTypes) {
+    if (
+      parent[key] === null || // Line below is an explicit check for undefined values as well
+      typeof parent[key] !== propTypes[key]
+    ) {
+      return false;
+    }
+  }
+  // Prop type validations passed
+  return true;
+};
+
+// Validates a single local transaction
+const validateSingleTransaction = (
+  tx: TransactionLocal,
+): tx is TransactionLocal => {
+  // Check first level required properties
+  if (
+    !validateChildPropTypes(tx, {
+      receipt: 'object',
+      route: 'string',
+      timestamp: 'number',
+      txDetails: 'object',
+      txHash: 'string',
+    })
+  ) {
+    return false;
+  }
+
+  // Check second level required properties
+  if (
+    !validateChildPropTypes(tx.txDetails, {
+      amount: 'object',
+      eta: 'number',
+      fromChain: 'string',
+      toChain: 'string',
+      tokenKey: 'string',
+    })
+  ) {
+    return false;
+  }
+
+  // Check third level properties
+  if (
+    !validateChildPropTypes(tx.txDetails.amount, {
+      amount: 'string',
+      decimals: 'number',
+    })
+  ) {
+    return false;
+  }
+
+  // All validation steps passed
+  return true;
+};
+
+// Validates a given array of local transactions
+const validateTransactions = (
+  parsedTxs: Array<TransactionLocal>,
+): parsedTxs is Array<TransactionLocal> => {
+  if (!Array.isArray(parsedTxs)) {
+    return false;
+  }
+
+  for (const tx of parsedTxs) {
+    if (!validateSingleTransaction(tx)) {
+      return false;
+    }
+  }
+
+  // All transactions are valid
+  return true;
+};
 
 // Retrieves all in-progress transactions from localStorage
 export const getTxsFromLocalStorage = ():
@@ -22,11 +107,26 @@ export const getTxsFromLocalStorage = ():
       const item = ls.getItem(itemKey);
       if (item) {
         try {
-          return JSON.parse(item);
+          const parsedTxs = JSON.parse(item);
+          if (validateTransactions(parsedTxs)) {
+            return parsedTxs;
+          } else {
+            console.log(
+              `Error while parsing localStorage item ${LOCAL_STORAGE_KEY}: Not an array of valid transactions`,
+            );
+            // Remove invalid transactions entry
+            ls.removeItem(LOCAL_STORAGE_KEY);
+            return;
+          }
         } catch (e: any) {
+          // We can get a SyntaxError from JSON.parse
+          // In that case we should debug log and remove the local storage entry completely,
+          // as we can't know which tx within entry causes the problem without parsing it.
           console.log(
             `Error while parsing localStorage item ${LOCAL_STORAGE_KEY}: ${e}`,
           );
+          // Remove item
+          ls.removeItem(LOCAL_STORAGE_KEY);
           return;
         }
       }
@@ -57,7 +157,17 @@ export const addTxToLocalStorage = (
   }
 
   // Update the list
-  ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newList, JSONReplacer));
+  try {
+    ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newList, JSONReplacer));
+  } catch (e: any) {
+    // We can get two different errors:
+    // 1- TypeError from JSON.stringify
+    // 2- DOMException from localStorage.setItem
+    // In each case, we should debug log and fail silently
+    console.log(
+      `Error while adding item to localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+    );
+  }
 };
 
 // Removes a transaction from localStorage
@@ -71,7 +181,17 @@ export const removeTxFromLocalStorage = (txHash: string) => {
     if (removeIndex > -1) {
       // remove the item and update localStorage
       items.splice(removeIndex, 1);
-      ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      try {
+        ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      } catch (e: any) {
+        // We can get two different errors:
+        // 1- TypeError from JSON.stringify
+        // 2- DOMException from localStorage.setItem
+        // In each case, we should debug log and fail silently
+        console.log(
+          `Error while removing item from localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+        );
+      }
     }
   }
 };
@@ -91,7 +211,17 @@ export const updateTxInLocalStorage = (
     if (idx > -1) {
       // Update item property and put back in local storage
       items[idx][key] = value;
-      ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      try {
+        ls.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items, JSONReplacer));
+      } catch (e: any) {
+        // We can get two different errors:
+        // 1- TypeError from JSON.stringify
+        // 2- DOMException from localStorage.setItem
+        // In each case, we should debug log and fail silently
+        console.log(
+          `Error while updating item in localStorage ${LOCAL_STORAGE_KEY}: ${e}`,
+        );
+      }
     }
   }
 };

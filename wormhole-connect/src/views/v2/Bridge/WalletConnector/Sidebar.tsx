@@ -25,11 +25,13 @@ import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 
 const useStyles = makeStyles()((theme) => ({
+  listButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    padding: '12px 16px',
+  },
   drawer: {
     width: '360px',
-  },
-  context: {
-    opacity: 0.6,
   },
   notInstalled: {
     opacity: 0.6,
@@ -91,7 +93,7 @@ const WalletSidebar = (props: Props) => {
       props.onClose?.();
       await props.onConnectWallet(walletInfo, props.type, selectedChain);
     },
-    [props.type, props.onClose, selectedChain],
+    [selectedChain, props],
   );
 
   const renderWalletOptions = useCallback(
@@ -112,38 +114,32 @@ const WalletSidebar = (props: Props) => {
               <Typography>No results</Typography>
             </ListItem>
           ) : (
-            walletsFiltered.map((wallet, index) => {
-              const WalletIcon = wallet.icon
-              return (
-                <ListItemButton
-                  key={wallet.name + index.toString()}
-                  dense
-                  sx={{ display: 'flex', flexDirection: 'row' }}
-                  onClick={() =>
-                    wallet.isReady
-                      ? connect(wallet)
-                      : window.open((wallet as any).wallet.getUrl())
-                  }
-                >
-                  <ListItemIcon>
-                    <WalletIcon size={32}/>
-                  </ListItemIcon>
-                  <Typography component="div" fontSize={14}>
-                    <div className={`${!wallet.isReady && classes.notInstalled}`}>
-                      {!wallet.isReady && 'Install'} {wallet.name}
-                    </div>
-                    <div className={classes.context}>
-                      {wallet.type.toUpperCase()}
-                    </div>
-                  </Typography>
-                </ListItemButton>
-              )
-            })
+            walletsFiltered.map((wallet) => (
+              <ListItemButton
+                key={wallet.name}
+                className={classes.listButton}
+                dense
+                onClick={() =>
+                  wallet.isReady
+                    ? connect(wallet)
+                    : window.open((wallet as any).wallet.getUrl())
+                }
+              >
+                <ListItemIcon>
+                  <wallet.icon size={32} />
+                </ListItemIcon>
+                <Typography component="div" fontSize={14}>
+                  <div className={`${!wallet.isReady && classes.notInstalled}`}>
+                    {!wallet.isReady && 'Install'} {wallet.name}
+                  </div>
+                </Typography>
+              </ListItemButton>
+            ))
           )}
         </>
       );
     },
-    [connect, search],
+    [classes.listButton, classes.notInstalled, connect, search],
   );
 
   const sidebarContent = useMemo(() => {
@@ -193,7 +189,16 @@ const WalletSidebar = (props: Props) => {
         // TODO: Do we ever get to this case? If so, what should be the UI?
         return <></>;
     }
-  }, [walletOptionsResult, renderWalletOptions]);
+  }, [
+    walletOptionsResult.state,
+    walletOptionsResult.error,
+    walletOptionsResult.options,
+    classes.title,
+    classes.smOnly,
+    search,
+    props.onClose,
+    renderWalletOptions,
+  ]);
 
   return (
     <Drawer

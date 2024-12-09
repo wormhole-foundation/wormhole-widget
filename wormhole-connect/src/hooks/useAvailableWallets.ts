@@ -7,19 +7,11 @@ import config from 'config';
 import { WalletData } from 'utils/wallet';
 import { useWalletManager } from 'contexts/WalletManager';
 
-type GetWalletsLoading = {
-  state: 'loading';
+type WalletOptions = {
+  state: 'result' | 'loading' | 'error';
+  options?: WalletData[];
+  error?: string;
 };
-type GetWalletsError = {
-  state: 'error';
-  error: string;
-};
-type GetWalletsResult = {
-  state: 'result';
-  options: WalletData[];
-};
-
-type GetWallets = GetWalletsLoading | GetWalletsError | GetWalletsResult;
 
 type Props = {
   chain: Chain | undefined;
@@ -27,7 +19,7 @@ type Props = {
 };
 
 type ReturnProps = {
-  walletOptionsResult: GetWallets;
+  walletOptionsResult: WalletOptions;
 };
 
 const FAILED_TO_LOAD_ERR =
@@ -37,9 +29,11 @@ export const useAvailableWallets = (props: Props): ReturnProps => {
   const { chain, supportedChains } = props;
   const { getWalletOptions } = useWalletManager()
 
-  const [walletOptionsResult, setWalletOptionsResult] = useState<GetWallets>({
-    state: 'loading',
-  });
+  const [walletOptionsResult, setWalletOptionsResult] = useState<WalletOptions>(
+    {
+      state: 'loading',
+    },
+  );
 
   useEffect(() => {
     let cancelled = false;

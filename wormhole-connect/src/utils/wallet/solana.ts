@@ -5,11 +5,12 @@ import {
   Connection,
   RpcResponseAndContext,
   SignatureResult,
+  SimulatedTransactionResponse,
   Transaction,
 } from '@solana/web3.js';
 
 import config from 'config';
-import { sleep } from 'utils';
+import { isEmptyObject, sleep } from 'utils';
 
 import {
   isVersionedTransaction,
@@ -24,6 +25,48 @@ import { VersionedTransaction } from '@solana/web3.js';
 import { isSolanaWallet } from '@dynamic-labs/solana';
 import { ConnectedWallet } from './wallet';
 import { DynamicWallet } from 'utils/dynamic-wallet/utils';
+
+// Checks response logs for known errors.
+// Returns when the first error is encountered.
+function checkKnownSimulationError(
+  response: SimulatedTransactionResponse,
+): boolean {
+  const errors = {};
+
+  // This error occur when the blockhash included in a transaction is not deemed to be valid
+  // when a validator processes a transaction. We can retry the simulation to get a valid blockhash.
+  if (response.err === 'BlockhashNotFound') {
+    errors['BlockhashNotFound'] =
+      'Blockhash not found during simulation. Trying again.';
+  }
+
+  // Check the response logs for any known errors
+  if (response.logs) {
+    for (const line of response.logs) {
+      // In some cases which aren't deterministic, like a slippage error, we can retry the
+      // simulation a few times to get a successful response.
+      if (line.includes('SlippageToleranceExceeded')) {
+        errors['SlippageToleranceExceeded'] =
+          'Slippage failure during simulation. Trying again.';
+      }
+
+      // In this case a require_gte expression was violated during a Swap instruction.
+      // We can retry the simulation to get a successful response.
+      if (line.includes('RequireGteViolated')) {
+        errors['RequireGteViolated'] =
+          'Swap instruction failure during simulation. Trying again.';
+      }
+    }
+  }
+
+  // No known simulation errors found
+  if (isEmptyObject(errors)) {
+    return false;
+  }
+
+  console.table(errors);
+  return true;
+}
 
 // This function signs and sends the transaction while constantly checking for confirmation
 // and resending the transaction if it hasn't been confirmed after the specified interval
@@ -142,13 +185,28 @@ export async function signAndSendTransaction(
   }
 
   if (confirmedTx.value.err) {
-    throw new Error(`Transaction failed: ${confirmedTx.value.err}`);
+    let errorMessage = `Transaction failed: ${confirmedTx.value.err}`;
+    if (typeof confirmedTx.value.err === 'object') {
+      try {
+        errorMessage = `Transaction failed: ${JSON.stringify(
+          confirmedTx.value.err,
+          (_key, value) =>
+            typeof value === 'bigint' ? value.toString() : value, // Handle bigint props
+        )}`;
+      } catch (e: unknown) {
+        // Most likely a circular reference error, we can't stringify this error object.
+        // See for more details:
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#exceptions
+        errorMessage = `Transaction failed: Unknown error`;
+      }
+    }
+    throw new Error(`Transaction failed: ${errorMessage}`);
   }
 
   return signature;
 }
 
-// this will throw if the simulation fails
+// This will throw if the simulation fails
 async function createPriorityFeeInstructions(
   connection: Connection,
   transaction: Transaction | VersionedTransaction,
@@ -157,15 +215,13 @@ async function createPriorityFeeInstructions(
   let unitsUsed = 200_000;
   let simulationAttempts = 0;
 
-  simulationLoop: while (simulationAttempts < 5) {
-    simulationAttempts++;
-
+  simulationLoop: while (true) {
     if (
       isVersionedTransaction(transaction) &&
       !transaction.message.recentBlockhash
     ) {
-      // This is required for versioned transactions - simulateTransaction throws
-      // if recentBlockhash is an empty string.
+      // This is required for versioned transactions
+      // SimulateTransaction throws if recentBlockhash is an empty string
       const { blockhash } = await connection.getLatestBlockhash(commitment);
       transaction.message.recentBlockhash = blockhash;
     }
@@ -178,32 +234,29 @@ async function createPriorityFeeInstructions(
       : connection.simulateTransaction(transaction));
 
     if (response.value.err) {
-      // In some cases which aren't deterministic, like a slippage error, we can retry the
-      // simulation a few times to get a successful response.
-      if (response.value.logs) {
-        for (const line of response.value.logs) {
-          if (line.includes('BlockhashNotFound')) {
-            console.info(
-              'Blockhash not found during simulation. Trying again.',
-            );
-            sleep(1000);
-            continue simulationLoop;
-          } else if (line.includes('SlippageToleranceExceeded')) {
-            console.info('Slippage failure during simulation. Trying again.');
-            sleep(1000);
-            continue simulationLoop;
-          }
+      if (checkKnownSimulationError(response.value)) {
+        // Number of attempts will be at most 5 for known errors
+        if (simulationAttempts < 5) {
+          simulationAttempts++;
+          await sleep(1000);
+          continue simulationLoop;
         }
+      } else if (simulationAttempts < 3) {
+        // Number of attempts will be at most 3 for unknown errors
+        simulationAttempts++;
+        await sleep(1000);
+        continue simulationLoop;
       }
 
-      // Logs didn't match an error case we would retry; throw
+      // Still failing after multiple attempts for both known and unknown errors
+      // We should throw in that case
       throw new Error(
         `Simulation failed: ${JSON.stringify(response.value.err)}\nLogs:\n${(
           response.value.logs || []
         ).join('\n  ')}`,
       );
     } else {
-      // Success case
+      // Simulation was successful
       if (response.value.unitsConsumed) {
         unitsUsed = response.value.unitsConsumed;
       }

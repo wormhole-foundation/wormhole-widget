@@ -58,13 +58,17 @@ const WalletConnector = (props: Props) => {
   const wallet = useSelector((state: RootState) => state.wallet[type]);
 
   const connected = useMemo(() => {
+    if (!wallet?.address) {
+      return null;
+    }
+
     return (
       <div className={classes.connected}>{`Connected to ${displayWalletAddress(
         wallet.type,
         wallet.address,
       )}`}</div>
     );
-  }, []);
+  }, [classes.connected, wallet.address, wallet.type]);
 
   const disconnected = useMemo(() => {
     const button = (
@@ -102,7 +106,14 @@ const WalletConnector = (props: Props) => {
         </>
       );
     }
-  }, [disabled, mobile, props.side, props.type, connectWallet]);
+  }, [
+    disabled,
+    mobile,
+    props.side,
+    props.type,
+    classes.connectWallet,
+    connectWallet,
+  ]);
 
   if (wallet && wallet.address) {
     return connected;

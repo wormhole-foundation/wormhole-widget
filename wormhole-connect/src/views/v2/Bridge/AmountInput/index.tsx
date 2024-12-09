@@ -19,6 +19,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import useGetTokenBalances from 'hooks/useGetTokenBalances';
@@ -38,7 +39,8 @@ const DebouncedTextField = memo(
     onChange: (event: string) => void;
   }) => {
     const [innerValue, setInnerValue] = useState<string>(value);
-    const defferedOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
+    const [isFocused, setIsFocused] = useState(false);
+    const deferredOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -53,16 +55,31 @@ const DebouncedTextField = memo(
         }
 
         setInnerValue(e.target.value);
-        defferedOnChange(e.target.value);
+        deferredOnChange(e.target.value);
       },
       [],
     );
 
+    // Propagate any outside changes to the inner TextField value
+    // The way we do this is by checking when the focus is not on the input component
     useEffect(() => {
-      setInnerValue(value);
+      if (!isFocused) {
+        setInnerValue(value);
+      }
+      // We should run this sife-effect only when the value changes
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    return <TextField {...props} value={innerValue} onChange={onInnerChange} />;
+    return (
+      <TextField
+        {...props}
+        value={innerValue}
+        focused={isFocused}
+        onChange={onInnerChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+    );
   },
 );
 
@@ -110,12 +127,15 @@ const AmountInput = (props: Props) => {
   const { sending: sendingWallet } = useSelector(
     (state: RootState) => state.wallet,
   );
+  const { amount } = useSelector((state: RootState) => state.transferInput);
 
-  const {
-    fromChain: sourceChain,
-    token: sourceToken,
-    amount,
-  } = useSelector((state: RootState) => state.transferInput);
+  const [amountInput, setAmountInput] = useState(
+    amount ? sdkAmount.display(amount) : '',
+  );
+
+  const { fromChain: sourceChain, token: sourceToken } = useSelector(
+    (state: RootState) => state.transferInput,
+  );
 
   const { balances, isFetching } = useGetTokenBalances(
     sendingWallet?.address || '',
@@ -123,8 +143,18 @@ const AmountInput = (props: Props) => {
     props.supportedSourceTokens || [],
   );
 
+  // Clear the amount input value if the amount is reset outside of this component
+  // This can happen if user swaps selected source and destination assets.
+  useEffect(() => {
+    if (!amount && amountInput) {
+      setAmountInput('');
+    }
+    // We should run this sife-effect only when the amount changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount]);
+
   const tokenBalance = useMemo(
-    () => balances?.[sourceToken]?.balance || '0',
+    () => balances?.[sourceToken]?.balance || null,
     [balances, sourceToken],
   );
 
@@ -151,20 +181,24 @@ const AmountInput = (props: Props) => {
         {isFetching ? (
           <CircularProgress size={14} />
         ) : (
-          // TODO AMOUNT HACK... fix amount formatting in amount.Amount balance refactor
           <Typography
             fontSize={14}
             textAlign="right"
             className={classes.balance}
           >
-            {parseFloat(tokenBalance).toLocaleString('en', {
-              maximumFractionDigits: 6,
-            })}
+            {tokenBalance === null
+              ? '0'
+              : sdkAmount.display(sdkAmount.truncate(tokenBalance, 6))}
           </Typography>
         )}
       </Stack>
     );
   }, [isInputDisabled, balances, tokenBalance, sendingWallet.address]);
+
+  const handleChange = useCallback((newValue: string): void => {
+    dispatch(setAmount(newValue));
+    setAmountInput(newValue);
+  }, []);
 
   const maxButton = useMemo(() => {
     return (
@@ -173,9 +207,7 @@ const AmountInput = (props: Props) => {
         disabled={isInputDisabled || !tokenBalance}
         onClick={() => {
           if (tokenBalance) {
-            // TODO: Remove this when useGetTokenBalances returns non formatted amounts
-            const trimmedTokenBalance = tokenBalance.replaceAll(',', '');
-            dispatch(setAmount(trimmedTokenBalance));
+            handleChange(sdkAmount.display(tokenBalance));
           }
         }}
       >
@@ -185,10 +217,6 @@ const AmountInput = (props: Props) => {
       </Button>
     );
   }, [isInputDisabled, tokenBalance]);
-
-  const handleChange = useCallback((newValue: string): void => {
-    dispatch(setAmount(newValue));
-  }, []);
 
   return (
     <div className={classes.amountContainer}>
@@ -222,7 +250,7 @@ const AmountInput = (props: Props) => {
             }}
             placeholder="0"
             variant="standard"
-            value={amount}
+            value={amountInput}
             onChange={handleChange}
             InputProps={{
               disableUnderline: true,

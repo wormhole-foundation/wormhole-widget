@@ -300,6 +300,7 @@ export interface Transaction {
   // In-progress status
   inProgress: boolean;
 }
+
 // Transanction data in local storage
 export interface TransactionLocal {
   receipt: routes.Receipt<AttestationReceipt>;

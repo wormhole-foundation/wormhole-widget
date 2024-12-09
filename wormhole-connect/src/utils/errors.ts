@@ -13,6 +13,7 @@ import {
   ERR_AMOUNT_TOO_LARGE,
 } from 'telemetry/types';
 import { InsufficientFundsForGasError } from 'sdklegacy';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 // TODO SDKV2
 // attempt to capture errors using regex
@@ -34,7 +35,10 @@ export function interpretTransferError(
     if (INSUFFICIENT_ALLOWANCE_REGEX.test(e?.message)) {
       uiErrorMessage = 'Error with transfer, please try again';
       internalErrorCode = ERR_INSUFFICIENT_ALLOWANCE;
-    } else if (e.name === 'TransactionExpiredTimeoutError') {
+    } else if (
+      e.name === 'TransactionExpiredTimeoutError' ||
+      e.name === 'TransactionExpiredBlockheightExceededError'
+    ) {
       // Solana timeout
       uiErrorMessage = 'Transfer timed out, please try again';
       internalErrorCode = ERR_TIMEOUT;
@@ -55,7 +59,7 @@ export function interpretTransferError(
       const assumedCircleLimit = 1_000_000;
       const { amount } = transferDetails;
       const limitString =
-        amount !== undefined && amount > assumedCircleLimit
+        amount !== undefined && sdkAmount.whole(amount) > assumedCircleLimit
           ? ` of 1,000,000`
           : '';
       uiErrorMessage = `Amount exceeds Circle limit${limitString}. Please reduce transfer amount.`;

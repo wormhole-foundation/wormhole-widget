@@ -16,7 +16,7 @@ import { getTokenBridgeWrappedTokenAddressSync } from 'utils/sdkv2';
 
 import { SDKv2Signer } from './signer';
 
-import { amount } from '@wormhole-foundation/sdk';
+import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import config, { getWormholeContextV2 } from 'config';
 import {
   getGasToken,
@@ -26,6 +26,8 @@ import {
   isWrappedToken,
 } from 'utils';
 import { ConnectedWallet } from 'utils/wallet/wallet';
+
+type Amount = sdkAmount.Amount;
 
 // =^o^=
 export class SDKv2Route {
@@ -64,7 +66,6 @@ export class SDKv2Route {
   async isRouteSupported(
     sourceToken: string,
     destToken: string,
-    _amount: string, // Amount is validated later, when getting a quote
     fromChain: Chain,
     toChain: Chain,
   ): Promise<boolean> {
@@ -88,6 +89,18 @@ export class SDKv2Route {
     );
 
     if (!fromTokenIdV2 || !toTokenIdV2) return false;
+
+    // Do not allow tokens supported by NTT to be bridged via the token bridge
+    if (
+      this.IS_TOKEN_BRIDGE_ROUTE &&
+      (await isNttSupportedToken(
+        fromTokenIdV2,
+        fromContext.context,
+        toContext.context,
+      ))
+    ) {
+      return false;
+    }
 
     const fromTokenSupported = !!(
       await this.rc.supportedSourceTokens(fromContext.context)
@@ -202,7 +215,7 @@ export class SDKv2Route {
   }
 
   async getQuote(
-    amount: string,
+    amount: Amount,
     sourceTokenV1: string,
     destTokenV1: string,
     sourceChain: Chain,
@@ -225,7 +238,7 @@ export class SDKv2Route {
     const wh = await getWormholeContextV2();
     const route = new this.rc(wh);
     const validationResult = await route.validate(req, {
-      amount,
+      amount: sdkAmount.display(amount),
       options,
     });
 
@@ -239,7 +252,7 @@ export class SDKv2Route {
   }
 
   async createRequest(
-    amount: string,
+    amount: Amount,
     sourceTokenV1: string,
     destTokenV1: string,
     sourceChain: Chain,
@@ -284,22 +297,18 @@ export class SDKv2Route {
   }
 
   async computeReceiveAmount(
-    amountIn: number,
+    amountIn: Amount,
     sourceToken: string,
     destToken: string,
     fromChain: Chain | undefined,
     toChain: Chain | undefined,
     options?: routes.AutomaticTokenBridgeRoute.Options,
-  ): Promise<number> {
-    if (isNaN(amountIn)) {
-      return 0;
-    }
-
+  ): Promise<Amount> {
     if (!fromChain || !toChain)
       throw new Error('Need both chains to get a quote from SDKv2');
 
     const [, quote] = await this.getQuote(
-      amountIn.toString(),
+      amountIn,
       sourceToken,
       destToken,
       fromChain,
@@ -308,36 +317,14 @@ export class SDKv2Route {
     );
 
     if (quote.success) {
-      return amount.whole(quote.destinationToken.amount);
+      return quote.destinationToken.amount;
     } else {
       throw quote.error;
     }
   }
 
-  async computeReceiveAmountWithFees(
-    amount: number,
-    sourceToken: string,
-    destToken: string,
-    fromChain: Chain | undefined,
-    toChain: Chain | undefined,
-    options?: routes.AutomaticTokenBridgeRoute.Options,
-  ): Promise<number> {
-    if (!fromChain || !toChain)
-      throw new Error('Need both chains to get a quote from SDKv2');
-
-    // TODO handle fees?
-    return this.computeReceiveAmount(
-      amount,
-      sourceToken,
-      destToken,
-      fromChain,
-      toChain,
-      options,
-    );
-  }
-
   async computeQuote(
-    amountIn: string,
+    amountIn: Amount,
     sourceToken: string,
     destToken: string,
     fromChain: Chain,
@@ -365,7 +352,7 @@ export class SDKv2Route {
 
   async send(
     sourceToken: TokenConfig,
-    amount: string,
+    amount: Amount,
     fromChain: Chain,
     senderAddress: string,
     toChain: Chain,
@@ -375,7 +362,7 @@ export class SDKv2Route {
     options?: routes.AutomaticTokenBridgeRoute.Options,
   ): Promise<[routes.Route<Network>, routes.Receipt]> {
     const [route, quote, req] = await this.getQuote(
-      amount.toString(),
+      amount,
       sourceToken.key,
       destToken,
       fromChain,
@@ -452,3 +439,33 @@ export class SDKv2Route {
     return false;
   }
 }
+
+// returns true if the token is supported by a NTT route, false otherwise
+const isNttSupportedToken = async (
+  token: TokenIdV2,
+  fromContext: ChainContext<Network, Chain>,
+  toContext: ChainContext<Network, Chain>,
+): Promise<boolean> => {
+  const checkRouteSupport = async (routeName: string): Promise<boolean> => {
+    const route: SDKv2Route | undefined = config.routes.get(routeName);
+    if (!route) return false;
+
+    const [sourceTokens, destTokens] = await Promise.all([
+      route.rc.supportedSourceTokens(fromContext),
+      route.rc.supportedDestinationTokens(token, fromContext, toContext),
+    ]);
+
+    const isSourceTokenSupported = sourceTokens.some((t) =>
+      isSameToken(t, token),
+    );
+
+    return isSourceTokenSupported && destTokens.length > 0;
+  };
+
+  const [isManualSupported, isAutomaticSupported] = await Promise.all([
+    checkRouteSupport('ManualNtt'),
+    checkRouteSupport('AutomaticNtt'),
+  ]);
+
+  return isManualSupported || isAutomaticSupported;
+};
