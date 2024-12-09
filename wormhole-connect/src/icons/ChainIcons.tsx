@@ -1,8 +1,9 @@
 import React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
+import type { Chain } from '@wormhole-foundation/sdk';
+
 import { CENTER } from 'utils/style';
-import { ChainIcon } from 'config/types';
 import GLMR from './Chains/GLMR';
 import AVAX from './Chains/AVAX';
 import CELO from './Chains/CELO';
@@ -17,7 +18,6 @@ import BSC from './Chains/BSC';
 import emptyChain from './Chains/empty';
 import ARBITRUM from './Chains/ARBITRUM';
 import OPTIMISM from './Chains/OPTIMISM';
-import KLAY from './Chains/KLAY';
 import KAIA from './Chains/KAIA';
 import SCROLL from './Chains/SCROLL';
 import BLAST from './Chains/BLAST';
@@ -41,35 +41,34 @@ const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   },
 }));
 
-const iconMap: { [key in ChainIcon]: React.JSX.Element } = {
-  [ChainIcon.GLMR]: GLMR(),
-  [ChainIcon.AVAX]: AVAX(),
-  [ChainIcon.BSC]: BSC(),
-  [ChainIcon.CELO]: CELO(),
-  [ChainIcon.ETH]: ETH(),
-  [ChainIcon.FANTOM]: FTM(),
-  [ChainIcon.POLYGON]: POLY(),
-  [ChainIcon.SOLANA]: SOL(),
-  [ChainIcon.SUI]: SUI(),
-  [ChainIcon.APT]: APT(),
-  [ChainIcon.ARBITRUM]: ARBITRUM(),
-  [ChainIcon.OPTIMISM]: OPTIMISM(),
-  [ChainIcon.BASE]: BASE(),
-  [ChainIcon.KAIA]: KAIA(),
-  [ChainIcon.KLAY]: KLAY(),
-  [ChainIcon.SCROLL]: SCROLL(),
-  [ChainIcon.BLAST]: BLAST(),
-  [ChainIcon.XLAYER]: XLAYER(),
-  [ChainIcon.MANTLE]: MANTLE(),
-  [ChainIcon.OSMO]: OSMO(),
+const iconMap: { [key in Chain]?: React.JSX.Element } = {
+  Moonbeam: GLMR(),
+  Avalanche: AVAX(),
+  Bsc: BSC(),
+  Celo: CELO(),
+  Ethereum: ETH(),
+  Fantom: FTM(),
+  Polygon: POLY(),
+  Solana: SOL(),
+  Sui: SUI(),
+  Aptos: APT(),
+  Arbitrum: ARBITRUM(),
+  Optimism: OPTIMISM(),
+  Base: BASE(),
+  Klaytn: KAIA(),
+  Scroll: SCROLL(),
+  Blast: BLAST(),
+  Xlayer: XLAYER(),
+  Mantle: MANTLE(),
+  Osmosis: OSMO(),
 };
 
-function isBuiltinChainIcon(icon?: ChainIcon | string): icon is ChainIcon {
-  return Object.values(ChainIcon).includes(icon as ChainIcon);
+function isBuiltinChainIcon(icon?: Chain | string): icon is Chain {
+  return Object.keys(iconMap).includes(icon as Chain);
 }
 
 type Props = {
-  icon?: ChainIcon | string;
+  icon?: Chain | string;
   height?: number;
 };
 

@@ -28,29 +28,6 @@ import RouteOperator from 'routes/operator';
 import { UiConfig } from './ui';
 import { TransferInfo } from 'utils/sdkv2';
 
-export enum ChainIcon {
-  'AVAX' = 1,
-  'BSC',
-  'CELO',
-  'ETH',
-  'FANTOM',
-  'POLYGON',
-  'SOLANA',
-  'GLMR',
-  'SUI',
-  'APT',
-  'BASE',
-  'ARBITRUM',
-  'OPTIMISM',
-  'KAIA',
-  'KLAY',
-  'SCROLL',
-  'BLAST',
-  'XLAYER',
-  'MANTLE',
-  'OSMO',
-}
-
 export enum TokenIcon {
   'AVAX' = 1,
   'BNB',
@@ -203,7 +180,7 @@ export interface ChainConfig extends BaseChainConfig {
   explorerName: string;
   gasToken: string;
   chainId: number | string;
-  icon: ChainIcon;
+  icon: Chain;
   maxBlockSearch: number;
   symbol?: string;
 }
