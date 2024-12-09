@@ -393,6 +393,20 @@ export const MAINNET_TOKENS: TokensConfig = {
     color: '#8457EF',
     decimals: 9,
   },
+  USDCsui: {
+    key: 'USDCsui',
+    symbol: 'USDC',
+    nativeChain: 'Sui',
+    tokenId: {
+      chain: 'Sui',
+      address:
+        '0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC',
+    },
+    icon: Icon.USDC,
+    coinGeckoId: 'usd-coin',
+    color: '#2774CA',
+    decimals: 6,
+  },
   APT: {
     key: 'APT',
     symbol: 'APT',
