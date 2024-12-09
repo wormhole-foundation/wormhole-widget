@@ -4,17 +4,15 @@ import { EthereumWalletConnectors } from "@dynamic-labs/ethereum"
 import { SolanaWalletConnectors } from "@dynamic-labs/solana"
 import { CosmosWalletConnectors } from "@dynamic-labs/cosmos"
 import { OnConnectCallback } from "./useDynamicWallet"
-import { Chain } from '@wormhole-foundation/sdk';
 import { Theme } from "@mui/material"
 
 interface ConfiguredDynamicContextProps {
     theme?: Theme
     onConnectCallbackRef: React.MutableRefObject<OnConnectCallback | undefined>
-    chainRef: React.MutableRefObject<Chain | undefined>
 }
 
 export const ConfiguredDynamicContext: React.FC<PropsWithChildren<ConfiguredDynamicContextProps>> = (
-    { children, onConnectCallbackRef, chainRef }
+    { children, onConnectCallbackRef }
 ) => {
     return <Fragment>
         <DynamicContextProvider
@@ -29,19 +27,6 @@ export const ConfiguredDynamicContext: React.FC<PropsWithChildren<ConfiguredDyna
                     SolanaWalletConnectors,
                     CosmosWalletConnectors,
                 ],
-                // TODO: Waiting for DW team to know if the following proccess is necessary
-                // walletsFilter: (wallets) => {
-                //     const chain = chainRef?.current
-                //     if (chain && isEVMChain(chain)) {
-                //         return wallets.filter(w => w.walletConnector.supportedChains.includes("EVM"))
-                //     } else if (chain === "Solana") {
-                //         return wallets.filter(w => w.walletConnector.supportedChains.includes("SOL"))
-                //     } else if (chain === "Cosmoshub") {
-                //         return wallets.filter(w => w.walletConnector.supportedChains.includes("COSMOS"))
-                //     } else {
-                //         return []
-                //     }
-                // },
                 events: {
                     onAuthSuccess: ({ primaryWallet }) => {
                         console.log("onAuthSuccess", primaryWallet?.chain, primaryWallet?.address, primaryWallet?.connector.name)
