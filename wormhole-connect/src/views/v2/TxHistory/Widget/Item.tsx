@@ -97,6 +97,7 @@ const WidgetItem = (props: Props) => {
     txHash,
   } = transaction;
   const { amount, eta, fromChain, toChain, tokenKey } = txDetails || {};
+  const tokenConfig = config.tokens[tokenKey];
 
   // Initialize the countdown
   const { seconds, minutes, totalSeconds, isRunning, restart } = useTimer({
@@ -115,17 +116,17 @@ const WidgetItem = (props: Props) => {
     route,
   });
 
+  // We have the initial receipt from local storage,
+  // but the receipt from useTrackTransfer is more up-to-date,
+  // so we need to use that one first.
+  const receipt = trackingReceipt || initialReceipt;
+
   useEffect(() => {
     if (isCompleted && txHash) {
       // Remove this transaction from local storage
       removeTxFromLocalStorage(txHash);
     }
   }, [isCompleted, txHash]);
-
-  // We have the initial receipt from local storage,
-  // but the receipt from useTrackTransfer is more up-to-date,
-  // so we need to use that one first.
-  const receipt = trackingReceipt || initialReceipt;
 
   // Remaining from the original ETA since the creation of this transaction
   const etaRemaining = useMemo(() => {
@@ -237,7 +238,7 @@ const WidgetItem = (props: Props) => {
     }
   }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
-  if (!transaction) {
+  if (!transaction || !tokenConfig) {
     return <></>;
   }
 
