@@ -107,7 +107,7 @@ const GasSlider = (props: {
 
   useEffect(() => {
     dispatch(setToNativeToken(debouncedPercentage / 100));
-  }, [debouncedPercentage]);
+  }, [debouncedPercentage, dispatch]);
 
   const nativeGasPrice = useMemo(() => {
     if (!destChain) {
@@ -117,7 +117,6 @@ const GasSlider = (props: {
     const tokenAmount = amount.display(
       amount.truncate(props.destinationGasDrop, 6),
     );
-    console.log(tokenAmount);
 
     const tokenPrice = calculateUSDPrice(
       props.destinationGasDrop,
