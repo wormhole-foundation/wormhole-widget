@@ -314,7 +314,7 @@ const parseCCTPReceipt = async (
     receipt.from === 'Sui'
       ? // The `burnToken` from Sui is the keccak256 hash of the USDC token address,
         // so we need to override it with the actual USDC address
-        circle.usdcContract.get(config.network, receipt.from)
+        circle.usdcContract.get(config.network, receipt.from)!
       : payload.burnToken.toNative(receipt.from).toString(),
   );
 
