@@ -163,6 +163,9 @@ const WidgetItem = (props: Props) => {
     }
 
     return eta - timePassed;
+    // totalSeconds is not used in this hook but we still need it here
+    // to update the remaining eta every second.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eta, timestamp, totalSeconds]);
 
   // Displays the countdown
@@ -209,7 +212,7 @@ const WidgetItem = (props: Props) => {
     }
 
     return ((eta - etaRemaining) / eta) * 100;
-  }, [eta, etaRemaining, isCompleted]);
+  }, [eta, etaExpired, etaRemaining]);
 
   // Start the countdown timer
   useEffect(() => {
@@ -220,7 +223,7 @@ const WidgetItem = (props: Props) => {
       //   3- we have the remaining eta
       restart(new Date(Date.now() + etaRemaining), true);
     }
-  }, [etaRemaining, isCompleted, isRunning]);
+  }, [etaRemaining, isCompleted, isRunning, restart]);
 
   // Action handler to navigate user to the Redeem view of this transaction
   const resumeTransaction = useCallback(async () => {
@@ -258,7 +261,7 @@ const WidgetItem = (props: Props) => {
     }
   }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
-  // Do not render if we don't have the transaction or the token config
+  // Do not render this widget if we don't have the transaction or the token config
   if (!transaction || !tokenConfig) {
     return <></>;
   }
@@ -288,7 +291,7 @@ const WidgetItem = (props: Props) => {
               <Stack direction="row" alignItems="center">
                 <Typography fontSize={14} marginRight="8px">
                   {`${sdkAmount.display(sdkAmount.truncate(amount, 4))} ${
-                    tokenConfig?.symbol || ''
+                    tokenConfig.symbol
                   }`}
                 </Typography>
                 <Box className={classes.chainIcon}>
