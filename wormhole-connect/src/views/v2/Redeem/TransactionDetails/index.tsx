@@ -13,6 +13,7 @@ import { makeStyles } from 'tss-react/mui';
 
 import config from 'config';
 import { RouteContext } from 'contexts/RouteContext';
+import ChainIcon from 'icons/ChainIcons';
 import TokenIcon from 'icons/TokenIcons';
 import {
   calculateUSDPrice,
@@ -85,7 +86,7 @@ const TransactionDetails = () => {
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <Badge
           badgeContent={
-            <TokenIcon icon={sourceChainConfig?.icon} height={16} />
+            <ChainIcon icon={sourceChainConfig?.icon} height={16} />
           }
           sx={{
             marginRight: '4px',
@@ -137,7 +138,7 @@ const TransactionDetails = () => {
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <Badge
-          badgeContent={<TokenIcon icon={destChainConfig?.icon} height={16} />}
+          badgeContent={<ChainIcon icon={destChainConfig?.icon} height={16} />}
           sx={{
             marginRight: '4px',
             '& .MuiBadge-badge': {

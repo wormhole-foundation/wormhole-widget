@@ -1,5 +1,5 @@
 import { CONFIG } from 'sdklegacy';
-import { ChainsConfig, Icon } from '../types';
+import { ChainsConfig } from '../types';
 
 const { chains } = CONFIG.MAINNET;
 
@@ -11,8 +11,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Etherscan',
     gasToken: 'ETH',
     chainId: 1,
-    icon: Icon.ETH,
+    icon: 'Ethereum',
     maxBlockSearch: 2000,
+    symbol: 'ETH',
   },
   Bsc: {
     ...chains.Bsc!,
@@ -21,8 +22,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'BscScan',
     gasToken: 'BNB',
     chainId: 56,
-    icon: Icon.BSC,
+    icon: 'Bsc',
     maxBlockSearch: 2000,
+    symbol: 'BSC',
   },
   Polygon: {
     ...chains.Polygon!,
@@ -31,8 +33,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'PolygonScan',
     gasToken: 'POL',
     chainId: 137,
-    icon: Icon.POLYGON,
+    icon: 'Polygon',
     maxBlockSearch: 1000,
+    symbol: 'POL',
   },
   Avalanche: {
     ...chains.Avalanche!,
@@ -41,8 +44,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Avascan',
     gasToken: 'AVAX',
     chainId: 43114,
-    icon: Icon.AVAX,
+    icon: 'Avalanche',
     maxBlockSearch: 2000,
+    symbol: 'AVAX',
   },
   Fantom: {
     ...chains.Fantom!,
@@ -51,8 +55,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'FTMscan',
     gasToken: 'FTM',
     chainId: 250,
-    icon: Icon.FANTOM,
+    icon: 'Fantom',
     maxBlockSearch: 2000,
+    symbol: 'FTM',
   },
   Celo: {
     ...chains.Celo!,
@@ -61,8 +66,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Celo Explorer',
     gasToken: 'CELO',
     chainId: 42220,
-    icon: Icon.CELO,
+    icon: 'Celo',
     maxBlockSearch: 2000,
+    symbol: 'CELO',
   },
   Moonbeam: {
     ...chains.Moonbeam!,
@@ -71,8 +77,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Moonscan',
     gasToken: 'GLMR',
     chainId: 1284,
-    icon: Icon.GLMR,
+    icon: 'Moonbeam',
     maxBlockSearch: 2000,
+    symbol: 'GLMR',
   },
   Solana: {
     ...chains.Solana!,
@@ -81,8 +88,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Solana Explorer',
     gasToken: 'SOL',
     chainId: 0,
-    icon: Icon.SOLANA,
+    icon: 'Solana',
     maxBlockSearch: 2000,
+    symbol: 'SOL',
   },
   Sui: {
     ...chains.Sui!,
@@ -91,8 +99,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Suiscan',
     gasToken: 'SUI',
     chainId: 0,
-    icon: Icon.SUI,
+    icon: 'Sui',
     maxBlockSearch: 0,
+    symbol: 'SUI',
   },
   Aptos: {
     ...chains.Aptos!,
@@ -101,8 +110,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Aptos Explorer',
     gasToken: 'APT',
     chainId: 0,
-    icon: Icon.APT,
+    icon: 'Aptos',
     maxBlockSearch: 0,
+    symbol: 'APT',
   },
   Base: {
     ...chains.Base!,
@@ -111,8 +121,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'BaseScan',
     gasToken: 'ETHbase',
     chainId: 8453,
-    icon: Icon.BASE,
+    icon: 'Base',
     maxBlockSearch: 2000,
+    symbol: 'BASE',
   },
   // TODO: SDKV2 - re-enable cosmos chains once cosmos gateway route is implemented
   //Osmosis: {
@@ -122,7 +133,7 @@ export const MAINNET_CHAINS: ChainsConfig = {
   //  explorerName: 'MintScan',
   //  gasToken: 'OSMO',
   //  chainId: 'osmosis-1',
-  //  icon: Icon.OSMO,
+  //  icon: 'Osmosis,
   //  maxBlockSearch: 0,
   //},
   //Wormchain: {
@@ -132,7 +143,7 @@ export const MAINNET_CHAINS: ChainsConfig = {
   //  explorerName: '',
   //  gasToken: 'WORM',
   //  chainId: '',
-  //  icon: Icon.OSMO,
+  //  icon: 'Osmosis,
   //  maxBlockSearch: 0,
   //},
   Arbitrum: {
@@ -142,8 +153,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Arbitrum Explorer',
     gasToken: 'ETHarbitrum',
     chainId: 42161,
-    icon: Icon.ARBITRUM,
+    icon: 'Arbitrum',
     maxBlockSearch: 2000,
+    symbol: 'ARB',
   },
   Optimism: {
     ...chains.Optimism!,
@@ -152,8 +164,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Optimistic Etherscan',
     gasToken: 'ETHoptimism',
     chainId: 10,
-    icon: Icon.OPTIMISM,
+    icon: 'Optimism',
     maxBlockSearch: 2000,
+    symbol: 'OP',
   },
   Klaytn: {
     ...chains.Klaytn!,
@@ -162,8 +175,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Kaia Scope',
     gasToken: 'KLAY',
     chainId: 8217,
-    icon: Icon.KLAY,
+    icon: 'Klaytn',
     maxBlockSearch: 2000,
+    symbol: 'KLAY',
   },
   //Evmos: {
   //  ...chains.Evmos!,
@@ -172,7 +186,7 @@ export const MAINNET_CHAINS: ChainsConfig = {
   //  explorerName: 'MintScan',
   //  gasToken: 'EVMOS',
   //  chainId: 'evmos_9001-2',
-  //  icon: Icon.EVMOS,
+  //  icon: 'Evmos',
   //  maxBlockSearch: 0,
   //},
   //Kujira: {
@@ -182,7 +196,7 @@ export const MAINNET_CHAINS: ChainsConfig = {
   //  explorerName: 'Kujira Finder',
   //  gasToken: 'KUJI',
   //  chainId: 'kaiyo-1',
-  //  icon: Icon.KUJI,
+  //  icon: 'Kujira',
   //  maxBlockSearch: 0,
   //},
   //Injective: {
@@ -192,7 +206,7 @@ export const MAINNET_CHAINS: ChainsConfig = {
   //  explorerName: 'Injective Explorer',
   //  gasToken: 'INJ',
   //  chainId: 'injective-1',
-  //  icon: Icon.INJ,
+  //  icon: 'Injective',
   //  maxBlockSearch: 0,
   //},
   Scroll: {
@@ -202,8 +216,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Scrollscan',
     gasToken: 'ETHscroll',
     chainId: 534352,
-    icon: Icon.SCROLL,
+    icon: 'Scroll',
     maxBlockSearch: 2000,
+    symbol: 'SCR',
   },
   Blast: {
     ...chains.Blast!,
@@ -212,8 +227,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Blastscan',
     gasToken: 'ETHblast',
     chainId: 81457,
-    icon: Icon.BLAST,
+    icon: 'Blast',
     maxBlockSearch: 2000,
+    symbol: 'BLAST',
   },
   Xlayer: {
     ...chains.Xlayer!,
@@ -222,8 +238,9 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'OKX Explorer',
     gasToken: 'OKB',
     chainId: 196,
-    icon: Icon.XLAYER,
+    icon: 'Xlayer',
     maxBlockSearch: 2000,
+    symbol: 'OKX',
   },
   Mantle: {
     ...chains.Mantle!,
@@ -232,7 +249,8 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'Mantle Explorer',
     gasToken: 'MNT',
     chainId: 5000,
-    icon: Icon.MANTLE,
+    icon: 'Mantle',
     maxBlockSearch: 2000,
+    symbol: 'MNT',
   },
 };

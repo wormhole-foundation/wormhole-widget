@@ -59,7 +59,15 @@ function SwapInputs() {
           }
         });
     }
-  }, [destToken, sourceToken, fromChain, toChain]);
+  }, [
+    fromChain,
+    toChain,
+    sourceToken,
+    destToken,
+    canSwap,
+    isTransactionInProgress,
+    dispatch,
+  ]);
 
   const { classes } = useStyles();
 

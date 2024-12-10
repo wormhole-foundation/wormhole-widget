@@ -1,5 +1,5 @@
 import { CONFIG } from 'sdklegacy';
-import { ChainsConfig, Icon } from '../types';
+import { ChainsConfig } from '../types';
 
 const { chains } = CONFIG.DEVNET;
 
@@ -11,8 +11,9 @@ export const DEVNET_CHAINS: ChainsConfig = {
     explorerName: '',
     gasToken: 'ETH',
     chainId: 1,
-    icon: Icon.ETH,
+    icon: 'Ethereum',
     maxBlockSearch: 0,
+    symbol: 'ETH',
   },
   Osmosis: {
     ...chains.Osmosis!,
@@ -21,8 +22,9 @@ export const DEVNET_CHAINS: ChainsConfig = {
     explorerName: '',
     gasToken: 'OSMO',
     chainId: 'osmosis-1002',
-    icon: Icon.OSMO,
+    icon: 'Osmosis',
     maxBlockSearch: 0,
+    symbol: 'OSMO',
   },
   Wormchain: {
     ...chains.Wormchain!,
@@ -31,8 +33,9 @@ export const DEVNET_CHAINS: ChainsConfig = {
     explorerName: '',
     gasToken: 'WORM',
     chainId: 'wormchain-1',
-    icon: Icon.OSMO,
+    icon: 'Osmosis',
     maxBlockSearch: 0,
+    symbol: 'OSMO',
   },
   Terra2: {
     ...chains.Terra2!,
@@ -41,7 +44,8 @@ export const DEVNET_CHAINS: ChainsConfig = {
     explorerName: '',
     gasToken: 'LUNA',
     chainId: 'localterra',
-    icon: Icon.OSMO,
+    icon: 'Terra2',
     maxBlockSearch: 0,
+    symbol: 'OSMO',
   },
 };
