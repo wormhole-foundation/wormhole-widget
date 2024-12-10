@@ -3,6 +3,7 @@ import { useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { makeStyles } from 'tss-react/mui';
 
+import config from 'config';
 import { TransactionLocal } from 'config/types';
 import WidgetItem from 'views/v2/TxHistory/Widget/Item';
 import { getTxsFromLocalStorage } from 'utils/inProgressTxCache';
@@ -43,7 +44,14 @@ const TxHistoryWidget = () => {
 
   useEffect(() => {
     // Get all in-progress transactions from localStorage
-    setTransactions(getTxsFromLocalStorage());
+    const txs = getTxsFromLocalStorage();
+
+    // Filter out the ones with unknown token configs
+    const verifiedTxs = txs?.filter(
+      (tx) => tx?.txDetails?.tokenKey && config.tokens[tx?.txDetails?.tokenKey],
+    );
+
+    setTransactions(verifiedTxs);
   }, []);
 
   if (!transactions || transactions.length === 0) {
