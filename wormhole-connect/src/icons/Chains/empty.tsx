@@ -8,7 +8,7 @@ const noIcon = (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect width="13" height="13" rx="2" fill="#2E2E34" />
+    <rect width="13" height="13" rx="2" fill="#3D405C" />
   </svg>
 );
 
