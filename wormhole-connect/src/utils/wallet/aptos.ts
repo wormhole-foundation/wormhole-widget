@@ -1,19 +1,9 @@
 import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
-import {
-  AptosSnapAdapter,
-  AptosWalletAdapter,
-  BitkeepWalletAdapter,
-  FewchaWalletAdapter,
-  MartianWalletAdapter,
-  NightlyWalletAdapter as NightlyWalletAdapterAptos,
-  PontemWalletAdapter,
-  RiseWalletAdapter,
-  SpikaWalletAdapter,
-  WalletAdapterNetwork,
-} from '@manahippo/aptos-wallet-adapter';
+import { InputEntryFunctionData, InputMultiSigData, MoveFunctionId } from "@aptos-labs/ts-sdk"
+import { WalletCore, Network as AptosNetwork } from "@aptos-labs/wallet-adapter-core"
 import { AptosWallet } from '@xlabs-libs/wallet-aggregator-aptos';
 
-import { Types } from 'aptos';
+import type { Types } from 'aptos';
 
 import { Network } from '@wormhole-foundation/sdk';
 import {
@@ -23,23 +13,32 @@ import {
 
 import config from 'config';
 
-const aptosWallets = {
-  aptos: new AptosWallet(new AptosWalletAdapter()),
-  martian: new AptosWallet(new MartianWalletAdapter()),
-  rise: new AptosWallet(new RiseWalletAdapter()),
-  nightly: new AptosWallet(new NightlyWalletAdapterAptos()),
-  pontem: new AptosWallet(new PontemWalletAdapter()),
-  fewcha: new AptosWallet(new FewchaWalletAdapter()),
-  spika: new AptosWallet(new SpikaWalletAdapter()),
-  snap: new AptosWallet(
-    new AptosSnapAdapter({
-      network: config.isMainnet
-        ? WalletAdapterNetwork.Mainnet
-        : WalletAdapterNetwork.Testnet,
-    }),
-  ),
-  bitkeep: new AptosWallet(new BitkeepWalletAdapter()),
-};
+const aptosWalletConfig = { network: config.isMainnet ? "mainnet" as AptosNetwork : "testnet" as AptosNetwork }
+const walletCore = new WalletCore(
+  [], [], aptosWalletConfig,
+  true
+);
+
+const aptosWallets: Record<string, AptosWallet> = {};
+walletCore.wallets.forEach((wallet) => {
+  aptosWallets[wallet.name] = new AptosWallet(wallet, aptosWalletConfig);
+});
+
+function convertPayloadInputV1ToV2(
+  inputV1: Types.TransactionPayload
+) {
+  if ("function" in inputV1) {
+    const inputV2: InputEntryFunctionData | InputMultiSigData  = {
+      function: inputV1.function as MoveFunctionId,
+      functionArguments: inputV1.arguments,
+      typeArguments: inputV1.type_arguments,
+    };
+    return inputV2;
+  }
+
+  throw new Error("Payload type not supported");
+}
+
 
 export function fetchOptions() {
   return aptosWallets;
@@ -63,9 +62,9 @@ export async function signAndSendTransaction(
     });
   }
 
-  const tx = await (wallet as AptosWallet).signAndSendTransaction(
-    payload as Types.TransactionPayload,
-  );
+  const tx = await (wallet as AptosWallet).signAndSendTransaction({
+    data: convertPayloadInputV1ToV2(payload as Types.TransactionPayload)
+  });
   /*
    * TODO SDKV2
   const aptosClient = (
