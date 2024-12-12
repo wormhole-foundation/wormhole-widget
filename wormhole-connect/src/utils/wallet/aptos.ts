@@ -1,6 +1,6 @@
 import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
 import { InputEntryFunctionData, InputMultiSigData, MoveFunctionId } from "@aptos-labs/ts-sdk"
-import { WalletCore, Network as AptosNetwork } from "@aptos-labs/wallet-adapter-core"
+import type { Network as AptosNetwork } from "@aptos-labs/wallet-adapter-core"
 import { AptosWallet } from '@xlabs-libs/wallet-aggregator-aptos';
 
 import type { Types } from 'aptos';
@@ -13,22 +13,11 @@ import {
 
 import config from 'config';
 
-const aptosWalletConfig = { network: config.isMainnet ? "mainnet" as AptosNetwork : "testnet" as AptosNetwork }
-const walletCore = new WalletCore(
-  [], [], aptosWalletConfig,
-  true
-);
-
-const aptosWallets: Record<string, AptosWallet> = {};
-walletCore.wallets.forEach((wallet) => {
-  aptosWallets[wallet.name] = new AptosWallet(wallet, aptosWalletConfig);
-});
-
 function convertPayloadInputV1ToV2(
   inputV1: Types.TransactionPayload
 ) {
   if ("function" in inputV1) {
-    const inputV2: InputEntryFunctionData | InputMultiSigData  = {
+    const inputV2: InputEntryFunctionData | InputMultiSigData = {
       function: inputV1.function as MoveFunctionId,
       functionArguments: inputV1.arguments,
       typeArguments: inputV1.type_arguments,
@@ -41,6 +30,12 @@ function convertPayloadInputV1ToV2(
 
 
 export function fetchOptions() {
+  const aptosWalletConfig = { network: config.isMainnet ? "mainnet" as AptosNetwork : "testnet" as AptosNetwork }
+  const aptosWallets: Record<string, AptosWallet> = {};
+  const walletCore = AptosWallet.walletCoreFactory(aptosWalletConfig, true, [])
+  walletCore.wallets.forEach((wallet) => {
+    aptosWallets[wallet.name] = new AptosWallet(wallet, walletCore);
+  });
   return aptosWallets;
 }
 
