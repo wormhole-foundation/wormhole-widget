@@ -234,7 +234,7 @@ const AmountInput = (props: Props) => {
             inputProps={{
               style: {
                 color: props.error
-                  ? theme.palette.error.light
+                  ? theme.palette.error.main
                   : theme.palette.text.primary,
                 fontSize: 24,
                 height: '40px',
@@ -270,9 +270,7 @@ const AmountInput = (props: Props) => {
         error={!!props.error}
         content={props.error || props.warning}
         show={!!props.error || !!props.warning}
-        color={
-          props.error ? theme.palette.error.light : theme.palette.grey.A400
-        }
+        color={props.error ? theme.palette.error.main : theme.palette.grey.A400}
         className={classes.inputError}
       />
     </div>

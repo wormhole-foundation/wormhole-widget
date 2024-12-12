@@ -27,13 +27,11 @@ import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
 
 const useStyles = makeStyles()((theme: any) => ({
-  container: {
-    marginTop: '4px',
-  },
   card: {
     width: '100%',
     cursor: 'pointer',
     maxWidth: '420px',
+    minHeight: '72px',
     borderRadius: '8px',
   },
   cardContent: {
@@ -45,6 +43,10 @@ const useStyles = makeStyles()((theme: any) => ({
       padding: '16px 20px',
     },
   },
+  chainBadge: {
+    border: `1.5px solid ${theme.palette.modal.background}`,
+    borderRadius: '4px',
+  },
   chainSelector: {
     display: 'flex',
     alignItems: 'center',
@@ -55,9 +57,8 @@ const useStyles = makeStyles()((theme: any) => ({
     cursor: 'not-allowed',
     clickEvent: 'none',
   },
-  chainBadge: {
-    border: `1.5px solid ${theme.palette.modal.background}`,
-    borderRadius: '4px',
+  popover: {
+    marginTop: '4px',
   },
 }));
 
@@ -186,7 +187,7 @@ const AssetPicker = (props: Props) => {
           vertical: 'top',
           horizontal: 'center',
         }}
-        className={classes.container}
+        className={classes.popover}
         transformOrigin={{
           vertical: 'top',
           horizontal: 'center',
