@@ -313,7 +313,7 @@ export const validateAll = async (
     !availability.isAvailable ||
     (manualAddressTarget &&
       !automatic(routeName || '', toChain) &&
-      !(destToken === 'USDCsol' || destToken === 'USDCeth'));
+      !(token === 'USDCsol' || token === 'USDCeth'));
   const availableRoutes = routeStates
     ?.filter((rs) => rs.supported && !isDisabled(rs.name, rs.availability))
     .map((val) => val.name);

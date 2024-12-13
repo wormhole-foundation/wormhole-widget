@@ -294,7 +294,7 @@ function RouteOption(props: {
     if (
       manualAddressTarget &&
       !props.automatic &&
-      !(destToken === 'USDCsol' || destToken === 'USDCeth')
+      !(token === 'USDCsol' || token === 'USDCeth')
     ) {
       return 'This route is not available when sending to a manual address';
     }
@@ -306,7 +306,7 @@ function RouteOption(props: {
   const reason = useMemo(() => {
     if (
       manualAddressTarget &&
-      !(destToken === 'USDCsol' || destToken === 'USDCeth') &&
+      !(token === 'USDCsol' || token === 'USDCeth') &&
       !props.automatic
     ) {
       return REASON_MANUAL_ADDRESS_NOT_SUPPORTED;
@@ -413,7 +413,7 @@ function RouteOptions() {
       !availability.isAvailable ||
       (manualAddressTarget &&
         !isAutomatic(routeName) &&
-        !(destToken === 'USDCsol' || destToken === 'USDCeth')),
+        !(token === 'USDCsol' || token === 'USDCeth')),
     [manualAddressTarget, toChain],
   );
 
