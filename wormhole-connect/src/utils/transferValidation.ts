@@ -311,11 +311,9 @@ export const validateAll = async (
   const maxSendAmount = getMaxAmt(route);
   const isDisabled = (routeName: string, availability: RouteAvailability) =>
     !availability.isAvailable ||
-    !(
-      destToken === 'USDCsol' ||
-      destToken === 'USDCeth' ||
-      (manualAddressTarget && !automatic(routeName || '', toChain))
-    );
+    (manualAddressTarget &&
+      !automatic(routeName || '', toChain) &&
+      !(destToken === 'USDCsol' || destToken === 'USDCeth'));
   const availableRoutes = routeStates
     ?.filter((rs) => rs.supported && !isDisabled(rs.name, rs.availability))
     .map((val) => val.name);

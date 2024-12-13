@@ -291,7 +291,11 @@ function RouteOption(props: {
     : props.route.name;
 
   const tooltipText = useMemo(() => {
-    if (manualAddressTarget && !props.automatic) {
+    if (
+      manualAddressTarget &&
+      !props.automatic &&
+      !(destToken === 'USDCsol' || destToken === 'USDCeth')
+    ) {
       return 'This route is not available when sending to a manual address';
     }
     if (props.disabled) {
@@ -307,6 +311,7 @@ function RouteOption(props: {
     ) {
       return REASON_MANUAL_ADDRESS_NOT_SUPPORTED;
     }
+
     if (props.disabled) {
       return REASON_AMOUNT_TOO_LOW;
     }
@@ -407,9 +412,8 @@ function RouteOptions() {
     (routeName: string, availability: RouteAvailability) =>
       !availability.isAvailable ||
       (manualAddressTarget &&
-        (!isAutomatic(routeName || '', toChain) ||
-          destToken === 'USDCsol' ||
-          destToken === 'USDCeth')),
+        !isAutomatic(routeName) &&
+        !(destToken === 'USDCsol' || destToken === 'USDCeth')),
     [manualAddressTarget, toChain],
   );
 
