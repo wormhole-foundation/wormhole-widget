@@ -406,7 +406,10 @@ function RouteOptions() {
   const isDisabled = useCallback(
     (routeName: string, availability: RouteAvailability) =>
       !availability.isAvailable ||
-      (manualAddressTarget && !isAutomatic(routeName || '', toChain)),
+      (manualAddressTarget &&
+        (!isAutomatic(routeName || '', toChain) ||
+          destToken === 'USDCsol' ||
+          destToken === 'USDCeth')),
     [manualAddressTarget, toChain],
   );
 

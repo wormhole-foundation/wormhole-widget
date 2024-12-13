@@ -338,7 +338,10 @@ function Bridge() {
   const showRouteValidation =
     !!fromChain && !!toChain && !!token && !!destToken && !!amount;
   const manualAddressTargetValidation = manualAddressTarget
-    ? manualAddressTarget && isAutomatic(route || '', toChain)
+    ? !!manualAddressTarget &&
+      (isAutomatic(route || '', toChain) ||
+        destToken === 'USDCsol' ||
+        destToken === 'USDCeth')
     : true;
   const pageHeader = getPageHeader();
 
