@@ -111,6 +111,7 @@ export function fetchOptions() {
                 : SolanaNetwork.Devnet,
               options: {
                 projectId: config.ui.walletConnectProjectId,
+                customStoragePrefix: 'wh-connect-solana-adapter',
               },
             }),
             connection,
