@@ -300,7 +300,11 @@ function RouteOption(props: {
   }, [manualAddressTarget, props]);
 
   const reason = useMemo(() => {
-    if (manualAddressTarget && !props.automatic) {
+    if (
+      manualAddressTarget &&
+      !(destToken === 'USDCsol' || destToken === 'USDCeth') &&
+      !props.automatic
+    ) {
       return REASON_MANUAL_ADDRESS_NOT_SUPPORTED;
     }
     if (props.disabled) {
