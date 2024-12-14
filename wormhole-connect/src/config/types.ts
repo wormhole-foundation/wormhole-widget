@@ -18,7 +18,7 @@ import {
 } from '@wormhole-foundation/sdk';
 
 import {
-  TransferDetails,
+  sferDetails,
   TriggerEventHandler,
   WormholeConnectEventHandler,
 } from 'telemetry/types';
@@ -302,7 +302,7 @@ export interface Transaction {
   inProgress: boolean;
 }
 
-// Transanction data in local storage
+// Transaction data in local storage
 export interface TransactionLocal {
   receipt: routes.Receipt<AttestationReceipt>;
   route: string;
