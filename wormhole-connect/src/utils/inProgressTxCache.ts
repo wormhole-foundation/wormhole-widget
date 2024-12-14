@@ -10,7 +10,7 @@ const LOCAL_STORAGE_MAX = 3;
 const JSONReplacer = (_, value: any) =>
   typeof value === 'bigint' ? value.toString() : value;
 
-// Checks the existance of the props with the given types in a parent object
+// Checks the existence of the props with the given types in a parent object
 const validateChildPropTypes = (
   parent: object,
   propTypes: { [key: string]: string },
