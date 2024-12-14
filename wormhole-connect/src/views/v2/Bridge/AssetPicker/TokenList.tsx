@@ -126,7 +126,7 @@ const TokenList = (props: Props) => {
       tokens.push(nativeTokenConfig);
     }
 
-    // Fourth: Add tokens with a balances in the connected wallet
+    // Fourth: Add tokens with balances in the connected wallet
     Object.entries(balances).forEach(([key, val]) => {
       if (val?.balance && sdkAmount.units(val.balance) > 0n) {
         const tokenConfig = props.tokenList?.find((t) => t.key === key);
