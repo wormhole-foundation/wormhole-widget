@@ -52,7 +52,7 @@ function checkKnownSimulationError(
 ): boolean {
   const errors = {};
 
-  // This error occur when the blockhash included in a transaction is not deemed to be valid
+  // This error occurs when the blockhash included in a transaction is not deemed to be valid
   // when a validator processes a transaction. We can retry the simulation to get a valid blockhash.
   if (response.err === 'BlockhashNotFound') {
     errors['BlockhashNotFound'] =
