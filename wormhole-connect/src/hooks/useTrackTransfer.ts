@@ -42,7 +42,7 @@ const useTrackTransfer = (props: Props): ReturnProps => {
     let sleepTime = TRACK_INTERVAL;
 
     if (eta && eta < 30_000) {
-      // Poll aggressively for very fast transfers
+      // Poll aggressively for high-speed transfers
       sleepTime = TRACK_INTERVAL_FAST;
     }
 
