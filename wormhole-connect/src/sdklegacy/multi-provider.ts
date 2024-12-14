@@ -31,7 +31,7 @@ type Provider = ethers.Provider;
  * intended to enable faster multi-chain development by housing all chain
  * connections under a single roof.
  *
- * Generally, we intend developers inherit the MultiProvider. Which is to say,
+ * Generally, we intend developers to inherit the MultiProvider. Which is to say,
  * the expected usage pattern is `class AppContext<T> extends MultiProvider<T>`.
  * This way, the `MultiProvider` registration methods are available on the app
  * context.
@@ -68,7 +68,7 @@ export class MultiProvider<T extends Domain> {
 
   /**
    * Resgister a domain with the MultiProvider. This allows the multiprovider
-   * to resolves tha domain info, and reference it by name or number.
+   * to resolve the domain info, and reference it by name or number.
    *
    * @param domain The Domain object to register.
    */
@@ -223,7 +223,7 @@ export class MultiProvider<T extends Domain> {
   }
 
   /**
-   * Get the Provider associated with a doman (if any)
+   * Get the Provider associated with a domain (if any)
    *
    * @param nameOrDomain A domain name or number.
    * @returns The currently registered Provider (or none)
