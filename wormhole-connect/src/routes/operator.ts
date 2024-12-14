@@ -129,7 +129,7 @@ export default class RouteOperator {
             // then we tell the user that the transaction can't be resumed.
           })
           .finally(() => {
-            // If we failed to get a receipt from all routes, resolve to null
+            // If we fail to get a receipt from all routes, resolve to null
             if (failedAttempts === totalAttemptsToMake) {
               resolve(null);
             }
