@@ -13,7 +13,7 @@ import { compressToBase64, decompressFromBase64 } from 'lz-string';
  * library.
  *
  * These can be referenced in the same way in the DemoApp sandbox so that the
- * config works when it's copy and pasted into an actual integrator project.
+ * config works when it's copied and pasted into an actual integrator project.
  *
  * The exports are:
  * - DEFAULT_ROUTES
