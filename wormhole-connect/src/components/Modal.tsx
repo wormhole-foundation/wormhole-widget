@@ -58,7 +58,7 @@ type Props = {
 
 function Modal({ open, width, closable, children, onClose }: Props) {
   const { classes } = useStyles({ width });
-  // TODO: have user pass in full-screen param?
+  // TODO: Has user passed in full-screen param?
   const handleClickInModal = useCallback((event: any) => {
     event.stopPropagation();
   }, []);
