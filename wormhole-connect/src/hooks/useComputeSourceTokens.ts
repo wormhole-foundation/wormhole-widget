@@ -71,7 +71,7 @@ const useComputeSourceTokens = (props: Props): ReturnProps => {
       active = false;
     };
     // IMPORTANT: do not include sourceToken in dependency array,
-    // because it's not needed and it will also cause an extra round unnecessary updates when the side-affect automatically sets the sourceToken.
+    // because it's not needed and it will also cause an extra round of unnecessary updates when the side-affect automatically sets the sourceToken.
     // Please See dispatch(setToken(...)) calls above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destChain, destToken, dispatch, route, sourceChain]);
