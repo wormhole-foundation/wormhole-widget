@@ -30,7 +30,7 @@ const getRpcForChain = (
     : defaultRpc;
 /**
  * Should be used to coalesce a wagmi chain name to a wormhole chain name.
- * This is necessary because the wormhole chain names are different from the wagmi chain names.
+ * This is necessary because the wormhole chain names differ from the wagmi chain names.
  *
  * @param name a wagmi chain name
  * @returns a wormhole chain name
