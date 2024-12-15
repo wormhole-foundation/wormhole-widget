@@ -4,7 +4,7 @@ function WORLD() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 512 512">
       <rect width="100%" height="100%" fill="#000" rx="256" />
-      <g clip-path="url(#world-chain-a)">
+      <g clipPath="url(#world-chain-a)">
         <mask
           id="world-chain-b"
           width="329"
