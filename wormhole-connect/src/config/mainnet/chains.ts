@@ -260,7 +260,8 @@ export const MAINNET_CHAINS: ChainsConfig = {
     explorerName: 'World Scan',
     gasToken: 'ETHworldchain',
     chainId: 480,
-    icon: Icon.WORLDCHAIN,
+    icon: 'Worldchain',
     maxBlockSearch: 2000,
+    symbol: 'WORLD',
   },
 };

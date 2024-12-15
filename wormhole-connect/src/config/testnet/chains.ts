@@ -269,7 +269,8 @@ export const TESTNET_CHAINS: ChainsConfig = {
     explorerName: 'World Scan',
     gasToken: 'ETHworldchain',
     chainId: 4801,
-    icon: Icon.WORLDCHAIN,
+    icon: 'Worldchain',
     maxBlockSearch: 2000,
+    symbol: 'WORLD',
   },
 };

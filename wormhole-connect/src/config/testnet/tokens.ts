@@ -405,7 +405,7 @@ export const TESTNET_TOKENS: TokensConfig = {
     key: 'ETHworldchain',
     symbol: 'ETH',
     nativeChain: 'Worldchain',
-    icon: Icon.WORLDCHAIN,
+    icon: TokenIcon.WORLDCHAIN,
     coinGeckoId: 'ethereum',
     decimals: 18,
     wrappedAsset: 'WETHworldchain',
@@ -414,7 +414,7 @@ export const TESTNET_TOKENS: TokensConfig = {
     key: 'WETHworldchain',
     symbol: 'WETH',
     nativeChain: 'Worldchain',
-    icon: Icon.WORLDCHAIN,
+    icon: TokenIcon.WORLDCHAIN,
     tokenId: {
       chain: 'Worldchain',
       address: '0x4200000000000000000000000000000000000006',
