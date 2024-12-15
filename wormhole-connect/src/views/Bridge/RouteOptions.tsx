@@ -301,7 +301,7 @@ function RouteOption(props: {
     if (props.disabled) {
       return 'Not enough funds on the source chain for automatic redemption';
     }
-  }, [manualAddressTarget, props]);
+  }, [manualAddressTarget, token, props]);
 
   const reason = useMemo(() => {
     if (
@@ -414,7 +414,7 @@ function RouteOptions() {
       (manualAddressTarget &&
         !isAutomatic(routeName) &&
         !(token === 'USDCsol' || token === 'USDCeth')),
-    [manualAddressTarget, toChain],
+    [manualAddressTarget, toChain, token],
   );
 
   const onSelect = useCallback(
