@@ -10,7 +10,7 @@ import {
   ERR_UNKNOWN,
   ERR_USER_REJECTED,
   ERR_AMOUNT_TOO_LARGE,
-  ERR_AMOUNT_IN_TOO_SMALL,
+  ERR_AMOUNT_TOO_SMALL,
 } from 'telemetry/types';
 import { InsufficientFundsForGasError } from 'sdklegacy';
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
@@ -51,7 +51,7 @@ export function interpretTransferError(
       internalErrorCode = ERR_USER_REJECTED;
     } else if (AMOUNT_IN_TOO_SMALL.test(e?.message)) {
       uiErrorMessage = 'Amount is too small for the selected route';
-      internalErrorCode = ERR_AMOUNT_IN_TOO_SMALL;
+      internalErrorCode = ERR_AMOUNT_TOO_SMALL;
     } else if (
       transferDetails.route.includes('CCTP') &&
       /burn.*exceed/i.test(e?.toString())
