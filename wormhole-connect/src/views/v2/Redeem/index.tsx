@@ -123,13 +123,6 @@ const useStyles = makeStyles<StyleProps>()((theme, { transitionDuration }) => ({
     width: '105px',
     height: '105px',
   },
-  poweredBy: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    marginTop: '24px',
-  },
   delayText: {
     maxWidth: '420px',
   },
@@ -915,9 +908,7 @@ const Redeem = () => {
         show={!!claimError}
         className={classes.errorBox}
       />
-      <div className={classes.poweredBy}>
-        <PoweredByIcon color={theme.palette.text.primary} />
-      </div>
+      <PoweredByIcon color={theme.palette.text.primary} />
       <WalletSidebar
         open={isWalletSidebarOpen}
         type={TransferWallet.RECEIVING}

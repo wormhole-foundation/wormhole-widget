@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useTheme } from '@mui/material';
-import Badge from '@mui/material/Badge';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -10,8 +9,7 @@ import Stack from '@mui/material/Stack';
 import { makeStyles } from 'tss-react/mui';
 
 import config from 'config';
-import ChainIcon from 'icons/ChainIcons';
-import TokenIcon from 'icons/TokenIcons';
+import AssetBadge from 'components/AssetBadge';
 import {
   calculateUSDPrice,
   getUSDFormat,
@@ -46,10 +44,8 @@ const TxHistoryItem = (props: Props) => {
 
   const {
     txHash,
-    sender,
     amount,
     amountUsd,
-    recipient,
     toChain,
     fromChain,
     tokenKey,
@@ -59,6 +55,14 @@ const TxHistoryItem = (props: Props) => {
     explorerLink,
   } = props.data;
 
+  // Separator with a unicode dot in the middle
+  const seperator = useMemo(
+    () => (
+      <Typography component="span" padding="0px 8px">{`\u00B7`}</Typography>
+    ),
+    [],
+  );
+
   // Render details for the sent amount
   const sentAmount = useMemo(() => {
     const sourceTokenConfig = config.tokens[tokenKey];
@@ -66,33 +70,30 @@ const TxHistoryItem = (props: Props) => {
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <Badge
-          badgeContent={
-            <ChainIcon icon={sourceChainConfig?.icon} height={16} />
-          }
-          sx={{
-            marginRight: '4px',
-            '& .MuiBadge-badge': {
-              right: 2,
-              top: 24,
-            },
-          }}
-        >
-          <TokenIcon icon={sourceTokenConfig?.icon} height={32} />
-        </Badge>
+        <AssetBadge
+          chainConfig={sourceChainConfig}
+          tokenConfig={sourceTokenConfig}
+        />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {amount} {sourceTokenConfig?.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
-            {`${getUSDFormat(amountUsd)} \u2022 ${
-              sourceChainConfig?.displayName
-            }`}
+            {getUSDFormat(amountUsd, false)}
+            {seperator}
+            {sourceChainConfig?.displayName}
           </Typography>
         </Stack>
       </Stack>
     );
-  }, [amount, fromChain, sender, tokenKey]);
+  }, [
+    amount,
+    amountUsd,
+    fromChain,
+    seperator,
+    theme.palette.text.secondary,
+    tokenKey,
+  ]);
 
   // Render details for the received amount
   const receivedAmount = useMemo(() => {
@@ -105,37 +106,41 @@ const TxHistoryItem = (props: Props) => {
       parseFloat(receiveAmount),
       props.tokenPrices,
       destTokenConfig,
+      false, // use tilde in the formatted USD price
     );
 
-    const receiveAmountDisplay = receiveAmountPrice
-      ? `${receiveAmountPrice} \u2022 `
-      : '';
+    const receiveAmountDisplay = receiveAmountPrice ? (
+      <>
+        {receiveAmountPrice}
+        {seperator}
+      </>
+    ) : null;
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <Badge
-          badgeContent={<ChainIcon icon={destChainConfig?.icon} height={16} />}
-          sx={{
-            marginRight: '4px',
-            '& .MuiBadge-badge': {
-              right: 2,
-              top: 24,
-            },
-          }}
-        >
-          <TokenIcon icon={destTokenConfig?.icon} height={32} />
-        </Badge>
+        <AssetBadge
+          chainConfig={destChainConfig}
+          tokenConfig={destTokenConfig}
+        />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {receiveAmount} {destTokenConfig?.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
-            {`${receiveAmountDisplay}${destChainConfig?.displayName}`}
+            {receiveAmountDisplay}
+            {destChainConfig?.displayName}
           </Typography>
         </Stack>
       </Stack>
     );
-  }, [props.tokenPrices, receiveAmount, receivedTokenKey, recipient, toChain]);
+  }, [
+    props.tokenPrices,
+    receiveAmount,
+    receivedTokenKey,
+    seperator,
+    theme.palette.text.secondary,
+    toChain,
+  ]);
 
   // Vertical line that connects sender and receiver token icons
   const verticalConnector = useMemo(
@@ -187,7 +192,7 @@ const TxHistoryItem = (props: Props) => {
                 color={theme.palette.text.secondary}
                 display="flex"
               >
-                <span>{`Transaction #${trimTxHash(txHash)}`}</span>
+                <span>{`Transaction #${trimTxHash(txHash, 4, 4)}`}</span>
                 <span>{transactionDateTime}</span>
               </Typography>
             }

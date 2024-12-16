@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -11,10 +12,12 @@ import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import config from 'config';
 import useGetTokenBalances from 'hooks/useGetTokenBalances';
 import type { ChainConfig, TokenConfig } from 'config/types';
+import type { RootState } from 'store';
 import type { WalletData } from 'store/wallet';
 import SearchableList from 'views/v2/Bridge/AssetPicker/SearchableList';
 import TokenItem from 'views/v2/Bridge/AssetPicker/TokenItem';
 import {
+  calculateUSDPrice,
   getDisplayName,
   isCanonicalToken,
   isFrankensteinToken,
@@ -62,6 +65,10 @@ const TokenList = (props: Props) => {
     props.wallet?.address || '',
     props.selectedChainConfig.key,
     props.tokenList || [],
+  );
+
+  const { usdPrices: tokenPrices } = useSelector(
+    (state: RootState) => state.tokenPrices,
   );
 
   const sortedTokens = useMemo(() => {
@@ -257,6 +264,9 @@ const TokenList = (props: Props) => {
       }}
       renderFn={(token: TokenConfig) => {
         const balance = balances?.[token.key]?.balance;
+        const price = balance
+          ? calculateUSDPrice(balance, tokenPrices.data, token)
+          : null;
         const disabled =
           props.isSource && !!props.wallet?.address && !!balances && !balance;
 
@@ -270,6 +280,7 @@ const TokenList = (props: Props) => {
               props.onSelectToken(token.key);
             }}
             balance={balance}
+            price={price}
             isFetchingBalance={isFetchingTokenBalances}
           />
         );

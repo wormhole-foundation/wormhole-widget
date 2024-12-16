@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { makeStyles } from 'tss-react/mui';
-import Box from '@mui/material/Box';
-import Badge from '@mui/material/Badge';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Popover from '@mui/material/Popover';
@@ -16,8 +14,6 @@ import DownIcon from '@mui/icons-material/ExpandMore';
 import UpIcon from '@mui/icons-material/ExpandLess';
 
 import config from 'config';
-import ChainIcon from 'icons/ChainIcons';
-import TokenIcon from 'icons/TokenIcons';
 
 import type { ChainConfig, TokenConfig } from 'config/types';
 import type { WalletData } from 'store/wallet';
@@ -25,6 +21,7 @@ import { isDisabledChain } from 'store/transferInput';
 import ChainList from './ChainList';
 import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
+import AssetBadge from 'components/AssetBadge';
 
 const useStyles = makeStyles()((theme: any) => ({
   card: {
@@ -43,10 +40,6 @@ const useStyles = makeStyles()((theme: any) => ({
       padding: '16px 20px',
     },
   },
-  chainBadge: {
-    border: `1.5px solid ${theme.palette.modal.background}`,
-    borderRadius: '4px',
-  },
   chainSelector: {
     display: 'flex',
     alignItems: 'center',
@@ -59,6 +52,10 @@ const useStyles = makeStyles()((theme: any) => ({
   },
   popover: {
     marginTop: '4px',
+  },
+  popoverSlot: {
+    width: '100%',
+    maxWidth: '420px',
   },
 }));
 
@@ -120,27 +117,6 @@ const AssetPicker = (props: Props) => {
     return props.token ? config.tokens[props.token] : undefined;
   }, [props.token]);
 
-  const badges = useMemo(() => {
-    return (
-      <Badge
-        badgeContent={
-          <Box className={classes.chainBadge}>
-            <ChainIcon icon={chainConfig?.icon} height={13} />
-          </Box>
-        }
-        sx={{
-          marginRight: '8px',
-          '& .MuiBadge-badge': {
-            right: 2,
-            top: 32,
-          },
-        }}
-      >
-        <TokenIcon icon={tokenConfig?.icon} height={36} />
-      </Badge>
-    );
-  }, [chainConfig, classes.chainBadge, tokenConfig?.icon]);
-
   const selection = useMemo(() => {
     if (!chainConfig && !tokenConfig) {
       return (
@@ -155,7 +131,7 @@ const AssetPicker = (props: Props) => {
         <Typography component={'div'} fontSize={16} fontWeight={700}>
           {tokenConfig?.symbol || 'Select token'}
         </Typography>
-        <Typography component={'div'} fontSize={12}>
+        <Typography component={'div'} fontSize={12} sx={{ opacity: 0.6 }}>
           {chainConfig?.displayName}
         </Typography>
       </div>
@@ -175,7 +151,7 @@ const AssetPicker = (props: Props) => {
             component={'div'}
             gap={1}
           >
-            {badges}
+            <AssetBadge chainConfig={chainConfig} tokenConfig={tokenConfig} />
             {selection}
           </Typography>
           {popupState.isOpen ? <UpIcon /> : <DownIcon />}
@@ -191,6 +167,12 @@ const AssetPicker = (props: Props) => {
         transformOrigin={{
           vertical: 'top',
           horizontal: 'center',
+        }}
+        marginThreshold={4}
+        slotProps={{
+          paper: {
+            className: classes.popoverSlot,
+          },
         }}
       >
         <ChainList

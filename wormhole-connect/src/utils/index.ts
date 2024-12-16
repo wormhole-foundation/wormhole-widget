@@ -35,9 +35,13 @@ export function trimAddress(address: string, max = 6): string {
   );
 }
 
-export function trimTxHash(txHash: string): string {
-  const start = txHash.slice(0, 6);
-  const end = txHash.slice(txHash.length - 4, txHash.length);
+export function trimTxHash(
+  txHash: string,
+  headLength = 6,
+  tailLength = 4,
+): string {
+  const start = txHash.slice(0, headLength);
+  const end = txHash.slice(txHash.length - tailLength, txHash.length);
   return `${start}...${end}`;
 }
 
@@ -287,7 +291,10 @@ export const getTokenPrice = (
   return undefined;
 };
 
-export const getUSDFormat = (price: number | undefined): string => {
+export const getUSDFormat = (
+  price: number | undefined,
+  useTilde = true,
+): string => {
   if (typeof price === 'undefined') {
     return '';
   }
@@ -296,13 +303,12 @@ export const getUSDFormat = (price: number | undefined): string => {
     return '$0';
   }
 
-  return (
-    '~' +
-    Intl.NumberFormat('en-EN', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price)
-  );
+  const formattedPrice = Intl.NumberFormat('en-EN', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(price);
+
+  return useTilde ? `~${formattedPrice}` : formattedPrice;
 };
 
 export const calculateUSDPriceRaw = (
@@ -328,8 +334,12 @@ export const calculateUSDPrice = (
   amount?: sdkAmount.Amount | number,
   tokenPrices?: TokenPrices | null,
   token?: TokenConfig,
+  useTilde = true,
 ): string => {
-  return getUSDFormat(calculateUSDPriceRaw(amount, tokenPrices, token));
+  return getUSDFormat(
+    calculateUSDPriceRaw(amount, tokenPrices, token),
+    useTilde,
+  );
 };
 
 /**

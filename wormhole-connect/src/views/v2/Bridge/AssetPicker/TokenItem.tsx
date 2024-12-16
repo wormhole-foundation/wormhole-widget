@@ -6,6 +6,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
+import Stack from '@mui/material/Stack';
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -43,9 +44,10 @@ const useStyles = makeStyles()((theme) => ({
 type TokenItemProps = {
   token: TokenConfig;
   chain: Chain;
-  disabled?: boolean;
-  onClick: () => void;
   balance: sdkAmount.Amount | null;
+  price: string | null;
+  onClick: () => void;
+  disabled?: boolean;
   isFetchingBalance?: boolean;
 };
 
@@ -77,7 +79,7 @@ function TokenItem(props: TokenItemProps) {
     >
       <div className={classes.tokenDetails}>
         <ListItemIcon>
-          <TokenIcon icon={props.token.icon} height={32} />
+          <TokenIcon icon={props.token.icon} />
         </ListItemIcon>
         <div>
           <Typography fontSize={16}>{props.token.symbol}</Typography>
@@ -98,15 +100,22 @@ function TokenItem(props: TokenItemProps) {
           </Typography>
         </div>
       </div>
-      <Typography fontSize={14}>
-        {props.isFetchingBalance ? (
-          <CircularProgress size={24} />
-        ) : props.balance ? (
-          sdkAmount.display(sdkAmount.truncate(props.balance, 6))
-        ) : (
-          ''
+      <Stack alignItems="flex-end">
+        <Typography fontSize={14}>
+          {props.isFetchingBalance ? (
+            <CircularProgress size={24} />
+          ) : props.balance ? (
+            sdkAmount.display(sdkAmount.truncate(props.balance, 6))
+          ) : (
+            ''
+          )}
+        </Typography>
+        {props.price && (
+          <Typography color={theme.palette.text.secondary} fontSize="10px">
+            {props.price}
+          </Typography>
         )}
-      </Typography>
+      </Stack>
     </ListItemButton>
   );
 }

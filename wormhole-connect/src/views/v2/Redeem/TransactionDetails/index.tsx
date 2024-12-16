@@ -1,7 +1,6 @@
 import React, { ReactNode, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material';
-import Badge from '@mui/material/Badge';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -13,8 +12,7 @@ import { makeStyles } from 'tss-react/mui';
 
 import config from 'config';
 import { RouteContext } from 'contexts/RouteContext';
-import ChainIcon from 'icons/ChainIcons';
-import TokenIcon from 'icons/TokenIcons';
+import AssetBadge from 'components/AssetBadge';
 import {
   calculateUSDPrice,
   millisToHumanString,
@@ -63,6 +61,14 @@ const TransactionDetails = () => {
     (state: RootState) => state.tokenPrices,
   );
 
+  // Separator with a unicode dot in the middle
+  const seperator = useMemo(
+    () => (
+      <Typography component="span" padding="0px 8px">{`\u00B7`}</Typography>
+    ),
+    [],
+  );
+
   // Render details for the sent amount
   const sentAmount = useMemo(() => {
     if (!tokenKey || !fromChain) {
@@ -84,20 +90,10 @@ const TransactionDetails = () => {
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <Badge
-          badgeContent={
-            <ChainIcon icon={sourceChainConfig?.icon} height={16} />
-          }
-          sx={{
-            marginRight: '4px',
-            '& .MuiBadge-badge': {
-              right: 2,
-              top: 24,
-            },
-          }}
-        >
-          <TokenIcon icon={sourceTokenConfig?.icon} height={32} />
-        </Badge>
+        <AssetBadge
+          chainConfig={sourceChainConfig}
+          tokenConfig={sourceTokenConfig}
+        />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {formattedAmount} {sourceTokenConfig.symbol}
@@ -106,13 +102,28 @@ const TransactionDetails = () => {
             {tokenPrices.isFetching ? (
               <CircularProgress size={14} />
             ) : (
-              `${usdAmount} \u2022 ${sourceChainConfig.displayName} \u2022 ${senderAddress}`
+              <>
+                {usdAmount}
+                {seperator}
+                {sourceChainConfig.displayName}
+                {seperator}
+                {senderAddress}
+              </>
             )}
           </Typography>
         </Stack>
       </Stack>
     );
-  }, [amount, fromChain, sender, tokenKey, tokenPrices]);
+  }, [
+    amount,
+    fromChain,
+    sender,
+    seperator,
+    theme.palette.text.secondary,
+    tokenKey,
+    tokenPrices.data,
+    tokenPrices.isFetching,
+  ]);
 
   // Render details for the received amount
   const receivedAmount = useMemo(() => {
@@ -137,18 +148,10 @@ const TransactionDetails = () => {
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <Badge
-          badgeContent={<ChainIcon icon={destChainConfig?.icon} height={16} />}
-          sx={{
-            marginRight: '4px',
-            '& .MuiBadge-badge': {
-              right: 2,
-              top: 24,
-            },
-          }}
-        >
-          <TokenIcon icon={destTokenConfig?.icon} height={32} />
-        </Badge>
+        <AssetBadge
+          chainConfig={destChainConfig}
+          tokenConfig={destTokenConfig}
+        />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {formattedReceiveAmount} {destTokenConfig.symbol}
@@ -157,13 +160,28 @@ const TransactionDetails = () => {
             {tokenPrices.isFetching ? (
               <CircularProgress size={14} />
             ) : (
-              `${usdAmount} \u2022 ${destChainConfig.displayName} \u2022 ${recipientAddress}`
+              <>
+                {usdAmount}
+                {seperator}
+                {destChainConfig.displayName}
+                {seperator}
+                {recipientAddress}
+              </>
             )}
           </Typography>
         </Stack>
       </Stack>
     );
-  }, [receiveAmount, receivedTokenKey, recipient, toChain, tokenPrices]);
+  }, [
+    receiveAmount,
+    receivedTokenKey,
+    recipient,
+    seperator,
+    theme.palette.text.secondary,
+    toChain,
+    tokenPrices.data,
+    tokenPrices.isFetching,
+  ]);
 
   // Vertical line that connects sender and receiver token icons
   const verticalConnector = useMemo(
@@ -217,7 +235,13 @@ const TransactionDetails = () => {
         {tokenPrices.isFetching ? <CircularProgress size={14} /> : feeValue}
       </Stack>
     );
-  }, [relayerFee, routeName, tokenPrices]);
+  }, [
+    relayerFee,
+    routeName,
+    theme.palette.text.secondary,
+    tokenPrices.data,
+    tokenPrices.isFetching,
+  ]);
 
   const destinationGas = useMemo(() => {
     if (
@@ -252,7 +276,14 @@ const TransactionDetails = () => {
         )}
       </Stack>
     );
-  }, [receiveNativeAmount, toChain, tokenPrices]);
+  }, [
+    receiveNativeAmount,
+    receivedTokenKey,
+    theme.palette.text.secondary,
+    toChain,
+    tokenPrices.data,
+    tokenPrices.isFetching,
+  ]);
 
   const explorerLink = useMemo(() => {
     // Fallback to routeName if RouteContext value is not available
@@ -282,7 +313,7 @@ const TransactionDetails = () => {
         </Link>
       </Stack>
     );
-  }, [sendTx, routeContext.route]);
+  }, [routeContext.route, routeName, sendTx, theme.palette.text.primary]);
 
   const timeToDestination = useMemo(() => {
     let etaDisplay: string | ReactNode = <CircularProgress size={14} />;
@@ -299,7 +330,7 @@ const TransactionDetails = () => {
         <Typography fontSize={14}>{etaDisplay}</Typography>
       </Stack>
     );
-  }, [eta]);
+  }, [eta, theme.palette.text.secondary, toChain]);
 
   return (
     <div className={classes.container}>

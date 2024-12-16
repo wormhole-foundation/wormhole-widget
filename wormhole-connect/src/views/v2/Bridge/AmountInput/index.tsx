@@ -201,22 +201,28 @@ const AmountInput = (props: Props) => {
   }, []);
 
   const maxButton = useMemo(() => {
+    const maxButtonDisabled =
+      isInputDisabled || !sendingWallet.address || !tokenBalance;
     return (
       <Button
         sx={{ minWidth: '32px', padding: '4px' }}
-        disabled={isInputDisabled || !tokenBalance}
+        disabled={maxButtonDisabled}
         onClick={() => {
           if (tokenBalance) {
             handleChange(sdkAmount.display(tokenBalance));
           }
         }}
       >
-        <Typography fontSize={14} textTransform="none">
+        <Typography
+          fontSize={14}
+          fontWeight={maxButtonDisabled ? 400 : 600}
+          textTransform="none"
+        >
           Max
         </Typography>
       </Button>
     );
-  }, [isInputDisabled, tokenBalance]);
+  }, [handleChange, isInputDisabled, sendingWallet.address, tokenBalance]);
 
   return (
     <div className={classes.amountContainer}>
