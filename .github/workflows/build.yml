@@ -48,7 +48,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Run script
-        run: echo hi #npm i prettier && npm run checksdn
+        run: npm i prettier && npm run checksdn
         working-directory: wormhole-connect
 
   check-token-list:
