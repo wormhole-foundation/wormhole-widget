@@ -401,6 +401,27 @@ export const TESTNET_TOKENS: TokensConfig = {
     coinGeckoId: 'mantle',
     decimals: 18,
   },
+  ETHworldchain: {
+    key: 'ETHworldchain',
+    symbol: 'ETH',
+    nativeChain: 'Worldchain',
+    icon: TokenIcon.WORLDCHAIN,
+    coinGeckoId: 'ethereum',
+    decimals: 18,
+    wrappedAsset: 'WETHworldchain',
+  },
+  WETHworldchain: {
+    key: 'WETHworldchain',
+    symbol: 'WETH',
+    nativeChain: 'Worldchain',
+    icon: TokenIcon.WORLDCHAIN,
+    tokenId: {
+      chain: 'Worldchain',
+      address: '0x4200000000000000000000000000000000000006',
+    },
+    coinGeckoId: 'ethereum',
+    decimals: 18,
+  },
 };
 
 export const TESTNET_WRAPPED_TOKENS: TokenAddressesByChain = {

@@ -11,8 +11,8 @@ function BSC() {
     >
       <rect width="36" height="36" rx="6" fill="#F0B90B" />
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M18 0C27.9418 0 36 8.05817 36 18C36 27.9418 27.9418 36 18 36C8.05817 36 0 27.9418 0 18C0 8.05817 8.05817 0 18 0Z"
         fill="#F0B90B"
       />
