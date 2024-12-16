@@ -9,25 +9,25 @@ function WORLD() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect width="36" height="36" rx="6" fill="black" />
+      <circle cx="18" cy="18" r="18" fill="black" />
       <path
-        d="M29.1239 11.0384L18.375 11.0554C14.8158 11.0554 11.9303 13.9408 11.9303 17.5C11.9303 21.0592 14.8158 23.9447 18.375 23.9447H28.726"
+        d="M28.3266 11.8302L17.9483 11.8466C14.5118 11.8466 11.7258 14.6326 11.7258 18.069C11.7258 21.5055 14.5118 24.2915 17.9483 24.2915H27.9424"
         stroke="white"
-        stroke-width="2.25944"
+        stroke-width="2.18153"
         stroke-miterlimit="10"
         stroke-linecap="round"
       />
       <path
-        d="M6.17065 17.5H31.0001"
+        d="M6.16479 18.069H30.138"
         stroke="white"
-        stroke-width="2.25944"
+        stroke-width="2.18153"
         stroke-miterlimit="10"
         stroke-linecap="round"
       />
       <path
-        d="M18.5 5C25.4036 5 31 10.5964 31 17.5C31 24.4036 25.4036 30 18.5 30C11.5964 30 6 24.4036 6 17.5C6 10.5964 11.5964 5 18.5 5Z"
+        d="M18.069 6C24.7345 6 30.1379 11.4035 30.1379 18.069C30.1379 24.7345 24.7345 30.1379 18.069 30.1379C11.4035 30.1379 6 24.7345 6 18.069C6 11.4035 11.4035 6 18.069 6Z"
         stroke="white"
-        stroke-width="2.25944"
+        stroke-width="2.18153"
         stroke-miterlimit="10"
         stroke-linecap="round"
       />

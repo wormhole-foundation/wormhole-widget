@@ -38,6 +38,7 @@ import INJ from './Tokens/INJ';
 import NTT from './Tokens/NTT';
 import SCROLL from './Tokens/SCROLL';
 import BLAST from './Tokens/BLAST';
+import WORLD from './Tokens/WORLD';
 
 const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   container: {
@@ -100,12 +101,7 @@ const iconMap: { [key in TokenIcon]: React.JSX.Element } = {
       src={chainToIcon('Mantle')}
     />
   ),
-  [TokenIcon.WORLDCHAIN]: (
-    <img
-      style={{ maxHeight: '100%', maxWidth: '100%' }}
-      src={chainToIcon('Worldchain')}
-    />
-  ),
+  [TokenIcon.WORLDCHAIN]: WORLD(),
 };
 
 function isBuiltinTokenIcon(icon?: TokenIcon | string): icon is TokenIcon {
