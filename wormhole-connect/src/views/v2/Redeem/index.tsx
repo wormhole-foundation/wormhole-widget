@@ -369,13 +369,7 @@ const Redeem = () => {
       headerConfig = { ...defaults, ...config.ui.pageHeader };
     }
 
-    return (
-      <PageHeader
-        title={headerConfig.text}
-        align={headerConfig.align}
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
-    );
+    return <PageHeader title={headerConfig.text} align={headerConfig.align} />;
   }, []);
 
   // Header showing the status of the transaction

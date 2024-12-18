@@ -14,7 +14,6 @@ export type UiConfig = {
   searchTx?: SearchTxConfig;
   partnerLogo?: string;
   walletConnectProjectId?: string;
-  showHamburgerMenu?: boolean;
   previewMode?: boolean; // Disables making transfers
 
   getHelpUrl?: string;

@@ -291,13 +291,7 @@ const Bridge = () => {
       headerConfig = { ...defaults, ...config.ui.pageHeader };
     }
 
-    return (
-      <PageHeader
-        title={headerConfig.text}
-        align={headerConfig.align}
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
-    );
+    return <PageHeader title={headerConfig.text} align={headerConfig.align} />;
   }, [config.ui]);
 
   // Asset picker for the source network and token
@@ -510,7 +504,7 @@ const Bridge = () => {
           walletConnector
         )}
       </span>
-      {config.ui.showHamburgerMenu ? null : <FooterNavBar />}
+      <FooterNavBar />
       <div className={classes.poweredBy}>
         <PoweredByIcon color={theme.palette.text.primary} />
       </div>
