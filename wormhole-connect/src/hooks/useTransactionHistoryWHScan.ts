@@ -44,6 +44,7 @@ interface WormholeScanTransaction {
       feeAddress: string;
       feeChain: number;
       fee: string;
+      normalizedDecimals?: number;
     };
   };
   sourceChain: {
@@ -172,7 +173,7 @@ const useTransactionHistoryWHScan = (
       sdkAmount.display(
         {
           amount: standarizedProperties.amount,
-          decimals: DECIMALS,
+          decimals: standarizedProperties.normalizedDecimals ?? DECIMALS,
         },
         0,
       );
