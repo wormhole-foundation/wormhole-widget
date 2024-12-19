@@ -63,6 +63,7 @@ export enum TokenIcon {
   'BLAST',
   'XLAYER',
   'MANTLE',
+  'WORLDCHAIN',
 }
 
 // Used in bridging components
@@ -302,7 +303,7 @@ export interface Transaction {
   inProgress: boolean;
 }
 
-// Transanction data in local storage
+// Transaction data in local storage
 export interface TransactionLocal {
   receipt: routes.Receipt<AttestationReceipt>;
   route: string;

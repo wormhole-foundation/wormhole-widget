@@ -110,6 +110,12 @@ const MAINNET: { [chain in Chain]?: ChainConfig } = {
     context: Context.ETH,
     finalityThreshold: 0,
   },
+  Worldchain: {
+    key: 'Worldchain',
+    id: 45,
+    context: Context.ETH,
+    finalityThreshold: 0,
+  },
 } as const;
 
 /**
@@ -143,6 +149,7 @@ const MAINNET_CONFIG: WormholeConfig = {
     Blast: 'https://rpc.ankr.com/blast',
     Xlayer: 'https://rpc.xlayer.tech',
     Mantle: 'https://rpc.mantle.xyz',
+    Worldchain: 'https://worldchain-mainnet.g.alchemy.com/public',
   },
   rest: {
     Sei: '',

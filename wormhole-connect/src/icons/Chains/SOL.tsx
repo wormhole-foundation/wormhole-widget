@@ -31,8 +31,8 @@ function SOL() {
           y2="27.9398"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#00FFA3" />
-          <stop offset="1" stop-color="#DC1FFF" />
+          <stop stopColor="#00FFA3" />
+          <stop offset="1" stopColor="#DC1FFF" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_85_9551"
@@ -42,8 +42,8 @@ function SOL() {
           y2="27.9398"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#00FFA3" />
-          <stop offset="1" stop-color="#DC1FFF" />
+          <stop stopColor="#00FFA3" />
+          <stop offset="1" stopColor="#DC1FFF" />
         </linearGradient>
         <linearGradient
           id="paint2_linear_85_9551"
@@ -53,8 +53,8 @@ function SOL() {
           y2="27.9398"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#00FFA3" />
-          <stop offset="1" stop-color="#DC1FFF" />
+          <stop stopColor="#00FFA3" />
+          <stop offset="1" stopColor="#DC1FFF" />
         </linearGradient>
       </defs>
     </svg>

@@ -37,8 +37,8 @@ function XLAYER() {
           y2="3.49957"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#040404" />
-          <stop offset="1" stop-color="#282828" />
+          <stop stopColor="#040404" />
+          <stop offset="1" stopColor="#282828" />
         </linearGradient>
       </defs>
     </svg>

@@ -253,4 +253,15 @@ export const MAINNET_CHAINS: ChainsConfig = {
     maxBlockSearch: 2000,
     symbol: 'MNT',
   },
+  Worldchain: {
+    ...chains.Worldchain!,
+    displayName: 'World Chain',
+    explorerUrl: 'https://worldscan.org/',
+    explorerName: 'World Scan',
+    gasToken: 'ETHworldchain',
+    chainId: 480,
+    icon: 'Worldchain',
+    maxBlockSearch: 2000,
+    symbol: 'WORLD',
+  },
 };
