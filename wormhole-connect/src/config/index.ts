@@ -33,8 +33,6 @@ import evm from '@wormhole-foundation/sdk/evm';
 import solana from '@wormhole-foundation/sdk/solana';
 import aptos from '@wormhole-foundation/sdk/aptos';
 import sui from '@wormhole-foundation/sdk/sui';
-import cosmwasm from '@wormhole-foundation/sdk/cosmwasm';
-import algorand from '@wormhole-foundation/sdk/algorand';
 import RouteOperator from 'routes/operator';
 import { getTokenDecimals, getWrappedToken } from 'utils';
 import { CHAIN_ORDER } from './constants';
@@ -230,7 +228,7 @@ export async function newWormholeContextV2(): Promise<WormholeV2<Network>> {
 
   return await getWormholeV2(
     config.network,
-    [evm, solana, aptos, cosmwasm, sui, algorand],
+    [evm, solana, aptos, sui],
     v2Config,
   );
 }
