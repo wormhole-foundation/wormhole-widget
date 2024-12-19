@@ -1,6 +1,10 @@
 import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
-import { InputEntryFunctionData, InputMultiSigData, MoveFunctionId } from "@aptos-labs/ts-sdk"
-import type { Network as AptosNetwork } from "@aptos-labs/wallet-adapter-core"
+import {
+  InputEntryFunctionData,
+  InputMultiSigData,
+  MoveFunctionId,
+} from '@aptos-labs/ts-sdk';
+import type { Network as AptosNetwork } from '@aptos-labs/wallet-adapter-core';
 import { AptosWallet } from '@xlabs-libs/wallet-aggregator-aptos';
 
 import type { Types } from 'aptos';
@@ -13,10 +17,8 @@ import {
 
 import config from 'config';
 
-function convertPayloadInputV1ToV2(
-  inputV1: Types.TransactionPayload
-) {
-  if ("function" in inputV1) {
+function convertPayloadInputV1ToV2(inputV1: Types.TransactionPayload) {
+  if ('function' in inputV1) {
     const inputV2: InputEntryFunctionData | InputMultiSigData = {
       function: inputV1.function as MoveFunctionId,
       functionArguments: inputV1.arguments,
@@ -25,14 +27,17 @@ function convertPayloadInputV1ToV2(
     return inputV2;
   }
 
-  throw new Error("Payload type not supported");
+  throw new Error('Payload type not supported');
 }
 
-
 export function fetchOptions() {
-  const aptosWalletConfig = { network: config.isMainnet ? "mainnet" as AptosNetwork : "testnet" as AptosNetwork }
+  const aptosWalletConfig = {
+    network: config.isMainnet
+      ? ('mainnet' as AptosNetwork)
+      : ('testnet' as AptosNetwork),
+  };
   const aptosWallets: Record<string, AptosWallet> = {};
-  const walletCore = AptosWallet.walletCoreFactory(aptosWalletConfig, true, [])
+  const walletCore = AptosWallet.walletCoreFactory(aptosWalletConfig, true, []);
   walletCore.wallets.forEach((wallet) => {
     aptosWallets[wallet.name] = new AptosWallet(wallet, walletCore);
   });
@@ -58,7 +63,7 @@ export async function signAndSendTransaction(
   }
 
   const tx = await (wallet as AptosWallet).signAndSendTransaction({
-    data: convertPayloadInputV1ToV2(payload as Types.TransactionPayload)
+    data: convertPayloadInputV1ToV2(payload as Types.TransactionPayload),
   });
   /*
    * TODO SDKV2
