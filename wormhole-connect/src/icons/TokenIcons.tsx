@@ -4,7 +4,7 @@ import { makeStyles } from 'tss-react/mui';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 
 import { CENTER } from 'utils/style';
-import { Icon } from 'config/types';
+import { TokenIcon } from 'config/types';
 import WBTC from './Tokens/WBTC';
 import BUSD from './Tokens/BUSD';
 import USDT from './Tokens/USDT';
@@ -20,10 +20,10 @@ import APT from './Tokens/APT';
 import SUI from './Tokens/SUI';
 import SEI from './Tokens/SEI';
 import BASE from './Tokens/BASE';
-import MATIC from './Tokens/MATIC';
+import POLY from './Tokens/POLY';
 import BSC from './Tokens/BSC';
 import USDC from './Tokens/USDC';
-import noIcon from './Tokens/noIcon';
+import emptyToken from './Tokens/empty';
 import ARBITRUM from './Tokens/ARBITRUM';
 import OPTIMISM from './Tokens/OPTIMISM';
 import OSMO from './Tokens/OSMO';
@@ -38,6 +38,7 @@ import INJ from './Tokens/INJ';
 import NTT from './Tokens/NTT';
 import SCROLL from './Tokens/SCROLL';
 import BLAST from './Tokens/BLAST';
+import WORLD from './Tokens/WORLD';
 
 const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   container: {
@@ -55,71 +56,72 @@ const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   },
 }));
 
-const iconMap: { [key in Icon]: React.JSX.Element } = {
-  [Icon.WBTC]: WBTC(),
-  [Icon.BUSD]: BUSD(),
-  [Icon.USDT]: USDT(),
-  [Icon.DAI]: DAI(),
-  [Icon.GLMR]: GLMR(),
-  [Icon.AVAX]: AVAX(),
-  [Icon.BNB]: BNB(),
-  [Icon.BSC]: BSC(),
-  [Icon.CELO]: CELO(),
-  [Icon.ETH]: ETH(),
-  [Icon.FANTOM]: FTM(),
-  [Icon.POLYGON]: MATIC(),
-  [Icon.SOLANA]: SOL(),
-  [Icon.USDC]: USDC(),
-  [Icon.SUI]: SUI(),
-  [Icon.APT]: APT(),
-  [Icon.ARBITRUM]: ARBITRUM(),
-  [Icon.OPTIMISM]: OPTIMISM(),
-  [Icon.SEI]: SEI(),
-  [Icon.BASE]: BASE(),
-  [Icon.OSMO]: OSMO(),
-  [Icon.TBTC]: TBTC(),
-  [Icon.WSTETH]: WSTETH(),
-  [Icon.ATOM]: ATOM(),
-  [Icon.EVMOS]: EVMOS(),
-  [Icon.KUJI]: KUJI(),
-  [Icon.PYTH]: PYTH(),
-  [Icon.KLAY]: KLAY(),
-  [Icon.INJ]: INJ(),
-  [Icon.NTT]: NTT(),
-  [Icon.SCROLL]: SCROLL(),
-  [Icon.BLAST]: BLAST(),
-  [Icon.XLAYER]: (
+const iconMap: { [key in TokenIcon]: React.JSX.Element } = {
+  [TokenIcon.WBTC]: WBTC(),
+  [TokenIcon.BUSD]: BUSD(),
+  [TokenIcon.USDT]: USDT(),
+  [TokenIcon.DAI]: DAI(),
+  [TokenIcon.GLMR]: GLMR(),
+  [TokenIcon.AVAX]: AVAX(),
+  [TokenIcon.BNB]: BNB(),
+  [TokenIcon.BSC]: BSC(),
+  [TokenIcon.CELO]: CELO(),
+  [TokenIcon.ETH]: ETH(),
+  [TokenIcon.FANTOM]: FTM(),
+  [TokenIcon.POLYGON]: POLY(),
+  [TokenIcon.SOLANA]: SOL(),
+  [TokenIcon.USDC]: USDC(),
+  [TokenIcon.SUI]: SUI(),
+  [TokenIcon.APT]: APT(),
+  [TokenIcon.ARBITRUM]: ARBITRUM(),
+  [TokenIcon.OPTIMISM]: OPTIMISM(),
+  [TokenIcon.SEI]: SEI(),
+  [TokenIcon.BASE]: BASE(),
+  [TokenIcon.OSMO]: OSMO(),
+  [TokenIcon.TBTC]: TBTC(),
+  [TokenIcon.WSTETH]: WSTETH(),
+  [TokenIcon.ATOM]: ATOM(),
+  [TokenIcon.EVMOS]: EVMOS(),
+  [TokenIcon.KUJI]: KUJI(),
+  [TokenIcon.PYTH]: PYTH(),
+  [TokenIcon.KLAY]: KLAY(),
+  [TokenIcon.INJ]: INJ(),
+  [TokenIcon.NTT]: NTT(),
+  [TokenIcon.SCROLL]: SCROLL(),
+  [TokenIcon.BLAST]: BLAST(),
+  [TokenIcon.XLAYER]: (
     <img
       style={{ maxHeight: '100%', maxWidth: '100%' }}
       src={chainToIcon('Xlayer')}
     />
   ),
-  [Icon.MANTLE]: (
+  [TokenIcon.MANTLE]: (
     <img
       style={{ maxHeight: '100%', maxWidth: '100%' }}
       src={chainToIcon('Mantle')}
     />
   ),
+  [TokenIcon.WORLDCHAIN]: WORLD(),
 };
 
-function isBuiltinIcon(icon?: Icon | string): icon is Icon {
-  return Object.values(Icon).includes(icon as Icon);
+function isBuiltinTokenIcon(icon?: TokenIcon | string): icon is TokenIcon {
+  return Object.values(TokenIcon).includes(icon as TokenIcon);
 }
 
 type Props = {
-  icon?: Icon | string;
+  icon?: TokenIcon | string;
   height?: number;
 };
 
-function TokenIcon(props: Props) {
-  const size = props.height || 32;
+function TokenIconComponent(props: Props) {
+  const size = props.height || 36;
   const { classes } = useStyles({ size });
 
   // Default, if icon is undefined
-  let icon = noIcon;
+  let icon = emptyToken;
 
-  if (isBuiltinIcon(props.icon)) {
-    icon = iconMap[props.icon] || noIcon;
+  if (isBuiltinTokenIcon(props.icon)) {
+    icon = iconMap[props.icon] || emptyToken;
   } else if (typeof props.icon === 'string') {
     icon = <img className={classes.iconImage} src={props.icon} />;
   }
@@ -127,4 +129,4 @@ function TokenIcon(props: Props) {
   return <div className={classes.container}>{icon}</div>;
 }
 
-export default TokenIcon;
+export default TokenIconComponent;

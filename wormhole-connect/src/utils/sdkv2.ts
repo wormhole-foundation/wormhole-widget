@@ -15,6 +15,7 @@ import {
   amount,
   routes,
   CircleTransfer,
+  circle,
 } from '@wormhole-foundation/sdk';
 import config from 'config';
 import { NttRoute } from '@wormhole-foundation/sdk-route-ntt';
@@ -310,8 +311,13 @@ const parseCCTPReceipt = async (
 
   const sourceTokenId = Wormhole.tokenId(
     receipt.from,
-    payload.burnToken.toNative(receipt.from).toString(),
+    receipt.from === 'Sui'
+      ? // The `burnToken` from Sui is the keccak256 hash of the USDC token address,
+        // so we need to override it with the actual USDC address
+        circle.usdcContract.get(config.network, receipt.from)!
+      : payload.burnToken.toNative(receipt.from).toString(),
   );
+
   const usdcLegacy = config.sdkConverter.findTokenConfigV1(
     sourceTokenId,
     config.tokensArr,

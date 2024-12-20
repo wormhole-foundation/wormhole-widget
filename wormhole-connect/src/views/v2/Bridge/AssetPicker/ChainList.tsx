@@ -9,7 +9,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
-import TokenIcon from 'icons/TokenIcons';
+import ChainIcon from 'icons/ChainIcons';
 
 import type { ChainConfig } from 'config/types';
 import type { WalletData } from 'store/wallet';
@@ -48,6 +48,7 @@ const useStyles = makeStyles()((theme) => ({
   chainButton: {
     display: 'flex',
     flexDirection: 'column',
+    padding: '8px',
     border: '1px solid transparent',
     borderRadius: 8,
     '&.Mui-selected': {
@@ -105,7 +106,7 @@ const ChainList = (props: Props) => {
 
   const shortList = useMemo(() => {
     return (
-      <List component={Stack} direction="row" gap={1}>
+      <List component={Stack} direction="row">
         {topChains.map((chain: ChainConfig) => (
           <ListItemButton
             key={chain.key}
@@ -113,9 +114,14 @@ const ChainList = (props: Props) => {
             className={classes.chainButton}
             onClick={() => props.onChainSelect(chain.key)}
           >
-            <TokenIcon icon={chain.icon} height={32} />
-            <Typography fontSize={12} whiteSpace="nowrap">
-              {chain.displayName}
+            <ChainIcon icon={chain.icon} />
+            <Typography
+              fontSize={12}
+              lineHeight="12px"
+              marginTop="8px"
+              whiteSpace="nowrap"
+            >
+              {chain.symbol}
             </Typography>
           </ListItemButton>
         ))}
@@ -127,11 +133,18 @@ const ChainList = (props: Props) => {
         >
           <AddIcon
             sx={{
-              width: '32px',
-              height: '32px',
+              width: '36px',
+              height: '36px',
             }}
           />
-          <Typography fontSize={12}>other</Typography>
+          <Typography
+            fontSize={12}
+            lineHeight="12px"
+            marginTop="8px"
+            whiteSpace="nowrap"
+          >
+            other
+          </Typography>
         </ListItemButton>
       </List>
     );
@@ -158,7 +171,7 @@ const ChainList = (props: Props) => {
             }}
           >
             <ListItemIcon sx={{ minWidth: 50 }}>
-              <TokenIcon icon={chain.icon} height={36} />
+              <ChainIcon icon={chain.icon} height={36} />
             </ListItemIcon>
             <Typography fontSize={16} fontWeight={500}>
               {chain.displayName}

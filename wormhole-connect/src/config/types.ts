@@ -28,7 +28,7 @@ import RouteOperator from 'routes/operator';
 import { UiConfig } from './ui';
 import { TransferInfo } from 'utils/sdkv2';
 
-export enum Icon {
+export enum TokenIcon {
   'AVAX' = 1,
   'BNB',
   'BSC',
@@ -63,6 +63,7 @@ export enum Icon {
   'BLAST',
   'XLAYER',
   'MANTLE',
+  'WORLDCHAIN',
 }
 
 // Used in bridging components
@@ -163,7 +164,7 @@ export type TokenConfig = {
   key: string;
   symbol: string;
   nativeChain: Chain;
-  icon: Icon | string;
+  icon: TokenIcon | string;
   tokenId?: TokenId; // if no token id, it is the native token
   coinGeckoId: string;
   color?: string;
@@ -180,8 +181,9 @@ export interface ChainConfig extends BaseChainConfig {
   explorerName: string;
   gasToken: string;
   chainId: number | string;
-  icon: Icon;
+  icon: Chain;
   maxBlockSearch: number;
+  symbol?: string;
 }
 
 export type ChainsConfig = {
@@ -301,7 +303,7 @@ export interface Transaction {
   inProgress: boolean;
 }
 
-// Transanction data in local storage
+// Transaction data in local storage
 export interface TransactionLocal {
   receipt: routes.Receipt<AttestationReceipt>;
   route: string;

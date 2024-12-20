@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { makeStyles } from 'tss-react/mui';
+import Box from '@mui/material/Box';
 import Badge from '@mui/material/Badge';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -15,6 +16,7 @@ import DownIcon from '@mui/icons-material/ExpandMore';
 import UpIcon from '@mui/icons-material/ExpandLess';
 
 import config from 'config';
+import ChainIcon from 'icons/ChainIcons';
 import TokenIcon from 'icons/TokenIcons';
 
 import type { ChainConfig, TokenConfig } from 'config/types';
@@ -23,16 +25,13 @@ import { isDisabledChain } from 'store/transferInput';
 import ChainList from './ChainList';
 import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
-import { Box } from '@mui/material';
 
 const useStyles = makeStyles()((theme: any) => ({
-  container: {
-    marginTop: '4px',
-  },
   card: {
     width: '100%',
     cursor: 'pointer',
     maxWidth: '420px',
+    minHeight: '72px',
     borderRadius: '8px',
   },
   cardContent: {
@@ -44,6 +43,10 @@ const useStyles = makeStyles()((theme: any) => ({
       padding: '16px 20px',
     },
   },
+  chainBadge: {
+    border: `1.5px solid ${theme.palette.modal.background}`,
+    borderRadius: '4px',
+  },
   chainSelector: {
     display: 'flex',
     alignItems: 'center',
@@ -54,12 +57,8 @@ const useStyles = makeStyles()((theme: any) => ({
     cursor: 'not-allowed',
     clickEvent: 'none',
   },
-  chainBadge: {
-    padding: '2px',
-    background:
-      theme.palette.background.badge ?? theme.palette.background.default,
-    borderRadius: '6px',
-    border: `2px solid ${theme.palette.modal.background}`,
+  popover: {
+    marginTop: '4px',
   },
 }));
 
@@ -125,23 +124,19 @@ const AssetPicker = (props: Props) => {
     return (
       <Badge
         badgeContent={
-          <>
-            {chainConfig ? (
-              <Box className={classes.chainBadge}>
-                <TokenIcon icon={chainConfig?.icon} height={18} />
-              </Box>
-            ) : null}
-          </>
+          <Box className={classes.chainBadge}>
+            <ChainIcon icon={chainConfig?.icon} height={13} />
+          </Box>
         }
         sx={{
           marginRight: '8px',
           '& .MuiBadge-badge': {
             right: 2,
-            top: 44,
+            top: 32,
           },
         }}
       >
-        <TokenIcon icon={tokenConfig?.icon} height={48} />
+        <TokenIcon icon={tokenConfig?.icon} height={36} />
       </Badge>
     );
   }, [chainConfig, classes.chainBadge, tokenConfig?.icon]);
@@ -192,7 +187,7 @@ const AssetPicker = (props: Props) => {
           vertical: 'top',
           horizontal: 'center',
         }}
-        className={classes.container}
+        className={classes.popover}
         transformOrigin={{
           vertical: 'top',
           horizontal: 'center',

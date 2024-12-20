@@ -23,7 +23,7 @@ import config, { getWormholeContextV2 } from 'config';
 import { RouteContext } from 'contexts/RouteContext';
 import useTrackTransfer from 'hooks/useTrackTransfer';
 import ArrowRight from 'icons/ArrowRight';
-import TokenIcon from 'icons/TokenIcons';
+import ChainIcon from 'icons/ChainIcons';
 import TxCompleteIcon from 'icons/TxComplete';
 import {
   setRoute as setRedeemRoute,
@@ -270,14 +270,14 @@ const WidgetItem = (props: Props) => {
                   }`}
                 </Typography>
                 <Box className={classes.chainIcon}>
-                  <TokenIcon
+                  <ChainIcon
                     icon={config.chains[fromChain]?.icon}
                     height={24}
                   />
                 </Box>
                 <ArrowRight className={classes.arrowIcon} />
                 <Box className={classes.chainIcon}>
-                  <TokenIcon icon={config.chains[toChain]?.icon} height={24} />
+                  <ChainIcon icon={config.chains[toChain]?.icon} height={24} />
                 </Box>
               </Stack>
             </Stack>

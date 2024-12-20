@@ -355,7 +355,11 @@ const useTransactionHistoryWHScan = (
 
             // If no parsers specified for the given appIds, we'll skip this transaction
             if (parser) {
-              return parser(tx);
+              try {
+                return parser(tx);
+              } catch (e) {
+                console.error(`Error parsing transaction: ${e}`);
+              }
             }
           }
         })

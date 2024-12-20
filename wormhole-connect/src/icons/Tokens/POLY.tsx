@@ -1,6 +1,6 @@
 import React from 'react';
 
-function MATIC() {
+function POLY() {
   return (
     <svg
       style={{ maxHeight: '100%', maxWidth: '100%' }}
@@ -25,4 +25,4 @@ function MATIC() {
   );
 }
 
-export default MATIC;
+export default POLY;
