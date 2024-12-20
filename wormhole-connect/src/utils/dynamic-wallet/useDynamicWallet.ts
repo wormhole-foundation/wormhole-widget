@@ -28,16 +28,18 @@ export const useDynamicWalletOptions = () => {
 
     const getDynamicWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
-        return walletOptions.filter((a) => a.chain === toDynamicChain(chain) && a.group).map((a): DynamicWalletData => ({
-            icon: ({ size }) => React.createElement(DynamicWalletIcon, { size, walletKey: a.key }),
-            isReady: true,
-            name: a.name,
-            type: fromWormholeChainToContext(chain),
-            walletKey: a.key,
-            chain: a.chain,
-            isInstalledOnBrowser: a.isInstalledOnBrowser,
-            isWalletConnect: a.isWalletConnect,
-        }))
+        return walletOptions.filter((a) => a.chain === toDynamicChain(chain) && (a.group || a.key === 'safe'))
+            .map((a): DynamicWalletData => ({
+                icon: ({ size }) => React.createElement(DynamicWalletIcon, { size, walletKey: a.key }),
+                isReady: true,
+                name: a.name,
+                type: fromWormholeChainToContext(chain),
+                walletKey: a.key,
+                chain: a.chain,
+                isInstalledOnBrowser: a.isInstalledOnBrowser,
+                isWalletConnect: a.isWalletConnect,
+            })
+        )
     }, [walletOptions, selectWalletOption, sdkHasLoaded])
 
     const selectDynamicWalletOption = React.useCallback(async (walletId: string, connectCallback: (wallet: DynamicWallet) => Promise<void>) => {
