@@ -1,5 +1,4 @@
-import React, { useCallback } from 'react';
-
+import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import IconButton from '@mui/material/IconButton';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
@@ -24,6 +23,7 @@ const useStyles = makeStyles()(() => ({
 
 function SwapInputs() {
   const dispatch = useDispatch();
+  const [rotateAnimation, setRotateAnimation] = useState('');
 
   const {
     isTransactionInProgress,
@@ -41,6 +41,10 @@ function SwapInputs() {
 
   const swap = useCallback(() => {
     if (!canSwap || isTransactionInProgress) return;
+
+    setRotateAnimation((val) =>
+      val === 'spinRight' ? 'spinLeft' : 'spinRight',
+    );
 
     dispatch(swapInputs());
     dispatch(swapWallets());
@@ -74,10 +78,29 @@ function SwapInputs() {
   return (
     <IconButton
       className={classes.swapButton}
+      sx={{
+        animation: `${rotateAnimation} 0.3s linear 1`,
+        '@keyframes spinRight': {
+          '0%': {
+            transform: 'rotate(-180deg)',
+          },
+          '100%': {
+            transform: 'rotate(0deg)',
+          },
+        },
+        '@keyframes spinLeft': {
+          '0%': {
+            transform: 'rotate(180deg)',
+          },
+          '100%': {
+            transform: 'rotate(0deg)',
+          },
+        },
+      }}
       onClick={swap}
       disabled={!canSwap}
     >
-      <SwapVertIcon color="secondary" />
+      <SwapVertIcon />
     </IconButton>
   );
 }
