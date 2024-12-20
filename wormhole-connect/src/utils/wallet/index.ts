@@ -57,6 +57,10 @@ export const setWalletConnection = (type: TransferWallet, wallet: Wallet) => {
   walletConnection[type] = wallet;
 };
 
+export const clearWalletConnection = (type: TransferWallet) => {
+  walletConnection[type] = undefined;
+};
+
 export const connectWallet = async (
   type: TransferWallet,
   chain: Chain,

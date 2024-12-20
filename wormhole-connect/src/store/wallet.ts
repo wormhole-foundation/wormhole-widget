@@ -2,6 +2,7 @@ import { Context } from 'sdklegacy';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   disconnect,
+  getWalletConnection,
   swapWalletConnections,
   TransferWallet,
 } from 'utils/wallet';
@@ -105,7 +106,14 @@ export const walletSlice = createSlice({
       const tmp = state.sending;
       state.sending = state.receiving;
       state.receiving = tmp;
+
       swapWalletConnections();
+
+      // If the new sending wallet is is not connected (the user pasted in an address instead of connecting a wallet)
+      // clear it since it can't be used for sending/signing transactions
+      if (!getWalletConnection(TransferWallet.SENDING)) {
+        state.sending = NO_WALLET;
+      }
     },
   },
 });

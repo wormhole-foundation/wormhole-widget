@@ -5,6 +5,7 @@ import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
 import { maybeLogSdkError } from 'utils/errors';
+import { getWalletConnection, TransferWallet } from 'utils/wallet';
 
 type HookReturn = {
   supportedRoutes: string[];
@@ -21,6 +22,10 @@ const useFetchSupportedRoutes = (): HookReturn => {
 
   const { toNativeToken } = useSelector((state: RootState) => state.relay);
 
+  const receivingWallet = useSelector(
+    (state: RootState) => state.wallet.receiving,
+  );
+
   useEffect(() => {
     if (!fromChain || !toChain || !token || !destToken) {
       setRoutes([]);
@@ -34,6 +39,14 @@ const useFetchSupportedRoutes = (): HookReturn => {
       setIsFetching(true);
       const _routes: string[] = [];
       await config.routes.forEach(async (name, route) => {
+        // Disable manual routes if the receiving wallet is not connected
+        if (
+          !route.AUTOMATIC_DEPOSIT &&
+          !getWalletConnection(TransferWallet.RECEIVING)
+        ) {
+          return;
+        }
+
         let supported = false;
 
         try {
@@ -75,7 +88,15 @@ const useFetchSupportedRoutes = (): HookReturn => {
     return () => {
       isActive = false;
     };
-  }, [token, destToken, amount, fromChain, toChain, toNativeToken]);
+  }, [
+    token,
+    destToken,
+    amount,
+    fromChain,
+    toChain,
+    toNativeToken,
+    receivingWallet,
+  ]);
 
   return {
     supportedRoutes: routes,
