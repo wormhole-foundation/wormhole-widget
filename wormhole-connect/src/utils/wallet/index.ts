@@ -5,9 +5,9 @@ import {
   WalletState,
 } from '@xlabs-libs/wallet-aggregator-core';
 import {
-  connectReceivingWallet,
   connectWallet as connectSourceWallet,
   clearWallet,
+  connectReceivingWallet,
 } from 'store/wallet';
 
 import config from 'config';
@@ -33,6 +33,7 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
+import { AddressOnlyWallet } from './AddressOnlyWallet';
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -55,6 +56,10 @@ export const walletAcceptedChains = (context: Context | undefined): Chain[] => {
 
 export const setWalletConnection = (type: TransferWallet, wallet: Wallet) => {
   walletConnection[type] = wallet;
+};
+
+export const clearWalletConnection = (type: TransferWallet) => {
+  walletConnection[type] = undefined;
 };
 
 export const connectWallet = async (
@@ -118,6 +123,12 @@ export const connectWallet = async (
   });
 
   localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+
+  // if the wallet is an address only wallet, store the address in localStorage
+  // for automatic connection on next visit
+  if (wallet.getName() === AddressOnlyWallet.NAME) {
+    localStorage.setItem(`wormhole-connect:wallet:${context}:address`, address);
+  }
 };
 
 // Checks localStorage for previously used wallet for this chain
@@ -131,9 +142,35 @@ export const connectLastUsedWallet = async (
   const lastUsedWallet = localStorage.getItem(
     `wormhole-connect:wallet:${chainConfig.context}`,
   );
-  // if the last used wallet is not WalletConnect, try to connect to it
-  if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
+
+  if (
+    lastUsedWallet === AddressOnlyWallet.NAME &&
+    type === TransferWallet.RECEIVING
+  ) {
+    const address = localStorage.getItem(
+      `wormhole-connect:wallet:${chainConfig.context}:address`,
+    );
+    if (address) {
+      const wallet = new AddressOnlyWallet(address, chain);
+      await connectWallet(
+        type,
+        chain,
+        {
+          name: AddressOnlyWallet.NAME,
+          type: chainConfig.context,
+          icon: wallet.getIcon(),
+          isReady: true,
+          wallet,
+        },
+        dispatch,
+      );
+    }
+    return;
+  }
+
+  if (lastUsedWallet !== 'WalletConnect') {
     const options = await getWalletOptions(chainConfig);
+    // TODO: need to add AddressOnlyWallet to the list of wallets
     const wallet = options.find((w) => w.name === lastUsedWallet);
     if (wallet) {
       await connectWallet(type, chain, wallet, dispatch);

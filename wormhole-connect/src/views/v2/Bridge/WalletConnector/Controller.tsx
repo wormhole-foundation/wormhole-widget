@@ -168,6 +168,7 @@ const ConnectedWallet = (props: Props) => {
         onClose={() => {
           setIsOpen(false);
         }}
+        showAddressInput={props.type === TransferWallet.RECEIVING}
       />
     </>
   );

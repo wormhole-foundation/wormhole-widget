@@ -5,6 +5,7 @@ import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
 import { maybeLogSdkError } from 'utils/errors';
+import { AddressOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
 
 type HookReturn = {
   supportedRoutes: string[];
@@ -21,6 +22,10 @@ const useFetchSupportedRoutes = (): HookReturn => {
 
   const { toNativeToken } = useSelector((state: RootState) => state.relay);
 
+  const receivingWallet = useSelector(
+    (state: RootState) => state.wallet.receiving,
+  );
+
   useEffect(() => {
     if (!fromChain || !toChain || !token || !destToken) {
       setRoutes([]);
@@ -34,6 +39,15 @@ const useFetchSupportedRoutes = (): HookReturn => {
       setIsFetching(true);
       const _routes: string[] = [];
       await config.routes.forEach(async (name, route) => {
+        // Disable manual routes when the receiving wallet is an AddressOnlyWallet
+        // because the receiving wallet can't sign/complete the transaction
+        if (
+          !route.AUTOMATIC_DEPOSIT &&
+          receivingWallet.name === AddressOnlyWallet.NAME
+        ) {
+          return;
+        }
+
         let supported = false;
 
         try {
@@ -75,7 +89,15 @@ const useFetchSupportedRoutes = (): HookReturn => {
     return () => {
       isActive = false;
     };
-  }, [token, destToken, amount, fromChain, toChain, toNativeToken]);
+  }, [
+    token,
+    destToken,
+    amount,
+    fromChain,
+    toChain,
+    toNativeToken,
+    receivingWallet,
+  ]);
 
   return {
     supportedRoutes: routes,
