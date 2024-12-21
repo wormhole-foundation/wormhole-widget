@@ -57,9 +57,6 @@ const useStyles = makeStyles()((theme) => ({
       display: 'block',
     },
   },
-  addressInput: {
-    // marginTop: '16px',
-  },
   addressInputContainer: {
     display: 'flex',
     flexDirection: 'column',
@@ -70,20 +67,6 @@ const useStyles = makeStyles()((theme) => ({
   submitButton: {
     width: '100%',
   },
-  //orDivider: {
-  //  display: 'flex',
-  //  alignItems: 'center',
-  //  margin: '16px 0',
-  //  '& hr': {
-  //    flexGrow: 1,
-  //    border: 'none',
-  //    borderTop: `1px solid ${theme.palette.divider}`,
-  //  },
-  //  '& span': {
-  //    padding: '0 16px',
-  //    color: theme.palette.text.secondary,
-  //  },
-  //},
 }));
 
 type Props = {
