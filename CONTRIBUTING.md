@@ -1,8 +1,9 @@
 ## Contributing
 
-Bug fixes and enhancements are welcome!
-
-*Please don't open pull requests to add tokens to Connect.* Instead, use the `tokensConfig` parameter in `config` to add tokens into your deployment of Connect.
+- Instead of opening opening pull requests to add tokens directly into Wormhole Connect, please use the configuration to add them into your own deployment.
+- We welcome typo and grammar fixes to *public facing* documents. This includes things like the whitepapers, but excludes inline code comments. PRs that touch only the latter will be rejected. Fixing typos in comments alongside other non-trivial engineering work is welcome.
+- Pull requests that modify dependencies must be well-documented so that the benefits of updating can be weighed against security and compatibility concerns. Low-effort PRs that update dependencies without any documentation will be rejected.
+- Feature additions must be discussed ahead of time before a pull request is created.
 
 ### Setup
 
