@@ -4,19 +4,17 @@ import { makeStyles } from 'tss-react/mui';
 import { setRoute } from 'store/router';
 
 import Header, { Alignment } from './Header';
-import MenuFull from './MenuFull';
 import DownIcon from 'icons/Down';
 
 const useStyles = makeStyles<{
-  showHamburgerMenu: boolean;
   align: Alignment;
-}>()((theme, { showHamburgerMenu, align }) => ({
+}>()((theme, { align }) => ({
   container: {
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-    marginBottom: showHamburgerMenu ? '40px' : '0px',
+    marginBottom: '0px',
     [theme.breakpoints.down('sm')]: {
       marginBottom: '20px',
     },
@@ -42,7 +40,7 @@ const useStyles = makeStyles<{
     fontWeight: '300',
     fontSize: '14px',
     opacity: '0.6',
-    marginBottom: showHamburgerMenu ? '0px' : '40px',
+    marginBottom: '40px',
   },
 }));
 
@@ -51,7 +49,6 @@ type PageHeaderProps = {
   align?: Alignment;
   description?: string;
   back?: boolean;
-  showHamburgerMenu?: boolean;
   testId?: string;
 };
 
@@ -60,10 +57,9 @@ function PageHeader({
   title,
   align = 'left',
   description,
-  showHamburgerMenu = true,
   testId,
 }: PageHeaderProps) {
-  const { classes } = useStyles({ showHamburgerMenu, align });
+  const { classes } = useStyles({ align });
   const dispatch = useDispatch();
   function goBack() {
     dispatch(setRoute('bridge'));
@@ -82,7 +78,6 @@ function PageHeader({
           )}
           <Header text={title} align={align} testId={testId} />
         </div>
-        {showHamburgerMenu ? <MenuFull /> : null}
       </div>
       {description && <div className={classes.description}>{description}</div>}
     </div>
