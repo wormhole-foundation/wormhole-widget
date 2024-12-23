@@ -6,6 +6,7 @@ import { Chain as WormholeChain } from "@wormhole-foundation/sdk"
 import { Context } from "sdklegacy";
 import { fromWormholeChainToContext, type IconType } from "utils/wallet";
 import type { ConnectedWallet } from "utils/wallet/wallet";
+import { evmWalletOptions } from "./const";
 
 export interface DynamicWalletData {
     name: string;
@@ -20,15 +21,22 @@ export interface DynamicWalletData {
 
 export type OnConnectCallback = (wallet: DynamicWallet) => void
 
+type WalletOptions = ReturnType<typeof useWalletOptions>["walletOptions"][number]
 
 export const useDynamicWalletOptions = () => {
     const { sdkHasLoaded, primaryWallet } = useDynamicContext();
     const { walletOptions, selectWalletOption }  = useWalletOptions()
     const userWallets = useUserWallets()
 
+    const filterWallets = React.useCallback((wallet: WalletOptions) => {
+        console.log(wallet.key)
+        return wallet.chain === "EVM" && evmWalletOptions.includes(wallet.key) ||
+            wallet.chain !== "EVM" && wallet.group
+    }, [])
+
     const getDynamicWalletOptions = React.useCallback((chain: WormholeChain, wallets: { sending?: ConnectedWallet, receiving?: ConnectedWallet }): DynamicWalletData[] => {
         if (!sdkHasLoaded) return []
-        return walletOptions.filter((a) => a.chain === toDynamicChain(chain) && (a.group || a.key === 'safe'))
+        return walletOptions.filter((a) => a.chain === toDynamicChain(chain) && filterWallets(a))
             .map((a): DynamicWalletData => ({
                 icon: ({ size }) => React.createElement(DynamicWalletIcon, { size, walletKey: a.key }),
                 isReady: true,
