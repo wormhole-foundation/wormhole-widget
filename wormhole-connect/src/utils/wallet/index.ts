@@ -99,10 +99,15 @@ export const connectWallet = async (
     dispatch(connectReceivingWallet(payload));
   }
 
-  // clear wallet when the user manually disconnects from outside the app
+  // Clear wallet when the user manually disconnects from outside the app
   wallet.on('disconnect', () => {
     wallet.removeAllListeners();
-    dispatch(clearWallet(type));
+    // Use setTimeout to defer the dispatch call to the next event loop tick.
+    // This ensures that the dispatch does not occur while a reducer is executing,
+    // preventing the "You may not call store.getState() while the reducer is executing" error.
+    setTimeout(() => {
+      dispatch(clearWallet(type));
+    }, 0);
     localStorage.removeItem(`wormhole-connect:wallet:${context}`);
   });
 
