@@ -33,7 +33,7 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { ReadOnlyWallet } from './AddressOnlyWallet';
+import { ReadOnlyWallet } from './ReadOnlyWallet';
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -56,10 +56,6 @@ export const walletAcceptedChains = (context: Context | undefined): Chain[] => {
 
 export const setWalletConnection = (type: TransferWallet, wallet: Wallet) => {
   walletConnection[type] = wallet;
-};
-
-export const clearWalletConnection = (type: TransferWallet) => {
-  walletConnection[type] = undefined;
 };
 
 export const connectWallet = async (
@@ -124,7 +120,7 @@ export const connectWallet = async (
 
   localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
 
-  // if the wallet is an address only wallet, store the address in localStorage
+  // if the wallet is a ReadOnlyWallet, store the address in localStorage
   // for automatic connection on next visit
   if (wallet.getName() === ReadOnlyWallet.NAME) {
     localStorage.setItem(`wormhole-connect:wallet:${context}:address`, address);
@@ -170,7 +166,6 @@ export const connectLastUsedWallet = async (
 
   if (lastUsedWallet !== 'WalletConnect') {
     const options = await getWalletOptions(chainConfig);
-    // TODO: need to add AddressOnlyWallet to the list of wallets
     const wallet = options.find((w) => w.name === lastUsedWallet);
     if (wallet) {
       await connectWallet(type, chain, wallet, dispatch);

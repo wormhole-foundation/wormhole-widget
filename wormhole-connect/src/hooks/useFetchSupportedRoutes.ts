@@ -5,7 +5,7 @@ import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
 import { maybeLogSdkError } from 'utils/errors';
-import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 type HookReturn = {
   supportedRoutes: string[];

@@ -5,7 +5,7 @@ import {
   swapWalletConnections,
   TransferWallet,
 } from 'utils/wallet';
-import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 export type WalletData = {
   type: Context | undefined;

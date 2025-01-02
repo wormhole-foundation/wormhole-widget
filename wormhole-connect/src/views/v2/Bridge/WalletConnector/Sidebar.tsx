@@ -25,7 +25,7 @@ import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
 import { isValidWalletAddress } from 'utils/address';
-import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {

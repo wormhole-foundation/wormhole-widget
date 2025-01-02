@@ -8,7 +8,7 @@ import { isValidSuiAddress } from '@mysten/sui.js';
 import { PublicKey } from '@solana/web3.js';
 import { getAddress } from 'ethers';
 
-function isEvmAddress(address: string): boolean {
+function isValidEvmAddress(address: string): boolean {
   if (
     !address.startsWith('0x') ||
     address.length !== 42 ||
@@ -25,7 +25,7 @@ function isEvmAddress(address: string): boolean {
   }
 }
 
-function isSolanaAddress(address: string): boolean {
+function isValidSolanaAddress(address: string): boolean {
   try {
     new PublicKey(address);
     return true;
@@ -34,7 +34,7 @@ function isSolanaAddress(address: string): boolean {
   }
 }
 
-function isAptosAddress(address: string): boolean {
+function isValidAptosAddress(address: string): boolean {
   return (
     address.startsWith('0x') &&
     address.length === 66 &&
@@ -50,16 +50,16 @@ export function isValidWalletAddress(chain: Chain, address: string): boolean {
   // We are being more restrictive here to prevent the user from accidentally using an incorrect address.
   switch (platform) {
     case 'Evm':
-      if (!isEvmAddress(address)) return false;
+      if (!isValidEvmAddress(address)) return false;
       break;
     case 'Solana':
-      if (!isSolanaAddress(address)) return false;
+      if (!isValidSolanaAddress(address)) return false;
       break;
     case 'Sui':
       if (!isValidSuiAddress(address)) return false;
       break;
     case 'Aptos':
-      if (!isAptosAddress(address)) return false;
+      if (!isValidAptosAddress(address)) return false;
       break;
     default:
       throw new Error(`Unsupported platform: ${platform}`);
