@@ -39,7 +39,7 @@ const useFetchSupportedRoutes = (): HookReturn => {
       setIsFetching(true);
       const _routes: string[] = [];
       await config.routes.forEach(async (name, route) => {
-        // Disable manual routes when the receiving wallet is an AddressOnlyWallet
+        // Disable manual routes when the receiving wallet is a ReadOnlyWallet
         // because the receiving wallet can't sign/complete the transaction
         if (
           !route.AUTOMATIC_DEPOSIT &&

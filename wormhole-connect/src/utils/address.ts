@@ -1,10 +1,22 @@
-import { Chain, chainToPlatform, Wormhole } from '@wormhole-foundation/sdk';
+import {
+  Chain,
+  chainToPlatform,
+  encoding,
+  Wormhole,
+} from '@wormhole-foundation/sdk';
 import { isValidSuiAddress } from '@mysten/sui.js';
 import { PublicKey } from '@solana/web3.js';
 import { getAddress } from 'ethers';
 
 function isEvmAddress(address: string): boolean {
-  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) return false;
+  if (
+    !address.startsWith('0x') ||
+    address.length !== 42 ||
+    !encoding.hex.valid(address)
+  ) {
+    return false;
+  }
+
   try {
     getAddress(address);
     return true;
@@ -23,7 +35,11 @@ function isSolanaAddress(address: string): boolean {
 }
 
 function isAptosAddress(address: string): boolean {
-  return /^0x[0-9a-fA-F]{64}$/.test(address);
+  return (
+    address.startsWith('0x') &&
+    address.length === 66 &&
+    encoding.hex.valid(address)
+  );
 }
 
 export function isValidWalletAddress(chain: Chain, address: string): boolean {
@@ -46,13 +62,16 @@ export function isValidWalletAddress(chain: Chain, address: string): boolean {
       if (!isAptosAddress(address)) return false;
       break;
     default:
-      break;
+      throw new Error(`Unsupported platform: ${platform}`);
   }
 
   try {
     // This will throw an error if the address is invalid
     Wormhole.chainAddress(chain, address);
   } catch (e) {
+    console.error(
+      `Invalid address for chain ${chain}: ${address}, error: ${e}`,
+    );
     return false;
   }
 
