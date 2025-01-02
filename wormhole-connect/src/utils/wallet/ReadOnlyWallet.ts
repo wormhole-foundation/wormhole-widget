@@ -5,14 +5,14 @@ import {
   SendTransactionResult,
   Wallet,
 } from '@xlabs-libs/wallet-aggregator-core';
-import { Chain, chainToChainId } from '@wormhole-foundation/sdk';
+import { Chain, chainToChainId, NativeAddress } from '@wormhole-foundation/sdk';
 
 export class ReadOnlyWallet extends Wallet {
   private _isConnected = true;
 
   static readonly NAME = 'ReadyOnlyWallet';
 
-  constructor(readonly _address: string, readonly _chain: Chain) {
+  constructor(readonly _address: NativeAddress<Chain>, readonly _chain: Chain) {
     super();
   }
 
@@ -27,7 +27,7 @@ export class ReadOnlyWallet extends Wallet {
   async connect(): Promise<Address[]> {
     this._isConnected = true;
     this.emit('connect');
-    return [this._address];
+    return [this._address.toString()];
   }
 
   async disconnect(): Promise<void> {
@@ -45,11 +45,11 @@ export class ReadOnlyWallet extends Wallet {
   }
 
   getAddress(): Address {
-    return this._address;
+    return this._address.toString();
   }
 
   getAddresses(): Address[] {
-    return [this._address];
+    return [this.getAddress()];
   }
 
   setMainAddress(address: Address): void {

@@ -33,7 +33,6 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { ReadOnlyWallet } from './ReadOnlyWallet';
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -124,12 +123,6 @@ export const connectWallet = async (
   });
 
   localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
-
-  // if the wallet is a ReadOnlyWallet, store the address in localStorage
-  // for automatic connection on next visit
-  if (wallet.getName() === ReadOnlyWallet.NAME) {
-    localStorage.setItem(`wormhole-connect:wallet:${context}:address`, address);
-  }
 };
 
 // Checks localStorage for previously used wallet for this chain
@@ -144,32 +137,7 @@ export const connectLastUsedWallet = async (
     `wormhole-connect:wallet:${chainConfig.context}`,
   );
 
-  if (
-    lastUsedWallet === ReadOnlyWallet.NAME &&
-    type === TransferWallet.RECEIVING
-  ) {
-    const address = localStorage.getItem(
-      `wormhole-connect:wallet:${chainConfig.context}:address`,
-    );
-    if (address) {
-      const wallet = new ReadOnlyWallet(address, chain);
-      await connectWallet(
-        type,
-        chain,
-        {
-          name: ReadOnlyWallet.NAME,
-          type: chainConfig.context,
-          icon: wallet.getIcon(),
-          isReady: true,
-          wallet,
-        },
-        dispatch,
-      );
-    }
-    return;
-  }
-
-  if (lastUsedWallet !== 'WalletConnect') {
+  if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
     const options = await getWalletOptions(chainConfig);
     const wallet = options.find((w) => w.name === lastUsedWallet);
     if (wallet) {

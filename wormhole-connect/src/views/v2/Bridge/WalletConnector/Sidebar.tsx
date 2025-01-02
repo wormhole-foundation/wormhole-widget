@@ -24,7 +24,7 @@ import { TransferWallet, WalletData, connectWallet } from 'utils/wallet';
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
-import { isValidWalletAddress } from 'utils/address';
+import { validateWalletAddress } from 'utils/address';
 import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
@@ -118,12 +118,13 @@ const WalletSidebar = (props: Props) => {
     const chainConfig = config.chains[selectedChain];
     if (!chainConfig) return;
 
-    if (!isValidWalletAddress(selectedChain, address)) {
+    const nativeAddress = validateWalletAddress(selectedChain, address);
+    if (!nativeAddress) {
       setAddressError('Invalid Address');
       return;
     }
 
-    const wallet = new ReadOnlyWallet(address, selectedChain);
+    const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
 
     const walletInfo: WalletData = {
       name: wallet.getName(),

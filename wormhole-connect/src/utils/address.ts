@@ -2,7 +2,8 @@ import {
   Chain,
   chainToPlatform,
   encoding,
-  Wormhole,
+  NativeAddress,
+  toNative,
 } from '@wormhole-foundation/sdk';
 import { isValidSuiAddress } from '@mysten/sui.js';
 import { PublicKey } from '@solana/web3.js';
@@ -42,7 +43,10 @@ function isValidAptosAddress(address: string): boolean {
   );
 }
 
-export function isValidWalletAddress(chain: Chain, address: string): boolean {
+export function validateWalletAddress(
+  chain: Chain,
+  address: string,
+): NativeAddress<Chain> | null {
   const platform = chainToPlatform(chain);
 
   // Wormhole.chainAddress() is permissive and accepts various address formats,
@@ -50,30 +54,30 @@ export function isValidWalletAddress(chain: Chain, address: string): boolean {
   // We are being more restrictive here to prevent the user from accidentally using an incorrect address.
   switch (platform) {
     case 'Evm':
-      if (!isValidEvmAddress(address)) return false;
+      if (!isValidEvmAddress(address)) return null;
       break;
     case 'Solana':
-      if (!isValidSolanaAddress(address)) return false;
+      if (!isValidSolanaAddress(address)) return null;
       break;
     case 'Sui':
-      if (!isValidSuiAddress(address)) return false;
+      if (!isValidSuiAddress(address)) return null;
       break;
     case 'Aptos':
-      if (!isValidAptosAddress(address)) return false;
+      if (!isValidAptosAddress(address)) return null;
       break;
     default:
-      throw new Error(`Unsupported platform: ${platform}`);
+      console.warn(`Unsupported platform: ${platform}`);
+      return null;
   }
 
   try {
     // This will throw an error if the address is invalid
-    Wormhole.chainAddress(chain, address);
+    return toNative(chain, address);
   } catch (e) {
     console.error(
       `Invalid address for chain ${chain}: ${address}, error: ${e}`,
     );
-    return false;
   }
 
-  return true;
+  return null;
 }
