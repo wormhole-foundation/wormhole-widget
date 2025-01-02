@@ -5,7 +5,7 @@ import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
 import { maybeLogSdkError } from 'utils/errors';
-import { AddressOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
 
 type HookReturn = {
   supportedRoutes: string[];
@@ -43,7 +43,7 @@ const useFetchSupportedRoutes = (): HookReturn => {
         // because the receiving wallet can't sign/complete the transaction
         if (
           !route.AUTOMATIC_DEPOSIT &&
-          receivingWallet.name === AddressOnlyWallet.NAME
+          receivingWallet.name === ReadOnlyWallet.NAME
         ) {
           return;
         }

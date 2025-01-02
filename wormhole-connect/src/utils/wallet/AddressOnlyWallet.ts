@@ -7,12 +7,12 @@ import {
 } from '@xlabs-libs/wallet-aggregator-core';
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk';
 
-export class AddressOnlyWallet extends Wallet {
+export class ReadOnlyWallet extends Wallet {
   private readonly _address: string;
   private readonly _chain: Chain;
   private _isConnected: boolean = true;
 
-  static readonly NAME = 'AddressOnlyWallet';
+  static readonly NAME = 'ReadyOnlyWallet';
 
   constructor(address: string, chain: Chain) {
     super();
@@ -21,7 +21,7 @@ export class AddressOnlyWallet extends Wallet {
   }
 
   getName(): string {
-    return AddressOnlyWallet.NAME;
+    return ReadOnlyWallet.NAME;
   }
 
   getUrl(): string {

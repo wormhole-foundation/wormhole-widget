@@ -5,7 +5,7 @@ import {
   swapWalletConnections,
   TransferWallet,
 } from 'utils/wallet';
-import { AddressOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
 
 export type WalletData = {
   type: Context | undefined;
@@ -109,9 +109,9 @@ export const walletSlice = createSlice({
 
       swapWalletConnections();
 
-      // If the new sending wallet is an AddressOnlyWallet,
+      // If the new sending wallet is a ReadOnlyWallet,
       // disconnect it since it can't be used for signing
-      if (state.sending.name === AddressOnlyWallet.NAME) {
+      if (state.sending.name === ReadOnlyWallet.NAME) {
         disconnect(TransferWallet.SENDING);
         state[TransferWallet.SENDING] = NO_WALLET;
       }

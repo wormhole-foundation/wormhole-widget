@@ -25,7 +25,7 @@ import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
 import { isValidWalletAddress } from 'utils/address';
-import { AddressOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
+import { ReadOnlyWallet } from 'utils/wallet/AddressOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -123,7 +123,7 @@ const WalletSidebar = (props: Props) => {
       return;
     }
 
-    const wallet = new AddressOnlyWallet(address, selectedChain);
+    const wallet = new ReadOnlyWallet(address, selectedChain);
 
     const walletInfo: WalletData = {
       name: wallet.getName(),
