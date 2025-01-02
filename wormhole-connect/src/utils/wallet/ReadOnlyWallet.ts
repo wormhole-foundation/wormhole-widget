@@ -8,7 +8,7 @@ import {
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk';
 
 export class ReadOnlyWallet extends Wallet {
-  private _isConnected: boolean = true;
+  private _isConnected = true;
 
   static readonly NAME = 'ReadyOnlyWallet';
 
