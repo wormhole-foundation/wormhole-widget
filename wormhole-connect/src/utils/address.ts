@@ -49,7 +49,7 @@ export function validateWalletAddress(
 ): NativeAddress<Chain> | null {
   const platform = chainToPlatform(chain);
 
-  // Wormhole.chainAddress() is permissive and accepts various address formats,
+  // toNative() is permissive and accepts various address formats,
   // including ICAP Ethereum addresses, hex-encoded Solana addresses, and attempts to parse as a UniversalAddress if parsing fails.
   // We are being more restrictive here to prevent the user from accidentally using an incorrect address.
   switch (platform) {
