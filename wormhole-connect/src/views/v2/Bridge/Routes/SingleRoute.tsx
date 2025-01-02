@@ -236,7 +236,7 @@ const SingleRoute = (props: Props) => {
           fontSize="14px"
           lineHeight="14px"
         >
-          Additional Gas
+          Additional gas
         </Typography>
         <Typography
           color={theme.palette.text.primary}

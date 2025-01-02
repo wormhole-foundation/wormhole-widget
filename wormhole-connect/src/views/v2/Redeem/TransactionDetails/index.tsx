@@ -267,7 +267,7 @@ const TransactionDetails = () => {
     return (
       <Stack direction="row" justifyContent="space-between">
         <Typography color={theme.palette.text.secondary} fontSize={14}>
-          Additional Gas
+          Additional gas
         </Typography>
         {tokenPrices.isFetching ? (
           <CircularProgress size={14} />
