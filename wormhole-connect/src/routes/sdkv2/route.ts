@@ -398,9 +398,12 @@ export class SDKv2Route {
     }
 
     // Otherwise track the transfer until it reaches a final state,
-    // retrying up to 5 times if there are errors
+    // retrying up to 5 times if there are errors with exponential backoff
     let retries = 0;
-    while (retries < 5) {
+    const maxRetries = 5;
+    const baseDelay = 1000; // Initial delay of 1 second
+
+    while (retries < maxRetries) {
       try {
         for await (receipt of route.track(receipt, 120 * 1000)) {
           if (receipt.state >= TransferState.SourceInitiated) {
@@ -409,10 +412,11 @@ export class SDKv2Route {
         }
       } catch (e) {
         console.error(
-          `Error tracking transfer (attempt ${retries + 1} / 5}):`,
+          `Error tracking transfer (attempt ${retries + 1} / ${maxRetries}):`,
           e,
         );
-        await sleep(1000);
+        const delay = baseDelay * Math.pow(2, retries); // Exponential backoff
+        await sleep(delay);
         retries++;
       }
     }
