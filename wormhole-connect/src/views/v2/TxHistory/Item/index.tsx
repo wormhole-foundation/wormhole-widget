@@ -79,7 +79,7 @@ const TxHistoryItem = (props: Props) => {
             {amount} {sourceTokenConfig?.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
-            {getUSDFormat(amountUsd, false)}
+            {getUSDFormat(amountUsd)}
             {seperator}
             {sourceChainConfig?.displayName}
           </Typography>
@@ -106,7 +106,6 @@ const TxHistoryItem = (props: Props) => {
       parseFloat(receiveAmount),
       props.tokenPrices,
       destTokenConfig,
-      false, // use tilde in the formatted USD price
     );
 
     const receiveAmountDisplay = receiveAmountPrice ? (

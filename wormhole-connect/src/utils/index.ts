@@ -291,10 +291,7 @@ export const getTokenPrice = (
   return undefined;
 };
 
-export const getUSDFormat = (
-  price: number | undefined,
-  useTilde = true,
-): string => {
+export const getUSDFormat = (price: number | undefined): string => {
   if (typeof price === 'undefined') {
     return '';
   }
@@ -303,12 +300,10 @@ export const getUSDFormat = (
     return '$0';
   }
 
-  const formattedPrice = Intl.NumberFormat('en-EN', {
+  return Intl.NumberFormat('en-EN', {
     style: 'currency',
     currency: 'USD',
   }).format(price);
-
-  return useTilde ? `~${formattedPrice}` : formattedPrice;
 };
 
 export const calculateUSDPriceRaw = (
@@ -334,12 +329,8 @@ export const calculateUSDPrice = (
   amount?: sdkAmount.Amount | number,
   tokenPrices?: TokenPrices | null,
   token?: TokenConfig,
-  useTilde = true,
 ): string => {
-  return getUSDFormat(
-    calculateUSDPriceRaw(amount, tokenPrices, token),
-    useTilde,
-  );
+  return getUSDFormat(calculateUSDPriceRaw(amount, tokenPrices, token));
 };
 
 /**
