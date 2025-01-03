@@ -1,13 +1,13 @@
 import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
-import {
-  InputEntryFunctionData,
-  InputMultiSigData,
-  MoveFunctionId,
-} from '@aptos-labs/ts-sdk';
+//import {
+//  InputEntryFunctionData,
+//  InputMultiSigData,
+//  MoveFunctionId,
+//} from '@aptos-labs/ts-sdk';
 import type { Network as AptosNetwork } from '@aptos-labs/wallet-adapter-core';
 import { AptosWallet } from '@xlabs-libs/wallet-aggregator-aptos';
 
-import type { Types } from 'aptos';
+// import type { Types } from 'aptos';
 
 import { Network } from '@wormhole-foundation/sdk';
 import {
@@ -17,6 +17,7 @@ import {
 
 import config from 'config';
 
+/*
 function convertPayloadInputV1ToV2(inputV1: Types.TransactionPayload) {
   if ('function' in inputV1) {
     const inputV2: InputEntryFunctionData | InputMultiSigData = {
@@ -29,6 +30,7 @@ function convertPayloadInputV1ToV2(inputV1: Types.TransactionPayload) {
 
   throw new Error('Payload type not supported');
 }
+*/
 
 export function fetchOptions() {
   const aptosWalletConfig = {
@@ -49,9 +51,10 @@ export async function signAndSendTransaction(
   wallet: Wallet | undefined,
 ) {
   // The wallets do not handle Uint8Array serialization
-  const payload = request.transaction as Types.EntryFunctionPayload;
-  if (payload.arguments) {
-    payload.arguments = payload.arguments.map((a: any) => {
+  // const payload = request.transaction as Types.EntryFunctionPayload;
+  const payload = request.transaction;
+  if (payload.functionArguments) {
+    payload.functionArguments = payload.functionArguments.map((a: any) => {
       if (a instanceof Uint8Array) {
         return Array.from(a);
       } else if (typeof a === 'bigint') {
@@ -63,7 +66,7 @@ export async function signAndSendTransaction(
   }
 
   const tx = await (wallet as AptosWallet).signAndSendTransaction({
-    data: convertPayloadInputV1ToV2(payload as Types.TransactionPayload),
+    data: payload, //convertPayloadInputV1ToV2(payload as Types.TransactionPayload),
   });
   /*
    * TODO SDKV2

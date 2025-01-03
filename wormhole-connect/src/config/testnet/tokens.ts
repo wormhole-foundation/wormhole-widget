@@ -196,7 +196,7 @@ export const TESTNET_TOKENS: TokensConfig = {
     key: 'APT',
     symbol: 'APT',
     nativeChain: 'Aptos',
-    tokenId: { chain: 'Aptos', address: '0x1::Aptos_coin::AptosCoin' },
+    tokenId: { chain: 'Aptos', address: '0x1::aptos_coin::AptosCoin' },
     icon: TokenIcon.APT,
     coinGeckoId: 'Aptos',
     color: '#8457EF',
