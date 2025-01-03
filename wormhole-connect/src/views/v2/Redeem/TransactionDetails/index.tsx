@@ -62,7 +62,7 @@ const TransactionDetails = () => {
   );
 
   // Separator with a unicode dot in the middle
-  const seperator = useMemo(
+  const separator = useMemo(
     () => (
       <Typography component="span" padding="0px 8px">{`\u00B7`}</Typography>
     ),
@@ -104,9 +104,9 @@ const TransactionDetails = () => {
             ) : (
               <>
                 {usdAmount}
-                {seperator}
+                {separator}
                 {sourceChainConfig.displayName}
-                {seperator}
+                {separator}
                 {senderAddress}
               </>
             )}
@@ -118,7 +118,7 @@ const TransactionDetails = () => {
     amount,
     fromChain,
     sender,
-    seperator,
+    separator,
     theme.palette.text.secondary,
     tokenKey,
     tokenPrices.data,
@@ -162,9 +162,9 @@ const TransactionDetails = () => {
             ) : (
               <>
                 {usdAmount}
-                {seperator}
+                {separator}
                 {destChainConfig.displayName}
-                {seperator}
+                {separator}
                 {recipientAddress}
               </>
             )}
@@ -176,7 +176,7 @@ const TransactionDetails = () => {
     receiveAmount,
     receivedTokenKey,
     recipient,
-    seperator,
+    separator,
     theme.palette.text.secondary,
     toChain,
     tokenPrices.data,

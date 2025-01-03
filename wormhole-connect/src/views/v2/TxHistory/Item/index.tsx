@@ -56,7 +56,7 @@ const TxHistoryItem = (props: Props) => {
   } = props.data;
 
   // Separator with a unicode dot in the middle
-  const seperator = useMemo(
+  const separator = useMemo(
     () => (
       <Typography component="span" padding="0px 8px">{`\u00B7`}</Typography>
     ),
@@ -80,7 +80,7 @@ const TxHistoryItem = (props: Props) => {
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
             {getUSDFormat(amountUsd)}
-            {seperator}
+            {separator}
             {sourceChainConfig?.displayName}
           </Typography>
         </Stack>
@@ -90,7 +90,7 @@ const TxHistoryItem = (props: Props) => {
     amount,
     amountUsd,
     fromChain,
-    seperator,
+    separator,
     theme.palette.text.secondary,
     tokenKey,
   ]);
@@ -111,7 +111,7 @@ const TxHistoryItem = (props: Props) => {
     const receiveAmountDisplay = receiveAmountPrice ? (
       <>
         {receiveAmountPrice}
-        {seperator}
+        {separator}
       </>
     ) : null;
 
@@ -136,7 +136,7 @@ const TxHistoryItem = (props: Props) => {
     props.tokenPrices,
     receiveAmount,
     receivedTokenKey,
-    seperator,
+    separator,
     theme.palette.text.secondary,
     toChain,
   ]);
