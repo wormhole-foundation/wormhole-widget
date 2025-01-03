@@ -26,7 +26,7 @@ import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
 import { validateWalletAddress } from 'utils/address';
 import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
-import { checkAddressIsSanctioned } from 'utils/transferValidation';
+import { SANCTIONED_WALLETS } from 'consts/wallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -125,10 +125,11 @@ const WalletSidebar = (props: Props) => {
       return;
     }
 
-    const isSanctioned = checkAddressIsSanctioned(nativeAddress.toString());
-    if (isSanctioned) {
-      setAddressError('Sanctioned Address');
-      return;
+    for (const sanctioned of SANCTIONED_WALLETS) {
+      if (nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()) {
+        setAddressError('Sanctioned Address');
+        return;
+      }
     }
 
     const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
