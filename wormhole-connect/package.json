@@ -43,7 +43,7 @@
     "@wormhole-foundation/sdk-icons": "^1.0.0",
     "@wormhole-foundation/sdk-route-ntt": "^0.6.1",
     "@wormhole-foundation/sdk-solana-ntt": "^0.6.1",
-    "@xlabs-libs/wallet-aggregator-aptos": "^1.0.0-alpha.1",
+    "@xlabs-libs/wallet-aggregator-aptos": "^1.0.0-alpha.2",
     "@xlabs-libs/wallet-aggregator-core": "^0.0.1-alpha.22",
     "@xlabs-libs/wallet-aggregator-evm": "^0.0.2-alpha.5",
     "@xlabs-libs/wallet-aggregator-solana": "^0.0.1-alpha.15",
