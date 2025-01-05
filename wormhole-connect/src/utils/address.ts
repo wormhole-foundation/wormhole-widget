@@ -6,8 +6,14 @@ import {
   toNative,
 } from '@wormhole-foundation/sdk';
 import { isValidSuiAddress } from '@mysten/sui.js';
-import { PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
+import {
+  getAccount,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import { getAddress } from 'ethers';
+import config from 'config';
 
 function isValidEvmAddress(address: string): boolean {
   if (
@@ -26,9 +32,18 @@ function isValidEvmAddress(address: string): boolean {
   }
 }
 
-function isValidSolanaAddress(address: string): boolean {
+async function isValidSolanaAddress(address: string): Promise<boolean> {
   try {
-    new PublicKey(address);
+    const key = new PublicKey(address);
+    if (config.rpcs.Solana) {
+      const connection = new Connection(config.rpcs.Solana);
+      const results = await Promise.allSettled([
+        getAccount(connection, key, 'finalized', TOKEN_PROGRAM_ID),
+        getAccount(connection, key, 'finalized', TOKEN_2022_PROGRAM_ID),
+      ]);
+      // A token account is not a valid wallet address
+      if (results.some((r) => r.status === 'fulfilled')) return false;
+    }
     return true;
   } catch {
     return false;
@@ -43,10 +58,10 @@ function isValidAptosAddress(address: string): boolean {
   );
 }
 
-export function validateWalletAddress(
+export async function validateWalletAddress(
   chain: Chain,
   address: string,
-): NativeAddress<Chain> | null {
+): Promise<NativeAddress<Chain> | null> {
   const platform = chainToPlatform(chain);
 
   // toNative() is permissive and accepts various address formats,
@@ -57,7 +72,7 @@ export function validateWalletAddress(
       if (!isValidEvmAddress(address)) return null;
       break;
     case 'Solana':
-      if (!isValidSolanaAddress(address)) return null;
+      if (!(await isValidSolanaAddress(address))) return null;
       break;
     case 'Sui':
       if (!isValidSuiAddress(address)) return null;

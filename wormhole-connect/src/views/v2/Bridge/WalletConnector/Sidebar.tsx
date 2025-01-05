@@ -119,7 +119,7 @@ const WalletSidebar = (props: Props) => {
     const chainConfig = config.chains[selectedChain];
     if (!chainConfig) return;
 
-    const nativeAddress = validateWalletAddress(selectedChain, address);
+    const nativeAddress = await validateWalletAddress(selectedChain, address);
     if (!nativeAddress) {
       setAddressError('Invalid Address');
       return;
