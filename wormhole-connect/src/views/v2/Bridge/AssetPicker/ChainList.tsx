@@ -6,10 +6,11 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import AddIcon from '@mui/icons-material/Add';
 import ChainIcon from 'icons/ChainIcons';
+import PlusIcon from 'icons/Plus';
 
 import type { ChainConfig } from 'config/types';
 import type { WalletData } from 'store/wallet';
@@ -39,18 +40,18 @@ const useStyles = makeStyles()((theme) => ({
     },
   },
   title: {
-    fontSize: 14,
-    marginBottom: 12,
+    fontSize: '14px',
+    marginBottom: '12px',
   },
   chainSearch: {
-    maxHeight: 400,
+    maxHeight: '400px',
   },
   chainButton: {
     display: 'flex',
     flexDirection: 'column',
     padding: '8px',
     border: '1px solid transparent',
-    borderRadius: 8,
+    borderRadius: '8px',
     '&.Mui-selected': {
       border: '1px solid',
       borderColor: theme.palette.primary.main,
@@ -59,9 +60,8 @@ const useStyles = makeStyles()((theme) => ({
   chainItem: {
     display: 'flex',
     flexDirection: 'row',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8,
+    padding: '8px',
+    borderRadius: '8px',
   },
 }));
 
@@ -81,10 +81,17 @@ const ChainList = (props: Props) => {
   const { classes } = useStyles();
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const {
+    chainList,
+    selectedChainConfig,
+    showSearch,
+    setShowSearch,
+    onChainSelect,
+  } = props;
 
   const topChains = useMemo(() => {
-    const allChains = props.chainList ?? [];
-    const selectedChain = props.selectedChainConfig;
+    const allChains = chainList ?? [];
+    const selectedChain = selectedChainConfig;
 
     // Find the selected chain in supported chains
     const selectedChainIndex = allChains.findIndex((chain) => {
@@ -102,43 +109,40 @@ const ChainList = (props: Props) => {
     }
 
     return allChains.slice(0, shortListSize);
-  }, [props.chainList, props.selectedChainConfig]);
+  }, [mobile, chainList, selectedChainConfig]);
 
   const shortList = useMemo(() => {
     return (
       <List component={Stack} direction="row">
         {topChains.map((chain: ChainConfig) => (
-          <ListItemButton
-            key={chain.key}
-            selected={props.selectedChainConfig?.key === chain.key}
-            className={classes.chainButton}
-            onClick={() => props.onChainSelect(chain.key)}
-          >
-            <ChainIcon icon={chain.icon} />
-            <Typography
-              fontSize={12}
-              lineHeight="12px"
-              marginTop="8px"
-              whiteSpace="nowrap"
+          <Tooltip title={chain.displayName}>
+            <ListItemButton
+              key={chain.key}
+              selected={selectedChainConfig?.key === chain.key}
+              className={classes.chainButton}
+              onClick={() => onChainSelect(chain.key)}
             >
-              {chain.symbol}
-            </Typography>
-          </ListItemButton>
+              <ChainIcon icon={chain.icon} />
+              <Typography
+                fontSize="12px"
+                lineHeight="12px"
+                marginTop="8px"
+                whiteSpace="nowrap"
+              >
+                {chain.symbol}
+              </Typography>
+            </ListItemButton>
+          </Tooltip>
         ))}
         <ListItemButton
           className={classes.chainButton}
           onClick={() => {
-            props.setShowSearch(true);
+            setShowSearch(true);
           }}
         >
-          <AddIcon
-            sx={{
-              width: '36px',
-              height: '36px',
-            }}
-          />
+          <PlusIcon sx={{ height: '36px', width: '36px' }} />
           <Typography
-            fontSize={12}
+            fontSize="12px"
             lineHeight="12px"
             marginTop="8px"
             whiteSpace="nowrap"
@@ -148,14 +152,20 @@ const ChainList = (props: Props) => {
         </ListItemButton>
       </List>
     );
-  }, [topChains]);
+  }, [
+    classes.chainButton,
+    onChainSelect,
+    selectedChainConfig?.key,
+    setShowSearch,
+    topChains,
+  ]);
 
   const searchList = useMemo(
     () => (
       <SearchableList<ChainConfig>
         searchPlaceholder="Search for a chain"
         className={classes.chainSearch}
-        items={props.chainList ?? []}
+        items={chainList ?? []}
         filterFn={(chain, query) =>
           !query ||
           chain.displayName.toLowerCase().includes(query.toLowerCase())
@@ -166,30 +176,36 @@ const ChainList = (props: Props) => {
             dense
             className={classes.chainItem}
             onClick={() => {
-              props.onChainSelect(chain.key);
-              props.setShowSearch(false);
+              onChainSelect(chain.key);
+              setShowSearch(false);
             }}
           >
-            <ListItemIcon sx={{ minWidth: 50 }}>
+            <ListItemIcon sx={{ minWidth: '50px' }}>
               <ChainIcon icon={chain.icon} height={36} />
             </ListItemIcon>
-            <Typography fontSize={16} fontWeight={500}>
+            <Typography fontSize="16px" fontWeight={500}>
               {chain.displayName}
             </Typography>
           </ListItemButton>
         )}
       />
     ),
-    [props.chainList, props.wallet],
+    [
+      chainList,
+      classes.chainItem,
+      classes.chainSearch,
+      onChainSelect,
+      setShowSearch,
+    ],
   );
 
   return (
     <Card className={classes.card} variant="elevation">
       <CardContent className={classes.cardContent}>
-        <Typography className={classes.title} fontSize={16} fontWeight={500}>
+        <Typography className={classes.title} fontSize="16px" fontWeight={500}>
           Select a network
         </Typography>
-        {props.showSearch ? searchList : shortList}
+        {showSearch ? searchList : shortList}
       </CardContent>
     </Card>
   );

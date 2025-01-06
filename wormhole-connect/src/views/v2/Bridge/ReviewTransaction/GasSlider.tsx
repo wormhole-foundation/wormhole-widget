@@ -184,7 +184,7 @@ const GasSlider = (props: {
               />
               <div className={classes.amounts}>
                 <Typography color={theme.palette.text.secondary} fontSize={14}>
-                  Additional Gas
+                  Additional gas
                 </Typography>
                 <Typography color={theme.palette.text.secondary} fontSize={14}>
                   {nativeGasPrice}

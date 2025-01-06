@@ -77,13 +77,6 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     width: '100%',
   },
-  poweredBy: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    marginTop: '24px',
-  },
   reviewTransaction: {
     padding: '8px 16px',
     borderRadius: '8px',
@@ -504,10 +497,8 @@ const Bridge = () => {
           walletConnector
         )}
       </span>
+      <PoweredByIcon color={theme.palette.text.primary} />
       <FooterNavBar />
-      <div className={classes.poweredBy}>
-        <PoweredByIcon color={theme.palette.text.primary} />
-      </div>
     </div>
   );
 };
