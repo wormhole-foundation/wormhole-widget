@@ -33,6 +33,7 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
+import { ReadOnlyWallet } from './ReadOnlyWallet';
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -122,7 +123,9 @@ export const connectWallet = async (
     }
   });
 
-  localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+  if (name !== ReadOnlyWallet.NAME) {
+    localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+  }
 };
 
 // Checks localStorage for previously used wallet for this chain
