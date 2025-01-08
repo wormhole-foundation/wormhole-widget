@@ -12,8 +12,12 @@ import { ConnectedWallet, toConnectedWallet, Wallet } from "utils/wallet/wallet"
 import { getWalletOptions as getWalletAgreggatorOptions } from "utils/wallet/legacy/index"
 import { ChainConfig } from "sdklegacy";
 import config from "config";
+import { validateWalletAddress } from "utils/address";
+import { SANCTIONED_WALLETS } from "consts/wallet";
+import { isReadOnlyWallet, ReadOnlyWallet, ReadOnlyWalletData } from "utils/wallet/ReadOnlyWallet";
 
 interface WalletManagerProps {
+    submitAddress: (selectedChain: WormholeChain, address: string) => Promise<void>;
     connectWallet: (type: TransferWallet) => any;
     getConnectedWallet: (type: TransferWallet) => ConnectedWallet | undefined;
     switchChain: (chainId: number, type: TransferWallet) => Promise<void>;
@@ -29,6 +33,7 @@ interface ConnectedWallets {
 }
 
 const WALLET_MANAGER_INITIAL_STATE: WalletManagerProps = {
+    submitAddress: (selectedChain: WormholeChain, address: string) => Promise.resolve(),
     connectWallet: (type: TransferWallet) => { },
     getConnectedWallet: (type: TransferWallet) => undefined,
     switchChain: (chainId: number, type: TransferWallet) => Promise.resolve(),
@@ -64,6 +69,8 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         walletConnection[walletConnection.nextTypeToConnect] = await toConnectedWallet(
             wallet, walletConnection.nextTypeToConnect, wormholeChain, dispatch
         )
+        // TODO: Send disconnectWallet function to onDisconnectEvent of the wallet
+        // walletConnection[walletConnection.nextTypeToConnect].onDisconnect(disconnectWallet)
     }, [walletConnection, disconnectDynamicWallet])
 
     const sidebarOnConnectWallet = React.useCallback(async (walletInfo: WalletData, type: TransferWallet, chain: WormholeChain) => {
@@ -100,28 +107,6 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         config.whLegacy.registerSigner(chain, signer);
     }, [])
 
-    const swapWalletConnections = React.useCallback(() => {
-        const temp = walletConnection.sending
-        walletConnection.sending = walletConnection.receiving
-        walletConnection.receiving = temp
-        walletConnection.nextTypeToConnect = walletConnection.nextTypeToConnect === TransferWallet.SENDING ?
-            TransferWallet.RECEIVING : TransferWallet.SENDING
-        dispatch(swapWallets())
-    }, [walletConnection, dispatch])
-
-    const connectWallet = React.useCallback(async (type: TransferWallet) => {
-        walletConnection.nextTypeToConnect = type
-        setWalletSidebarProps({ isOpen: true, type })
-    }, [setWalletSidebarProps])
-
-    const switchChain = React.useCallback(async (chainId: number, type: TransferWallet) => {
-        await walletConnection[type]?.switchChain?.(chainId)
-    }, [walletConnection])
-
-    const getConnectedWallet = React.useCallback((type: TransferWallet) => {
-        return walletConnection[type]
-    }, [walletConnection])
-
     const disconnectWallet = React.useCallback(async (type: TransferWallet) => {
         if (walletConnection[type]) {
             const wallet = walletConnection[type].getWallet()
@@ -134,7 +119,66 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         }
     }, [walletConnection, disconnectDynamicWallet])
 
+    const swapWalletConnections = React.useCallback(async () => {
+        const temp = walletConnection.sending
+        walletConnection.sending = walletConnection.receiving
+        walletConnection.receiving = temp
+        walletConnection.nextTypeToConnect = walletConnection.nextTypeToConnect === TransferWallet.SENDING ?
+            TransferWallet.RECEIVING : TransferWallet.SENDING
+        dispatch(swapWallets())
+        if (isReadOnlyWallet(walletConnection.sending?.getWallet())) {
+            await disconnectWallet(TransferWallet.SENDING)
+        }
+    }, [walletConnection, dispatch])
+
+    const connectWallet = React.useCallback(async (type: TransferWallet) => {
+        walletConnection.nextTypeToConnect = type
+        setWalletSidebarProps({ isOpen: true, type })
+    }, [setWalletSidebarProps])
+
+    // TODO: Refactor this code
+    // We should move this code to the ReadonlyWallet file and call the function connectWallet
+    const submitAddress = React.useCallback(async (
+        selectedChain: WormholeChain,
+        address: string,
+    ) => {    
+        const chainConfig = config.chains[selectedChain];
+        if (!chainConfig) return;
+    
+        const nativeAddress = await validateWalletAddress(selectedChain, address);
+        if (!nativeAddress) {
+          throw new Error('Invalid Address');
+        }
+    
+        for (const sanctioned of SANCTIONED_WALLETS) {
+          if (nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()) {
+            throw new Error('Sanctioned Address');
+          }
+        }
+    
+        const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
+    
+        const walletInfo: ReadOnlyWalletData = {
+          name: wallet.getName(),
+          type: chainConfig.context,
+          icon: '',
+          isReady: true,
+          wallet,
+        };
+    
+        await sidebarOnConnectWallet(walletInfo, TransferWallet.RECEIVING, selectedChain)
+      }, []);
+
+    const switchChain = React.useCallback(async (chainId: number, type: TransferWallet) => {
+        await walletConnection[type]?.switchChain?.(chainId)
+    }, [walletConnection])
+
+    const getConnectedWallet = React.useCallback((type: TransferWallet) => {
+        return walletConnection[type]
+    }, [walletConnection])
+
     const walletManager = React.useMemo(() => ({
+        submitAddress,
         connectWallet,
         getConnectedWallet,
         switchChain,
@@ -143,6 +187,7 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
         swapWalletConnections,
         disconnectWallet,
     }), [
+        submitAddress,
         connectWallet,
         getConnectedWallet,
         switchChain,
@@ -172,10 +217,10 @@ const InternalWMComponent: React.FC<React.PropsWithChildren<InternalWMProviderPr
                 onConnectWallet={sidebarOnConnectWallet}
                 open={walletSidebarProps.isOpen}
                 type={walletSidebarProps.type}
-                onClose={() => {
+                onClose={() =>
                     setWalletSidebarProps(defaultWalletSidebarConfig)
                 }
-                }
+                showAddressInput={walletConnection.nextTypeToConnect === TransferWallet.RECEIVING}
             />
         </WalletManager.Provider>
     </>

@@ -54,14 +54,18 @@ const connectWallet = async (
     } else {
       dispatch(connectReceivingWallet(payload));
     }
-  
-    // clear wallet when the user manually disconnects from outside the app
+
     wallet.on('disconnect', () => {
       wallet.disconnect()
-      dispatch(clearWallet(type));
+      // Use setTimeout to defer the dispatch call to the next event loop tick.
+      // This ensures that the dispatch does not occur while a reducer is executing,
+      // preventing the "You may not call store.getState() while the reducer is executing" error.
+      setTimeout(() => {
+        dispatch(clearWallet(type));
+      }, 0);
       localStorage.removeItem(`wormhole-connect:wallet:${context}`);
     });
-  
+
     // when the user has multiple wallets connected and either changes
     // or disconnects the current wallet, clear the wallet
     wallet.on('accountsChanged', (accs: string[]) => {
@@ -132,7 +136,8 @@ export const toConnectedWalletAggregator = async (wallet: WalletAggregatorData, 
       return wallet.wallet.getNetworkInfo()
     },
     icon: ({ size }) => React.createElement(WalletAggregatorIcon, { iconSize: size, walletName: wallet.wallet.getName(), walletIcon: wallet.wallet.getIcon() }),
-    getWalletKey: () => wallet.wallet.getName()
+    getWalletKey: () => wallet.wallet.getName(),
+    // onDisconnect: (listener) => wallet.wallet.on("disconnect", listener)
   }
   return connectedWallet
 };

@@ -29,7 +29,6 @@ export const useDynamicWalletOptions = () => {
     const userWallets = useUserWallets()
 
     const filterWallets = React.useCallback((wallet: WalletOptions) => {
-        console.log(wallet.key)
         return wallet.chain === "EVM" && evmWalletOptions.includes(wallet.key) ||
             wallet.chain !== "EVM" && wallet.group
     }, [])

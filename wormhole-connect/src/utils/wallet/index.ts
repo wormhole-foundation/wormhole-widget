@@ -25,6 +25,7 @@ import { DynamicWalletData, useDynamicWalletHelpers, useDynamicWalletOptions } f
 import { getWalletOptions, WalletAggregatorData } from './legacy';
 import { ConnectedWallet } from './wallet';
 import { isChainSupportedByDynamicWallet } from 'utils/dynamic-wallet/utils';
+import { ReadOnlyWalletData } from './ReadOnlyWallet';
 
 export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
 
@@ -62,7 +63,7 @@ export const walletAcceptedChains = (context: Context | undefined): WormholeChai
     .map((c) => c.key);
 };
 
-export type WalletData = WalletAggregatorData | DynamicWalletData
+export type WalletData = WalletAggregatorData | DynamicWalletData | ReadOnlyWalletData
 
 export const useConnectToLastUsedWallet = (
   connectWallet: (wallet: WalletData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch<any>) => void,

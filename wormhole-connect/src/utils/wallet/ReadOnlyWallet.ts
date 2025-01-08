@@ -1,19 +1,28 @@
-import {
-  Address,
-  ChainId,
-  IconSource,
-  SendTransactionResult,
-  Wallet,
-} from '@xlabs-libs/wallet-aggregator-core';
-import { Chain, chainToChainId, NativeAddress } from '@wormhole-foundation/sdk';
+import { Chain as WormholeChain, chainToChainId, NativeAddress, ChainId } from '@wormhole-foundation/sdk';
+import { TransferWallet } from '.';
+import { connectReceivingWallet, connectWallet as connectSourceWallet } from "store/wallet";
+import { Dispatch } from '@reduxjs/toolkit';
+import { ConnectedWallet } from './wallet';
+import React from 'react';
+import { Context } from 'sdklegacy';
+import config from 'config';
+import EventEmitter from "eventemitter3"
 
-export class ReadOnlyWallet extends Wallet {
+export type ReadOnlyWalletData = {
+  name: string;
+  type: Context;
+  icon: any;
+  isReady: boolean;
+  wallet: ReadOnlyWallet;
+};
+
+export class ReadOnlyWallet extends EventEmitter {
   private _isConnected = true;
 
   static readonly NAME = 'ReadyOnlyWallet';
 
-  constructor(readonly _address: NativeAddress<Chain>, readonly _chain: Chain) {
-    super();
+  constructor(readonly _address: NativeAddress<WormholeChain>, readonly _chain: WormholeChain) {
+    super()
   }
 
   getName(): string {
@@ -24,15 +33,13 @@ export class ReadOnlyWallet extends Wallet {
     return '';
   }
 
-  async connect(): Promise<Address[]> {
+  async connect(): Promise<string[]> {
     this._isConnected = true;
-    this.emit('connect');
     return [this._address.toString()];
   }
 
   async disconnect(): Promise<void> {
     this._isConnected = false;
-    this.emit('disconnect');
   }
 
   getChainId(): ChainId {
@@ -44,15 +51,15 @@ export class ReadOnlyWallet extends Wallet {
     throw new Error('Method not implemented.');
   }
 
-  getAddress(): Address {
+  getAddress(): string {
     return this._address.toString();
   }
 
-  getAddresses(): Address[] {
+  getAddresses(): string[] {
     return [this.getAddress()];
   }
 
-  setMainAddress(address: Address): void {
+  setMainAddress(address: string): void {
     // No-op: can't change address for read-only wallet
   }
 
@@ -65,15 +72,11 @@ export class ReadOnlyWallet extends Wallet {
     return this._isConnected;
   }
 
-  getIcon(): IconSource {
-    return '';
-  }
-
   async signTransaction(tx: any): Promise<any> {
     throw new Error('Address only wallet cannot sign transactions');
   }
 
-  async sendTransaction(tx: any): Promise<SendTransactionResult<any>> {
+  async sendTransaction(tx: any): Promise<any> {
     throw new Error('Address only wallet cannot send transactions');
   }
 
@@ -81,7 +84,7 @@ export class ReadOnlyWallet extends Wallet {
     throw new Error('Address only wallet cannot sign messages');
   }
 
-  async signAndSendTransaction(tx: any): Promise<SendTransactionResult<any>> {
+  async signAndSendTransaction(tx: any): Promise<any> {
     throw new Error('Address only wallet cannot sign or send transactions');
   }
 
@@ -92,4 +95,45 @@ export class ReadOnlyWallet extends Wallet {
   supportsChain(chainId: ChainId): boolean {
     return this.getChainId() === chainId;
   }
+}
+
+export function isReadOnlyWallet(wallet: any): wallet is ReadOnlyWalletData {
+  return wallet && wallet.wallet instanceof ReadOnlyWallet;
+}
+
+export async function toConnectedReadOnlyWallet(walletInfo: ReadOnlyWalletData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch): Promise<ConnectedWallet> {
+  const wallet = walletInfo.wallet
+
+  config.triggerEvent({
+      type: 'wallet.connect',
+      details: {
+          side: type,
+          chain: chain,
+          wallet: wallet.getName(),
+      },
+  });
+
+  const payload = {
+      address: wallet.getAddress(),
+      type: walletInfo.type,
+      name: wallet.getName()
+  }
+  if (type === TransferWallet.SENDING) {
+    dispatch(connectSourceWallet(payload));
+  } else {
+    dispatch(connectReceivingWallet(payload));
+  }
+
+  return {
+    address: wallet.getAddress(),
+    disconnect: async () => {
+      wallet.disconnect();
+    },
+    getWallet: () => walletInfo,
+    getNetworkInfo: () => Promise.resolve(null),
+    getWalletKey: () => wallet.getName(),
+    // TODO: Create an icon for readonly wallets
+    icon: () => React.createElement('div') as any,
+    // onDisconnect: (listener) => wallet.on("disconnect", listener)
+  };
 }
