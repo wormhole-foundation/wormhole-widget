@@ -48,9 +48,7 @@ import {
   millisToMinutesAndSeconds,
   minutesAndSecondsWithPadding,
 } from 'utils/transferValidation';
-import {
-  TransferWallet,
-} from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
 import TransactionDetails from 'views/v2/Redeem/TransactionDetails';
 
 import type { RootState } from 'store';
@@ -140,7 +138,12 @@ const Redeem = () => {
   const [transferSuccessEventFired, setTransferSuccessEventFired] =
     useState(false);
   const [etaExpired, setEtaExpired] = useState(false);
-  const { connectWallet, getConnectedWallet, switchChain, registerWalletSigner } = useWalletManager()
+  const {
+    connectWallet,
+    getConnectedWallet,
+    switchChain,
+    registerWalletSigner,
+  } = useWalletManager();
 
   const routeContext = React.useContext(RouteContext);
 
@@ -723,7 +726,9 @@ const Redeem = () => {
         throw new Error('Route is not manual or finalizable');
       }
 
-      const receivingConnectedWallet = getConnectedWallet(TransferWallet.RECEIVING)
+      const receivingConnectedWallet = getConnectedWallet(
+        TransferWallet.RECEIVING,
+      );
 
       if (!receivingConnectedWallet) {
         throw new Error('Could not get receiving connected wallet');

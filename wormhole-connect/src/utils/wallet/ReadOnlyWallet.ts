@@ -1,12 +1,20 @@
-import { Chain as WormholeChain, chainToChainId, NativeAddress, ChainId } from '@wormhole-foundation/sdk';
+import {
+  Chain as WormholeChain,
+  chainToChainId,
+  NativeAddress,
+  ChainId,
+} from '@wormhole-foundation/sdk';
 import { TransferWallet } from '.';
-import { connectReceivingWallet, connectWallet as connectSourceWallet } from "store/wallet";
+import {
+  connectReceivingWallet,
+  connectWallet as connectSourceWallet,
+} from 'store/wallet';
 import { Dispatch } from '@reduxjs/toolkit';
 import { ConnectedWallet } from './wallet';
 import React from 'react';
 import { Context } from 'sdklegacy';
 import config from 'config';
-import EventEmitter from "eventemitter3"
+import EventEmitter from 'eventemitter3';
 
 export type ReadOnlyWalletData = {
   name: string;
@@ -21,8 +29,11 @@ export class ReadOnlyWallet extends EventEmitter {
 
   static readonly NAME = 'ReadyOnlyWallet';
 
-  constructor(readonly _address: NativeAddress<WormholeChain>, readonly _chain: WormholeChain) {
-    super()
+  constructor(
+    readonly _address: NativeAddress<WormholeChain>,
+    readonly _chain: WormholeChain,
+  ) {
+    super();
   }
 
   getName(): string {
@@ -101,23 +112,28 @@ export function isReadOnlyWallet(wallet: any): wallet is ReadOnlyWalletData {
   return wallet && wallet.wallet instanceof ReadOnlyWallet;
 }
 
-export async function toConnectedReadOnlyWallet(walletInfo: ReadOnlyWalletData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch): Promise<ConnectedWallet> {
-  const wallet = walletInfo.wallet
+export async function toConnectedReadOnlyWallet(
+  walletInfo: ReadOnlyWalletData,
+  type: TransferWallet,
+  chain: WormholeChain,
+  dispatch: Dispatch,
+): Promise<ConnectedWallet> {
+  const wallet = walletInfo.wallet;
 
   config.triggerEvent({
-      type: 'wallet.connect',
-      details: {
-          side: type,
-          chain: chain,
-          wallet: wallet.getName(),
-      },
+    type: 'wallet.connect',
+    details: {
+      side: type,
+      chain: chain,
+      wallet: wallet.getName(),
+    },
   });
 
   const payload = {
-      address: wallet.getAddress(),
-      type: walletInfo.type,
-      name: wallet.getName()
-  }
+    address: wallet.getAddress(),
+    type: walletInfo.type,
+    name: wallet.getName(),
+  };
   if (type === TransferWallet.SENDING) {
     dispatch(connectSourceWallet(payload));
   } else {

@@ -6,7 +6,14 @@ import { Dispatch } from 'redux';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Network, Chain as WormholeChain, UnsignedTransaction, chainToPlatform, chainIdToChain, toChainId } from '@wormhole-foundation/sdk';
+import {
+  Network,
+  Chain as WormholeChain,
+  UnsignedTransaction,
+  chainToPlatform,
+  chainIdToChain,
+  toChainId,
+} from '@wormhole-foundation/sdk';
 
 import {
   EvmUnsignedTransaction,
@@ -21,13 +28,19 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { DynamicWalletData, useDynamicWalletHelpers, useDynamicWalletOptions } from "../dynamic-wallet/useDynamicWallet";
+import {
+  DynamicWalletData,
+  useDynamicWalletHelpers,
+  useDynamicWalletOptions,
+} from '../dynamic-wallet/useDynamicWallet';
 import { getWalletOptions, WalletAggregatorData } from './legacy';
 import { ConnectedWallet } from './wallet';
 import { isChainSupportedByDynamicWallet } from 'utils/dynamic-wallet/utils';
 import { ReadOnlyWalletData } from './ReadOnlyWallet';
 
-export type IconType = (props: {size?: number}) => React.FunctionComponentElement<any>;
+export type IconType = (props: {
+  size?: number;
+}) => React.FunctionComponentElement<any>;
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -35,14 +48,14 @@ export enum TransferWallet {
 }
 
 export const isEVMChain = (chain: WormholeChain) => {
-  return chainToPlatform(chainIdToChain(toChainId(chain))) === "Evm"
-}
+  return chainToPlatform(chainIdToChain(toChainId(chain))) === 'Evm';
+};
 
 export const fromWormholeChainToContext = (chain: WormholeChain): Context => {
   if (isEVMChain(chain)) {
     return Context.ETH;
   }
-  switch(chain) {
+  switch (chain) {
     case 'Solana':
       return Context.SOLANA;
     case 'Sui':
@@ -52,9 +65,11 @@ export const fromWormholeChainToContext = (chain: WormholeChain): Context => {
     default:
       throw new Error('unsupported chain');
   }
-}
+};
 
-export const walletAcceptedChains = (context: Context | undefined): WormholeChain[] => {
+export const walletAcceptedChains = (
+  context: Context | undefined,
+): WormholeChain[] => {
   if (!context) {
     return config.chainsArr.map((c) => c.key);
   }
@@ -63,46 +78,57 @@ export const walletAcceptedChains = (context: Context | undefined): WormholeChai
     .map((c) => c.key);
 };
 
-export type WalletData = WalletAggregatorData | DynamicWalletData | ReadOnlyWalletData
+export type WalletData =
+  | WalletAggregatorData
+  | DynamicWalletData
+  | ReadOnlyWalletData;
 
 export const useConnectToLastUsedWallet = (
-  connectWallet: (wallet: WalletData, type: TransferWallet, chain: WormholeChain, dispatch: Dispatch<any>) => void,
-): void => {
-  const dispatch = useDispatch();
-  const { getDynamicWalletOptions } = useDynamicWalletOptions()
-  const { isDynamicWalletReady } = useDynamicWalletHelpers()
-  const { toChain, fromChain } = useSelector(
-    (state: RootState) => state.transferInput,
-  );
-  
-  // Checks localStorage for previously used wallet for this chain
-  // and connects to it automatically if it exists.
-  const connectLastUsedWallet = React.useCallback(async (
+  connectWallet: (
+    wallet: WalletData,
     type: TransferWallet,
     chain: WormholeChain,
     dispatch: Dispatch<any>,
-  ) => {
-    let wallet: WalletData | undefined;
-    const chainConfig = config.chains[chain!]!;
-    const lastUsedWallet = localStorage.getItem(
-      `wormhole-connect:wallet:${chainConfig.context}`,
-    );
+  ) => void,
+): void => {
+  const dispatch = useDispatch();
+  const { getDynamicWalletOptions } = useDynamicWalletOptions();
+  const { isDynamicWalletReady } = useDynamicWalletHelpers();
+  const { toChain, fromChain } = useSelector(
+    (state: RootState) => state.transferInput,
+  );
 
-    if (lastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
-      const walletOptions = await getDynamicWalletOptions(chain, {});
-      wallet = walletOptions.find((w) => w.walletKey === lastUsedWallet);
-      if (wallet?.isWalletConnect) {
-        wallet = undefined;
+  // Checks localStorage for previously used wallet for this chain
+  // and connects to it automatically if it exists.
+  const connectLastUsedWallet = React.useCallback(
+    async (
+      type: TransferWallet,
+      chain: WormholeChain,
+      dispatch: Dispatch<any>,
+    ) => {
+      let wallet: WalletData | undefined;
+      const chainConfig = config.chains[chain!]!;
+      const lastUsedWallet = localStorage.getItem(
+        `wormhole-connect:wallet:${chainConfig.context}`,
+      );
+
+      if (lastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
+        const walletOptions = await getDynamicWalletOptions(chain, {});
+        wallet = walletOptions.find((w) => w.walletKey === lastUsedWallet);
+        if (wallet?.isWalletConnect) {
+          wallet = undefined;
+        }
+      } else if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
+        const walletOptions = await getWalletOptions(chainConfig);
+        wallet = walletOptions.find((w) => w.name === lastUsedWallet);
       }
-    } else if (lastUsedWallet && lastUsedWallet !== "WalletConnect") {
-      const walletOptions = await getWalletOptions(chainConfig);
-      wallet = walletOptions.find((w) => w.name === lastUsedWallet);
-    }
 
-    if (wallet) {
-      await connectWallet(wallet, type, chain, dispatch);
-    }
-  }, [connectWallet, getWalletOptions])
+      if (wallet) {
+        await connectWallet(wallet, type, chain, dispatch);
+      }
+    },
+    [connectWallet, getWalletOptions],
+  );
 
   React.useEffect(() => {
     if (!isDynamicWalletReady()) return;
@@ -157,4 +183,3 @@ export const signAndSendTransaction = async (
     throw new Error('unimplemented');
   }
 };
-

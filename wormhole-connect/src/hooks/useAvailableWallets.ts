@@ -27,7 +27,7 @@ const FAILED_TO_LOAD_ERR =
 
 export const useAvailableWallets = (props: Props): ReturnProps => {
   const { chain, supportedChains } = props;
-  const { getWalletOptions } = useWalletManager()
+  const { getWalletOptions } = useWalletManager();
 
   const [walletOptionsResult, setWalletOptionsResult] = useState<WalletOptions>(
     {

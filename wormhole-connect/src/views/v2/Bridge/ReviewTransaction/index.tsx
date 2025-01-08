@@ -77,7 +77,8 @@ const ReviewTransaction = (props: Props) => {
 
   const routeContext = useContext(RouteContext);
 
-  const { getConnectedWallet, switchChain, registerWalletSigner } = useWalletManager()
+  const { getConnectedWallet, switchChain, registerWalletSigner } =
+    useWalletManager();
 
   const transferInput = useSelector((state: RootState) => state.transferInput);
 

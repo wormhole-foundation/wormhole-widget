@@ -7,7 +7,10 @@ import { getBigInt } from 'ethers';
 import type { ConnectedWallet } from './wallet';
 import config from 'config';
 
-export async function switchChain(w: ConnectedWallet, chainId: number | string) {
+export async function switchChain(
+  w: ConnectedWallet,
+  chainId: number | string,
+) {
   await w.switchChain?.(chainId as number);
 }
 
@@ -38,5 +41,5 @@ export async function signAndSendTransaction(
   const tx = await signer.sendTransaction(request.transaction);
   const result = await tx.wait();
 
-  return result?.hash || "";
+  return result?.hash || '';
 }

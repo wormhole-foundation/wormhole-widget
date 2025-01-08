@@ -68,7 +68,11 @@ type Props = {
   open: boolean;
   onClose?: () => any;
   showAddressInput?: boolean;
-  onConnectWallet: (newWallet: WalletData, type: TransferWallet, chain: Chain) => void;
+  onConnectWallet: (
+    newWallet: WalletData,
+    type: TransferWallet,
+    chain: Chain,
+  ) => void;
 };
 
 // Renders the sidebar on the right-side to display the list of available wallets

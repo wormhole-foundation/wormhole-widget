@@ -49,7 +49,7 @@ type Props = {
 // and the sidebar for the list of available wallets.
 const WalletConnector = (props: Props) => {
   const { disabled = false, type } = props;
-  const { connectWallet } = useWalletManager()
+  const { connectWallet } = useWalletManager();
 
   const theme = useTheme();
 
@@ -106,11 +106,7 @@ const WalletConnector = (props: Props) => {
         </Tooltip>
       );
     } else {
-      return (
-        <>
-          {button}
-        </>
-      );
+      return <>{button}</>;
     }
   }, [
     disabled,

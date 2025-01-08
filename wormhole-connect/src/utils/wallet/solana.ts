@@ -137,9 +137,9 @@ export async function signAndSendTransaction(
   let confirmedTx: RpcResponseAndContext<SignatureResult> | null = null;
   let txSendAttempts = 1;
   let signature = '';
-  const solanaSigner = await wallet.getSigner()
+  const solanaSigner = await wallet.getSigner();
   // TODO: VersionedTransaction is supported, but the interface needs to be updated
-  const tx = await solanaSigner.signTransaction(unsignedTx)
+  const tx = await solanaSigner.signTransaction(unsignedTx);
   const serializedTx = tx.serialize();
   const sendOptions = {
     skipPreflight: true,

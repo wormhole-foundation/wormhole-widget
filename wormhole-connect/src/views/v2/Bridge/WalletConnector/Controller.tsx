@@ -70,7 +70,8 @@ const COPY_MESSAGE_TIMOUT = 1000;
 
 // Renders the connected state for a wallet given the type (sending | receiving)
 const ConnectedWallet = (props: Props) => {
-  const { getConnectedWallet, disconnectWallet: disconnectFromStore } = useWalletManager();
+  const { getConnectedWallet, disconnectWallet: disconnectFromStore } =
+    useWalletManager();
 
   const { classes } = useStyles();
 
@@ -113,12 +114,12 @@ const ConnectedWallet = (props: Props) => {
     return <></>;
   }
 
-  const WalletIcon = connectedWallet?.icon
+  const WalletIcon = connectedWallet?.icon;
 
   return (
     <>
       <div className={classes.connectWallet} {...bindTrigger(popupState)}>
-        { WalletIcon ? <WalletIcon size={20} /> : null }
+        {WalletIcon ? <WalletIcon size={20} /> : null}
         <Tooltip title="Copied" open={isCopied} placement="top" arrow>
           <Typography
             className={classes.walletAddress}
