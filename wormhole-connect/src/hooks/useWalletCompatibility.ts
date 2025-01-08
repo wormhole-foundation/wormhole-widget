@@ -42,7 +42,7 @@ export const useWalletCompatibility = ({
           isCompatible: false,
           warning: `Please use ${compatibleWallets.join(
             ' or ',
-          )} wallet with the Aptos CCTP route.`,
+          )} with the Aptos CCTP route.`,
         };
       }
     }
