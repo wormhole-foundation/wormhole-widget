@@ -46,6 +46,19 @@ export default function SearchInput(props: SearchInputProps) {
       }}
       placeholder={props.placeholder}
       size="small"
+      sx={{
+        // Root class for the input field
+        '& .MuiOutlinedInput-root': {
+          // Class for the input placeholder text
+          '& .MuiOutlinedInput-input::placeholder': {
+            fontWeight: 300,
+          },
+          // Class for the border around the input field
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderWidth: '1px',
+          },
+        },
+      }}
       variant="outlined"
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}

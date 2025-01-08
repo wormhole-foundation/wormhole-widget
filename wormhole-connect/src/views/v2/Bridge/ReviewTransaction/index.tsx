@@ -258,7 +258,7 @@ const ReviewTransaction = (props: Props) => {
         ),
         receivedTokenKey: config.tokens[destToken].key, // TODO: possibly wrong (e..g if portico swap fails)
         relayerFee,
-        receiveAmount: (quote.destinationToken.amount),
+        receiveAmount: quote.destinationToken.amount,
         receiveNativeAmount,
         eta: quote.eta || 0,
       };

@@ -236,7 +236,7 @@ const SingleRoute = (props: Props) => {
           fontSize="14px"
           lineHeight="14px"
         >
-          Additional Gas
+          Additional gas
         </Typography>
         <Typography
           color={theme.palette.text.primary}
@@ -617,14 +617,14 @@ const SingleRoute = (props: Props) => {
           }}
         >
           <CardHeader
-            avatar={<TokenIcon icon={destTokenConfig?.icon} height={36} />}
+            avatar={<TokenIcon icon={destTokenConfig?.icon} />}
             className={classes.cardHeader}
             title={routeCardHeader}
             subheader={routeCardSubHeader}
             action={routeCardBadge}
           />
           <CardContent className={classes.cardContent}>
-            <Stack gap="18px">
+            <Stack gap="14px">
               {relayerFee}
               {destinationGas}
               {timeToDestination}

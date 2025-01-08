@@ -1,4 +1,10 @@
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTimer } from 'react-timer-hook';
 import { useTheme } from '@mui/material';
@@ -119,13 +125,6 @@ const useStyles = makeStyles<StyleProps>()((theme, { transitionDuration }) => ({
   txStatusIcon: {
     width: '105px',
     height: '105px',
-  },
-  poweredBy: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    marginTop: '24px',
   },
   delayText: {
     maxWidth: '420px',
@@ -304,6 +303,8 @@ const Redeem = () => {
       // we will mark the local storage item as readyToClaim
       updateTxInLocalStorage(txData?.sendTx, 'isReadyToClaim', true);
     }
+    // We should run this side-effect only when tx/receipt status changes or we receive an error.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     receipt?.state,
     isTxCompleted,
@@ -363,13 +364,7 @@ const Redeem = () => {
       headerConfig = { ...defaults, ...config.ui.pageHeader };
     }
 
-    return (
-      <PageHeader
-        title={headerConfig.text}
-        align={headerConfig.align}
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
-    );
+    return <PageHeader title={headerConfig.text} align={headerConfig.align} />;
   }, []);
 
   // Header showing the status of the transaction
@@ -675,7 +670,7 @@ const Redeem = () => {
   ]);
 
   // Callback for claim action in Manual route transactions
-  const handleManualClaim = async () => {
+  const handleManualClaim = useCallback(async () => {
     // This will be set back to false by a hook above which looks out for isTxComplete=true
     setIsClaimInProgress(true);
     setClaimError('');
@@ -767,24 +762,22 @@ const Redeem = () => {
       setUnhandledManualClaimError(e);
       setIsClaimInProgress(false);
     }
-  };
+  }, [
+    details,
+    fromChain,
+    isConnectedToReceivingWallet,
+    isTxDestQueued,
+    receivedTokenKey,
+    receivingWallet.address,
+    routeContext.receipt,
+    routeContext.route,
+    routeName,
+    toChain,
+    tokenKey,
+  ]);
 
   // Main CTA button which has separate states for automatic and manual claims
   const actionButton = useMemo(() => {
-    if (isTxCompleted || isTxRefunded) {
-      return (
-        <Button
-          variant="primary"
-          className={classes.actionButton}
-          onClick={() => {
-            dispatch(setRoute('bridge'));
-          }}
-        >
-          <Typography textTransform="none">Start a new transaction</Typography>
-        </Button>
-      );
-    }
-
     if (isClaimInProgress) {
       return (
         <Button disabled variant="primary" className={classes.actionButton}>
@@ -806,10 +799,8 @@ const Redeem = () => {
       );
     }
 
-    const canBeManuallyClaimed =
-      isTxDestQueued || (!isAutomaticRoute && isTxAttested);
-
-    if (canBeManuallyClaimed) {
+    // Checking if transaction can be manually claimed
+    if (isTxDestQueued || (!isAutomaticRoute && isTxAttested)) {
       if (!isConnectedToReceivingWallet) {
         return (
           <Button
@@ -838,27 +829,35 @@ const Redeem = () => {
     }
 
     return (
-      <Button
-        variant="primary"
-        className={classes.actionButton}
-        onClick={() => {
-          dispatch(setRoute('bridge'));
-        }}
-      >
-        <Typography textTransform="none">Start a new transaction</Typography>
-      </Button>
+      <>
+        <Button
+          variant="primary"
+          className={classes.actionButton}
+          onClick={() => {
+            dispatch(setRoute('bridge'));
+          }}
+        >
+          <Typography textTransform="none">Start a new transaction</Typography>
+        </Button>
+        {!isTxCompleted && (
+          <Typography fontSize="12px" sx={{ margin: 'auto', opacity: 0.6 }}>
+            Your current transaction will continue to process in the background.
+          </Typography>
+        )}
+      </>
     );
   }, [
     claimError,
     classes.actionButton,
     classes.claimButton,
+    dispatch,
+    handleManualClaim,
     isAutomaticRoute,
     isClaimInProgress,
     isConnectedToReceivingWallet,
     isTxAttested,
     isTxCompleted,
     isTxDestQueued,
-    isTxRefunded,
     theme.palette.primary.contrastText,
   ]);
 
@@ -922,9 +921,7 @@ const Redeem = () => {
         show={!!claimError}
         className={classes.errorBox}
       />
-      <div className={classes.poweredBy}>
-        <PoweredByIcon color={theme.palette.text.primary} />
-      </div>
+      <PoweredByIcon color={theme.palette.text.primary} />
     </div>
   );
 };

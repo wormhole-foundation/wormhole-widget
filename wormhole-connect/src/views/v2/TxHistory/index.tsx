@@ -37,13 +37,6 @@ const useStyles = makeStyles()((_theme) => ({
     overflow: 'auto',
     width: '100%',
   },
-  poweredBy: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    marginTop: '24px',
-  },
   txHistoryHeader: {
     width: '100%',
     display: 'flex',
@@ -90,13 +83,7 @@ const TxHistory = () => {
       headerConfig = { ...defaults, ...config.ui.pageHeader };
     }
 
-    return (
-      <PageHeader
-        title={headerConfig.text}
-        align={headerConfig.align}
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
-    );
+    return <PageHeader title={headerConfig.text} align={headerConfig.align} />;
   }, []);
 
   // Header for Transaction History, which includes the title and settings icon
@@ -109,7 +96,7 @@ const TxHistory = () => {
         </IconButton>
       </div>
     );
-  }, []);
+  }, [classes.txHistoryHeader, dispatch]);
 
   const transactionList = useMemo(() => {
     if (!transactions) {
@@ -146,7 +133,15 @@ const TxHistory = () => {
         </InfiniteScroll>
       </div>
     );
-  }, [hasMore, sendingWallet.address, tokenPrices.data, transactions]);
+  }, [
+    classes.infiniteScroller,
+    classes.spacer,
+    hasMore,
+    sendingWallet.address,
+    theme.palette.text.secondary,
+    tokenPrices.data,
+    transactions,
+  ]);
 
   return (
     <div className={joinClass([classes.container, classes.spacer])}>
@@ -154,9 +149,7 @@ const TxHistory = () => {
       {txHistoryHeader}
       {transactionList}
       {(!transactions || isFetching) && <CircularProgress />}
-      <div className={classes.poweredBy}>
-        <PoweredByIcon color={theme.palette.text.primary} />
-      </div>
+      <PoweredByIcon color={theme.palette.text.primary} />
     </div>
   );
 };

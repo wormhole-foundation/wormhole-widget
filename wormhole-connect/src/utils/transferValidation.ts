@@ -111,7 +111,7 @@ export const validateAmount = (
   return '';
 };
 
-const checkAddressIsSanctioned = (address: string): boolean =>
+export const checkAddressIsSanctioned = (address: string): boolean =>
   SANCTIONED_WALLETS.has(address) || SANCTIONED_WALLETS.has('0x' + address);
 
 export const validateWallet = async (

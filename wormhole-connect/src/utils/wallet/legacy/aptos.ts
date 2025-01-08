@@ -1,19 +1,6 @@
 import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
-import {
-  AptosSnapAdapter,
-  AptosWalletAdapter,
-  BitkeepWalletAdapter,
-  FewchaWalletAdapter,
-  MartianWalletAdapter,
-  NightlyWalletAdapter as NightlyWalletAdapterAptos,
-  PontemWalletAdapter,
-  RiseWalletAdapter,
-  SpikaWalletAdapter,
-  WalletAdapterNetwork,
-} from '@manahippo/aptos-wallet-adapter';
+import type { Network as AptosNetwork } from '@aptos-labs/wallet-adapter-core';
 import { AptosWallet } from '@xlabs-libs/wallet-aggregator-aptos';
-
-import { Types } from 'aptos';
 
 import { Network } from '@wormhole-foundation/sdk';
 import {
@@ -22,50 +9,54 @@ import {
 } from '@wormhole-foundation/sdk-aptos';
 
 import config from 'config';
-
-const aptosWallets = {
-  aptos: new AptosWallet(new AptosWalletAdapter()),
-  martian: new AptosWallet(new MartianWalletAdapter()),
-  rise: new AptosWallet(new RiseWalletAdapter()),
-  nightly: new AptosWallet(new NightlyWalletAdapterAptos()),
-  pontem: new AptosWallet(new PontemWalletAdapter()),
-  fewcha: new AptosWallet(new FewchaWalletAdapter()),
-  spika: new AptosWallet(new SpikaWalletAdapter()),
-  snap: new AptosWallet(
-    new AptosSnapAdapter({
-      network: config.isMainnet
-        ? WalletAdapterNetwork.Mainnet
-        : WalletAdapterNetwork.Testnet,
-    }),
-  ),
-  bitkeep: new AptosWallet(new BitkeepWalletAdapter()),
-};
+import { InputEntryFunctionData } from '@aptos-labs/ts-sdk';
 
 export function fetchOptions() {
+  const aptosWalletConfig = {
+    network: config.isMainnet
+      ? ('mainnet' as AptosNetwork)
+      : ('testnet' as AptosNetwork),
+  };
+  const aptosWallets: Record<string, AptosWallet> = {};
+  const walletCore = AptosWallet.walletCoreFactory(aptosWalletConfig, true, []);
+  walletCore.wallets.forEach((wallet) => {
+    aptosWallets[wallet.name] = new AptosWallet(wallet, walletCore);
+  });
   return aptosWallets;
+}
+
+function isInputEntryFunctionData(data: any): data is InputEntryFunctionData {
+  return (
+    data &&
+    typeof data === 'object' &&
+    'function' in data &&
+    'functionArguments' in data
+  );
 }
 
 export async function signAndSendTransaction(
   request: AptosUnsignedTransaction<Network, AptosChains>,
   wallet: Wallet | undefined,
 ) {
-  // The wallets do not handle Uint8Array serialization
-  const payload = request.transaction as Types.EntryFunctionPayload;
-  if (payload.arguments) {
-    payload.arguments = payload.arguments.map((a: any) => {
-      if (a instanceof Uint8Array) {
-        return Array.from(a);
-      } else if (typeof a === 'bigint') {
-        return a.toString();
-      } else {
-        return a;
-      }
-    });
+  const payload = request.transaction;
+  if (!isInputEntryFunctionData(payload)) {
+    throw new Error('Unsupported transaction type');
   }
+  // The wallets do not handle Uint8Array serialization
+  // const payload = request.transaction as Types.EntryFunctionPayload;
+  payload.functionArguments = payload.functionArguments.map((a: any) => {
+    if (a instanceof Uint8Array) {
+      return Array.from(a);
+    } else if (typeof a === 'bigint') {
+      return a.toString();
+    } else {
+      return a;
+    }
+  });
 
-  const tx = await (wallet as AptosWallet).signAndSendTransaction(
-    payload as Types.TransactionPayload,
-  );
+  const tx = await (wallet as AptosWallet).signAndSendTransaction({
+    data: payload,
+  });
   /*
    * TODO SDKV2
   const aptosClient = (

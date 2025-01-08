@@ -1,7 +1,6 @@
 import React from 'react';
 import { makeStyles } from 'tss-react/mui';
 import PageHeader from 'components/PageHeader';
-import config from 'config';
 import FooterNavBar from 'components/FooterNavBar';
 
 const useStyles = makeStyles()(() => ({
@@ -25,11 +24,7 @@ function Terms() {
   const { classes } = useStyles();
   return (
     <div className={classes.terms}>
-      <PageHeader
-        title="Terms"
-        back
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
+      <PageHeader title="Terms" back />
       <div className={classes.body}>
         <div>Disclaimer:</div>
 
@@ -74,7 +69,7 @@ function Terms() {
           third-party activities.
         </div>
       </div>
-      {config.ui.showHamburgerMenu ? null : <FooterNavBar />}
+      <FooterNavBar />
     </div>
   );
 }

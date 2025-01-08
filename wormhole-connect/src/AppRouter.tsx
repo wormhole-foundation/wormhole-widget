@@ -30,7 +30,7 @@ const useStyles = makeStyles()((theme: any) => ({
     width: '100%',
     display: 'flex',
     justifyContent: 'center',
-    padding: '16px',
+    padding: '4px',
     fontFamily: theme.palette.font.primary,
     [theme.breakpoints.down('sm')]: {
       margin: '0 auto',

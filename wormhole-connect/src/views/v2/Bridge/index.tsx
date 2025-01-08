@@ -77,13 +77,6 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     width: '100%',
   },
-  poweredBy: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    marginTop: '24px',
-  },
   reviewTransaction: {
     padding: '8px 16px',
     borderRadius: '8px',
@@ -288,13 +281,7 @@ const Bridge = () => {
       headerConfig = { ...defaults, ...config.ui.pageHeader };
     }
 
-    return (
-      <PageHeader
-        title={headerConfig.text}
-        align={headerConfig.align}
-        showHamburgerMenu={config.ui.showHamburgerMenu}
-      />
-    );
+    return <PageHeader title={headerConfig.text} align={headerConfig.align} />;
   }, [config.ui]);
 
   // Asset picker for the source network and token
@@ -507,10 +494,8 @@ const Bridge = () => {
           walletConnector
         )}
       </span>
-      {config.ui.showHamburgerMenu ? null : <FooterNavBar />}
-      <div className={classes.poweredBy}>
-        <PoweredByIcon color={theme.palette.text.primary} />
-      </div>
+      <PoweredByIcon color={theme.palette.text.primary} />
+      <FooterNavBar />
     </div>
   );
 };
