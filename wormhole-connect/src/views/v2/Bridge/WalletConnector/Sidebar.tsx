@@ -12,6 +12,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -23,6 +24,9 @@ import { TransferWallet, WalletData, connectWallet } from 'utils/wallet';
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import WalletIcon from 'icons/WalletIcons';
+import { validateWalletAddress } from 'utils/address';
+import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
+import { SANCTIONED_WALLETS } from 'consts/wallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -49,12 +53,23 @@ const useStyles = makeStyles()((theme) => ({
       display: 'block',
     },
   },
+  addressInputContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    width: '100%',
+    padding: '16px',
+  },
+  submitButton: {
+    width: '100%',
+  },
 }));
 
 type Props = {
   type: TransferWallet;
   open: boolean;
   onClose?: () => any;
+  showAddressInput?: boolean;
 };
 
 // Renders the sidebar on the right-side to display the list of available wallets
@@ -68,6 +83,8 @@ const WalletSidebar = (props: Props) => {
   );
 
   const [search, setSearch] = useState('');
+  const [address, setAddress] = useState('');
+  const [addressError, setAddressError] = useState('');
 
   const supportedChains = useMemo(() => {
     const networkContext = config.chainsArr.map((chain) => chain.context);
@@ -95,6 +112,45 @@ const WalletSidebar = (props: Props) => {
     },
     [selectedChain, props, dispatch],
   );
+
+  const submitAddress = useCallback(async () => {
+    if (!selectedChain || !address) return;
+
+    const chainConfig = config.chains[selectedChain];
+    if (!chainConfig) return;
+
+    const nativeAddress = await validateWalletAddress(selectedChain, address);
+    if (!nativeAddress) {
+      setAddressError('Invalid Address');
+      return;
+    }
+
+    for (const sanctioned of SANCTIONED_WALLETS) {
+      if (nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()) {
+        setAddressError('Sanctioned Address');
+        return;
+      }
+    }
+
+    const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
+
+    const walletInfo: WalletData = {
+      name: wallet.getName(),
+      type: chainConfig.context,
+      icon: wallet.getIcon(),
+      isReady: true,
+      wallet,
+    };
+
+    await connectWallet(
+      TransferWallet.RECEIVING,
+      selectedChain,
+      walletInfo,
+      dispatch,
+    );
+
+    props.onClose?.();
+  }, [address, selectedChain, props.onClose]);
 
   const renderWalletOptions = useCallback(
     (wallets: WalletData[]): JSX.Element => {
@@ -156,7 +212,9 @@ const WalletSidebar = (props: Props) => {
               <ListItem>
                 <div className={classes.title}>
                   <Typography component={'div'} fontSize={16}>
-                    Connect a wallet
+                    {props.type === TransferWallet.RECEIVING
+                      ? 'Select destination wallet'
+                      : 'Connect a wallet'}
                   </Typography>
                   <div className={classes.smOnly}>
                     <IconButton onClick={props.onClose} sx={{ padding: 0 }}>
@@ -183,6 +241,32 @@ const WalletSidebar = (props: Props) => {
                 />
               </ListItem>
               {renderWalletOptions(walletOptionsResult.options)}
+              {props.showAddressInput && !search && (
+                <ListItem className={classes.addressInputContainer}>
+                  <TextField
+                    fullWidth
+                    placeholder="Send to wallet address"
+                    size="small"
+                    variant="outlined"
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setAddressError('');
+                    }}
+                    error={!!addressError}
+                    helperText={addressError}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={submitAddress}
+                    disabled={!address}
+                    className={classes.submitButton}
+                  >
+                    Submit
+                  </Button>
+                </ListItem>
+              )}
             </List>
           )
         );
@@ -198,7 +282,12 @@ const WalletSidebar = (props: Props) => {
     classes.smOnly,
     search,
     props.onClose,
+    props.type,
+    props.showAddressInput,
     renderWalletOptions,
+    address,
+    addressError,
+    submitAddress,
   ]);
 
   return (

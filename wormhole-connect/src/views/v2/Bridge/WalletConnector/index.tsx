@@ -46,7 +46,7 @@ type Props = {
 };
 
 // Parent component to display Connect Wallet CTA
-// and the sidebar for the lsit of available wallets.
+// and the sidebar for the list of available wallets.
 const WalletConnector = (props: Props) => {
   const { disabled = false, type } = props;
 
@@ -100,7 +100,13 @@ const WalletConnector = (props: Props) => {
           onClick={() => connectWallet()}
         >
           <Typography textTransform="none">
-            {mobile ? 'Connect' : `Connect ${props.side} wallet`}
+            {mobile
+              ? props.side === 'source'
+                ? 'Connect'
+                : 'Select wallet'
+              : `${props.side === 'source' ? 'Connect' : 'Select'} ${
+                  props.side
+                } wallet`}
           </Typography>
         </Button>
       </span>
@@ -122,6 +128,7 @@ const WalletConnector = (props: Props) => {
             onClose={() => {
               setIsOpen(false);
             }}
+            showAddressInput={props.type === TransferWallet.RECEIVING}
           />
         </>
       );

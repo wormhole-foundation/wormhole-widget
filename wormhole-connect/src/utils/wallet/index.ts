@@ -5,9 +5,9 @@ import {
   WalletState,
 } from '@xlabs-libs/wallet-aggregator-core';
 import {
-  connectReceivingWallet,
   connectWallet as connectSourceWallet,
   clearWallet,
+  connectReceivingWallet,
 } from 'store/wallet';
 
 import config from 'config';
@@ -33,6 +33,7 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
+import { ReadOnlyWallet } from './ReadOnlyWallet';
 
 export enum TransferWallet {
   SENDING = 'sending',
@@ -98,10 +99,15 @@ export const connectWallet = async (
     dispatch(connectReceivingWallet(payload));
   }
 
-  // clear wallet when the user manually disconnects from outside the app
+  // Clear wallet when the user manually disconnects from outside the app
   wallet.on('disconnect', () => {
     wallet.removeAllListeners();
-    dispatch(clearWallet(type));
+    // Use setTimeout to defer the dispatch call to the next event loop tick.
+    // This ensures that the dispatch does not occur while a reducer is executing,
+    // preventing the "You may not call store.getState() while the reducer is executing" error.
+    setTimeout(() => {
+      dispatch(clearWallet(type));
+    }, 0);
     localStorage.removeItem(`wormhole-connect:wallet:${context}`);
   });
 
@@ -117,7 +123,9 @@ export const connectWallet = async (
     }
   });
 
-  localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+  if (name !== ReadOnlyWallet.NAME) {
+    localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
+  }
 };
 
 // Checks localStorage for previously used wallet for this chain
@@ -131,6 +139,7 @@ export const connectLastUsedWallet = async (
   const lastUsedWallet = localStorage.getItem(
     `wormhole-connect:wallet:${chainConfig.context}`,
   );
+
   // if the last used wallet is not WalletConnect, try to connect to it
   if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
     const options = await getWalletOptions(chainConfig);
