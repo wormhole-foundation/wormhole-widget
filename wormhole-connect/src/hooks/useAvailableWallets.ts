@@ -67,7 +67,7 @@ export const useAvailableWallets = (props: Props): ReturnProps => {
     return () => {
       cancelled = true;
     };
-  }, [chain, supportedChains]);
+  }, [chain, supportedChains, getWalletOptions]);
 
   return {
     walletOptionsResult,
