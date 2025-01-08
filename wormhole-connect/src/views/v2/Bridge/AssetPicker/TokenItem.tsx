@@ -15,7 +15,7 @@ import TokenIcon from 'icons/TokenIcons';
 import { TokenConfig } from 'config/types';
 
 import type { Chain } from '@wormhole-foundation/sdk';
-import { getDisplayName, getExplorerUrl, getWrappedToken } from 'utils';
+import { getDisplayName, getTokenExplorerUrl, getWrappedToken } from 'utils';
 import { getTokenBridgeWrappedTokenAddressSync } from 'utils/sdkv2';
 
 const useStyles = makeStyles()((theme) => ({
@@ -65,7 +65,7 @@ function TokenItem(props: TokenItemProps) {
           getWrappedToken(token),
           chain,
         )?.toString();
-  const explorerURL = address ? getExplorerUrl(chain, address) : undefined;
+  const explorerURL = address ? getTokenExplorerUrl(chain, address) : undefined;
   const addressDisplay = `${address?.slice(0, 4)}...${address?.slice(-4)}`;
 
   const displayName = getDisplayName(token, chain);
