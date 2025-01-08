@@ -28,14 +28,15 @@ import {
 
 import type { RootState } from 'store';
 import type { RelayerFee } from 'store/relay';
+import type { QuoteResult } from 'routes/operator';
 
 type Props = {
-  quotes: any;
+  quotes: Record<string, QuoteResult | undefined>;
 };
 
 type ReturnProps = {
   error: string | undefined;
-  errorInternal: any | undefined;
+  errorInternal: unknown | undefined;
   send: () => void;
 };
 
@@ -43,7 +44,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
   const dispatch = useDispatch();
 
   const [error, setError] = useState<string | undefined>(undefined);
-  const [errorInternal, setErrorInternal] = useState<any | undefined>(
+  const [errorInternal, setErrorInternal] = useState<unknown | undefined>(
     undefined,
   );
 
@@ -124,7 +125,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
           setError(error ?? 'Transfer validation failed');
           return;
         }
-      } catch (e) {
+      } catch (e: unknown) {
         setError('Error validating transfer');
         setErrorInternal(e);
         console.error(e);
@@ -137,7 +138,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
     const sourceTokenConfig = config.tokens[sourceToken];
 
     try {
-      const fromConfig = config.chains[sourceChain!];
+      const fromConfig = config.chains[sourceChain];
 
       if (fromConfig && fromConfig?.context === Context.ETH) {
         const chainId = fromConfig.chainId;
@@ -199,6 +200,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
       }
 
       const txTimestamp = Date.now();
+
       const txDetails = {
         sendTx: txId,
         sender: sendingWallet.address,
@@ -206,7 +208,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
         recipient: receivingWallet.address,
         toChain: receipt.to,
         fromChain: receipt.from,
-        tokenAddress: getWrappedToken(sourceTokenConfig).tokenId!.address,
+        tokenAddress: getWrappedToken(sourceTokenConfig).tokenId?.address ?? '',
         tokenKey: sourceTokenConfig.key,
         tokenDecimals: getTokenDecimals(
           sourceChain,
@@ -248,7 +250,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
       dispatch(setRedeemRoute(route));
       dispatch(setAppRoute('redeem'));
       setError(undefined);
-    } catch (e: any) {
+    } catch (e: unknown) {
       const [uiError, transferError] = interpretTransferError(
         e,
         transferDetails,
