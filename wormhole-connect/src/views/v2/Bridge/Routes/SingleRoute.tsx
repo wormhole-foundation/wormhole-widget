@@ -31,7 +31,7 @@ import type { RootState } from 'store';
 import { TokenConfig } from 'config/types';
 import FastestRoute from 'icons/FastestRoute';
 import CheapestRoute from 'icons/CheapestRoute';
-import GasSlider from 'views/v2/Bridge/ReviewTransaction/GasSlider';
+import GasSlider from 'views/v2/Bridge/GasSlider';
 
 const HIGH_FEE_THRESHOLD = 20; // dollhairs
 

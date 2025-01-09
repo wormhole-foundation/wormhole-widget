@@ -36,15 +36,18 @@ type Props = {
 
 type ReturnProps = {
   error: string | undefined;
-  errorInternal: unknown | undefined;
-  send: () => void;
+  // errorInternal can be a result of custom validation, hence of any type.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errorInternal: any | undefined;
+  onConfirm: () => void;
 };
 
 const useSendTransaction = (props: Props): ReturnProps => {
   const dispatch = useDispatch();
 
   const [error, setError] = useState<string | undefined>(undefined);
-  const [errorInternal, setErrorInternal] = useState<unknown | undefined>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [errorInternal, setErrorInternal] = useState<any | undefined>(
     undefined,
   );
 
@@ -74,8 +77,11 @@ const useSendTransaction = (props: Props): ReturnProps => {
 
   const getUSDAmount = useUSDamountGetter();
 
-  const send = async () => {
-    setError(undefined);
+  const onConfirm = async () => {
+    // Clear previous errors
+    if (error) {
+      setError(undefined);
+    }
 
     if (config.ui.previewMode) {
       setError('Connect is in preview mode');
@@ -95,11 +101,11 @@ const useSendTransaction = (props: Props): ReturnProps => {
       return;
     }
 
+    // Validate all inputs
+    // The results of this check will be written back to Redux store (see transferInput.validations).
     await validate({ transferInput, relay, wallet }, dispatch, () => false);
 
-    const valid = isTransferValid(validations);
-
-    if (!valid || !route) {
+    if (!isTransferValid(validations)) {
       return;
     }
 
@@ -279,7 +285,7 @@ const useSendTransaction = (props: Props): ReturnProps => {
   };
 
   return {
-    send,
+    onConfirm,
     error,
     errorInternal,
   };

@@ -100,14 +100,14 @@ const GasSlider = (props: {
   const destChainConfig = config.chains[destChain!];
   const nativeGasTokenConfig = config.tokens[destChainConfig!.gasToken];
 
-  const [isGasSliderOpen, setIsGasSliderOpen] = useState(!props.disabled);
+  const [isGasSliderOpen, setIsGasSliderOpen] = useState(false);
   const [percentage, setPercentage] = useState(0);
 
   const [debouncedPercentage] = useDebounce(percentage, 500);
 
   useEffect(() => {
     dispatch(setToNativeToken(debouncedPercentage / 100));
-  }, [debouncedPercentage]);
+  }, [debouncedPercentage, dispatch]);
 
   const nativeGasPrice = useMemo(() => {
     if (!destChain) {
@@ -151,6 +151,7 @@ const GasSlider = (props: {
           <Typography>{`Need more gas on ${destChain}?`}</Typography>
           <StyledSwitch
             checked={isGasSliderOpen}
+            disabled={props.disabled}
             onClick={(e: any) => {
               const { checked } = e.target;
 
@@ -172,6 +173,7 @@ const GasSlider = (props: {
               <StyledSlider
                 aria-label="Native gas conversion amount"
                 defaultValue={0}
+                disabled={props.disabled}
                 value={percentage}
                 baseColor={theme.palette.primary.main}
                 railColor={theme.palette.background.default}
