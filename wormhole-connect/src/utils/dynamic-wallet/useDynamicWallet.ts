@@ -87,8 +87,7 @@ export const useDynamicWalletOptions = () => {
         return await connectCallback(connectedWallet);
       }
 
-      console.log('Selecting wallet option', walletId);
-      await selectWalletOption(walletId);
+      await selectWalletOption(walletId, false);
     },
     [sdkHasLoaded, primaryWallet, selectWalletOption],
   );
