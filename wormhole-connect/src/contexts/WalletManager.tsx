@@ -30,19 +30,9 @@ import {
 import { getWalletOptions as getWalletAgreggatorOptions } from 'utils/wallet/legacy/index';
 import { ChainConfig } from 'sdklegacy';
 import config from 'config';
-import { validateWalletAddress } from 'utils/address';
-import { SANCTIONED_WALLETS } from 'consts/wallet';
-import {
-  isReadOnlyWallet,
-  ReadOnlyWallet,
-  ReadOnlyWalletData,
-} from 'utils/wallet/ReadOnlyWallet';
+import { isReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 interface WalletManagerProps {
-  submitAddress: (
-    selectedChain: WormholeChain,
-    address: string,
-  ) => Promise<void>;
   connectWallet: (type: TransferWallet) => any;
   getConnectedWallet: (type: TransferWallet) => ConnectedWallet | undefined;
   switchChain: (chainId: number, type: TransferWallet) => Promise<void>;
@@ -61,8 +51,6 @@ interface ConnectedWallets {
 }
 
 const WALLET_MANAGER_INITIAL_STATE: WalletManagerProps = {
-  submitAddress: (selectedChain: WormholeChain, address: string) =>
-    Promise.resolve(),
   connectWallet: (type: TransferWallet) => {},
   getConnectedWallet: (type: TransferWallet) => undefined,
   switchChain: (chainId: number, type: TransferWallet) => Promise.resolve(),
@@ -215,45 +203,6 @@ const InternalWMComponent: React.FC<
     [setWalletSidebarProps],
   );
 
-  // TODO: Refactor this code
-  // We should move this code to the ReadonlyWallet file and call the function connectWallet
-  const submitAddress = React.useCallback(
-    async (selectedChain: WormholeChain, address: string) => {
-      const chainConfig = config.chains[selectedChain];
-      if (!chainConfig) return;
-
-      const nativeAddress = await validateWalletAddress(selectedChain, address);
-      if (!nativeAddress) {
-        throw new Error('Invalid Address');
-      }
-
-      for (const sanctioned of SANCTIONED_WALLETS) {
-        if (
-          nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()
-        ) {
-          throw new Error('Sanctioned Address');
-        }
-      }
-
-      const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
-
-      const walletInfo: ReadOnlyWalletData = {
-        name: wallet.getName(),
-        type: chainConfig.context,
-        icon: '',
-        isReady: true,
-        wallet,
-      };
-
-      await sidebarOnConnectWallet(
-        walletInfo,
-        TransferWallet.RECEIVING,
-        selectedChain,
-      );
-    },
-    [],
-  );
-
   const switchChain = React.useCallback(
     async (chainId: number, type: TransferWallet) => {
       await walletConnection[type]?.switchChain?.(chainId);
@@ -270,7 +219,6 @@ const InternalWMComponent: React.FC<
 
   const walletManager = React.useMemo(
     () => ({
-      submitAddress,
       connectWallet,
       getConnectedWallet,
       switchChain,
@@ -280,7 +228,6 @@ const InternalWMComponent: React.FC<
       disconnectWallet,
     }),
     [
-      submitAddress,
       connectWallet,
       getConnectedWallet,
       switchChain,

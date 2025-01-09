@@ -24,7 +24,9 @@ import { Chain } from '@wormhole-foundation/sdk';
 
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
-import { useWalletManager } from 'contexts/WalletManager';
+import { validateWalletAddress } from 'utils/address';
+import { SANCTIONED_WALLETS } from 'consts/wallet';
+import { ReadOnlyWallet, ReadOnlyWalletData } from 'utils/wallet/ReadOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -103,8 +105,6 @@ const WalletSidebar = (props: Props) => {
     supportedChains,
   });
 
-  const { submitAddress: connectReadonlyWallet } = useWalletManager();
-
   const connect = useCallback(
     async (walletInfo: WalletData) => {
       if (!selectedChain) {
@@ -119,15 +119,35 @@ const WalletSidebar = (props: Props) => {
 
   const submitAddress = useCallback(async () => {
     if (!selectedChain || !address) return;
-    try {
-      await connectReadonlyWallet(selectedChain, address);
-    } catch (error) {
-      if (error instanceof Error) {
-        setAddressError(error.message);
-      }
-      console.error(error);
-      return;
+
+    const chainConfig = config.chains[selectedChain];
+    if (!chainConfig) return;
+
+    const nativeAddress = await validateWalletAddress(selectedChain, address);
+    if (!nativeAddress) {
+      throw new Error('Invalid Address');
     }
+
+    for (const sanctioned of SANCTIONED_WALLETS) {
+      if (
+        nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()
+      ) {
+        throw new Error('Sanctioned Address');
+      }
+    }
+
+    // TODO: Move this code to ReadOnlyWallet file
+    const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
+
+    const walletInfo: ReadOnlyWalletData = {
+      name: wallet.getName(),
+      type: chainConfig.context,
+      icon: '',
+      isReady: true,
+      wallet,
+    };
+
+    await props.onConnectWallet(walletInfo, props.type, selectedChain)
     props.onClose?.();
   }, [address, selectedChain, props.onClose]);
 
@@ -262,10 +282,10 @@ const WalletSidebar = (props: Props) => {
     props.onClose,
     props.type,
     props.showAddressInput,
+    props.onConnectWallet,
     renderWalletOptions,
     address,
     addressError,
-    connectReadonlyWallet,
   ]);
 
   return (
