@@ -90,9 +90,12 @@ const switchChain = async (wallet: DynamicWallet, chainId: number) => {
 export const toConnectedWallet = async (
   wallet: DynamicWallet,
   type: TransferWallet,
-  chain: any,
+  chain: WormholeChain,
   dispatch: Dispatch,
 ): Promise<ConnectedWallet> => {
+  if (wallet.chain !== toDynamicChain(chain)) {
+    throw new Error(`Expected wallet with chain ${toDynamicChain(chain)}. Received: ${wallet.chain}`);
+  }
   await connectDynamicWallet(type, chain, wallet, dispatch);
   const address = wallet.address;
   const icon = (props) =>
