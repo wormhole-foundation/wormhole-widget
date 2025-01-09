@@ -25,6 +25,7 @@ import {
   millisToHumanString,
   formatDuration,
 } from 'utils';
+import { joinClass } from 'utils/style';
 
 import type { RouteData } from 'config/routes';
 import type { RootState } from 'store';
@@ -35,56 +36,65 @@ import GasSlider from 'views/v2/Bridge/GasSlider';
 
 const HIGH_FEE_THRESHOLD = 20; // dollhairs
 
-const useStyles = makeStyles()((theme: any) => ({
-  container: {
-    width: '100%',
-    maxWidth: '420px',
-    marginBottom: '8px',
-  },
-  card: {
-    borderRadius: '8px',
-    width: '100%',
-    maxWidth: '420px',
-  },
-  cardHeader: {
-    padding: '20px 20px 0px',
-  },
-  cardContent: {
-    marginTop: '18px',
-    padding: '0px 20px 20px',
-  },
-  errorIcon: {
-    color: theme.palette.error.main,
-    height: '34px',
-    width: '34px',
-    marginRight: '24px',
-  },
-  fastestBadge: {
-    width: '14px',
-    height: '14px',
-    position: 'relative',
-    top: '2px',
-    marginRight: '4px',
-    fill: theme.palette.primary.main,
-  },
-  cheapestBadge: {
-    width: '12px',
-    height: '12px',
-    position: 'relative',
-    top: '1px',
-    marginRight: '3px',
-    fill: theme.palette.primary.main,
-  },
-  messageContainer: {
-    padding: '12px 0px 0px',
-  },
-  warningIcon: {
-    color: theme.palette.warning.main,
-    height: '34px',
-    width: '34px',
-    marginRight: '12px',
-  },
-}));
+const useStyles = makeStyles<{ isSelected: boolean }>()(
+  (theme: any, { isSelected }) => ({
+    container: {
+      width: '100%',
+      maxWidth: '420px',
+      marginBottom: '8px',
+    },
+    card: {
+      border: '1px solid',
+      borderColor: isSelected ? theme.palette.primary.main : 'transparent',
+      borderRadius: '8px',
+      width: '100%',
+      maxWidth: '420px',
+    },
+    cardHeader: {
+      padding: '20px 20px 0px',
+    },
+    cardContent: {
+      marginTop: '18px',
+      padding: '0px 20px 20px',
+    },
+    disabled: {
+      opacity: '0.6',
+      cursor: 'default',
+      clickEvent: 'none',
+    },
+    errorIcon: {
+      color: theme.palette.error.main,
+      height: '34px',
+      width: '34px',
+      marginRight: '24px',
+    },
+    fastestBadge: {
+      width: '14px',
+      height: '14px',
+      position: 'relative',
+      top: '2px',
+      marginRight: '4px',
+      fill: theme.palette.primary.main,
+    },
+    cheapestBadge: {
+      width: '12px',
+      height: '12px',
+      position: 'relative',
+      top: '1px',
+      marginRight: '3px',
+      fill: theme.palette.primary.main,
+    },
+    messageContainer: {
+      padding: '12px 0px 0px',
+    },
+    warningIcon: {
+      color: theme.palette.warning.main,
+      height: '34px',
+      width: '34px',
+      marginRight: '12px',
+    },
+  }),
+);
 
 type Props = {
   route: RouteData;
@@ -99,7 +109,6 @@ type Props = {
 };
 
 const SingleRoute = (props: Props) => {
-  const { classes } = useStyles();
   const theme = useTheme();
   const routeConfig = config.routes.get(props.route.name);
 
@@ -115,9 +124,11 @@ const SingleRoute = (props: Props) => {
     (state: RootState) => state.tokenPrices,
   );
 
+  const { quote, isSelected } = props;
   const { name } = props.route;
-  const { quote } = props;
   const receiveNativeAmount = quote?.destinationNativeGas;
+
+  const { classes } = useStyles({ isSelected });
 
   const destTokenConfig = useMemo(
     () => config.tokens[destToken] as TokenConfig | undefined,
@@ -566,7 +577,7 @@ const SingleRoute = (props: Props) => {
   // 1- If no action handler provided, fall back to default
   // 2- Otherwise there is an action handler, "pointer"
   const cursor = useMemo(() => {
-    if (props.isSelected || typeof props.onSelect !== 'function') {
+    if (isSelected || typeof props.onSelect !== 'function') {
       return 'default';
     }
 
@@ -575,7 +586,7 @@ const SingleRoute = (props: Props) => {
     }
 
     return 'pointer';
-  }, [props.error, props.isSelected, props.onSelect]);
+  }, [props.error, isSelected, props.onSelect]);
 
   const routeCardBadge = useMemo(() => {
     if (props.isFastest) {
@@ -609,18 +620,16 @@ const SingleRoute = (props: Props) => {
   return (
     <div key={name} className={classes.container}>
       <Card
-        className={classes.card}
-        sx={{
-          border: '1px solid',
-          borderColor: props.isSelected
-            ? theme.palette.primary.main
-            : 'transparent',
-          opacity: 1,
-        }}
+        className={joinClass([
+          classes.card,
+          isTransactionInProgress && classes.disabled,
+        ])}
       >
         <CardActionArea
           disabled={
-            typeof props.onSelect !== 'function' || props.error !== undefined
+            isTransactionInProgress ||
+            typeof props.onSelect !== 'function' ||
+            props.error !== undefined
           }
           disableTouchRipple
           sx={{ cursor }}

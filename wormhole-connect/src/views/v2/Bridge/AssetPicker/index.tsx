@@ -22,6 +22,7 @@ import ChainList from './ChainList';
 import TokenList from './TokenList';
 import { Chain } from '@wormhole-foundation/sdk';
 import AssetBadge from 'components/AssetBadge';
+import { joinClass } from 'utils/style';
 
 const useStyles = makeStyles()((theme: any) => ({
   card: {
@@ -46,8 +47,8 @@ const useStyles = makeStyles()((theme: any) => ({
     justifyContent: 'space-between',
   },
   disabled: {
-    opacity: '0.4',
-    cursor: 'not-allowed',
+    opacity: '0.6',
+    cursor: 'default',
     clickEvent: 'none',
   },
   popover: {
@@ -70,6 +71,7 @@ type Props = {
   setChain: (value: Chain) => void;
   wallet: WalletData;
   isSource: boolean;
+  isTransactionInProgress: boolean;
 };
 
 const AssetPicker = (props: Props) => {
@@ -138,12 +140,19 @@ const AssetPicker = (props: Props) => {
     );
   }, [chainConfig, tokenConfig]);
 
+  const triggerProps = props.isTransactionInProgress
+    ? {}
+    : bindTrigger(popupState);
+
   return (
     <>
       <Card
-        className={classes.card}
+        className={joinClass([
+          classes.card,
+          props.isTransactionInProgress && classes.disabled,
+        ])}
         variant="elevation"
-        {...bindTrigger(popupState)}
+        {...triggerProps}
       >
         <CardContent className={classes.cardContent}>
           <Typography
