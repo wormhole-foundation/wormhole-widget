@@ -2,7 +2,7 @@ import {
   Chain as WormholeChain,
   chainToChainId,
   NativeAddress,
-  ChainId,
+  ChainId as WormholeChainId,
 } from '@wormhole-foundation/sdk';
 import { TransferWallet } from '.';
 import {
@@ -12,7 +12,7 @@ import {
 import { Dispatch } from '@reduxjs/toolkit';
 import { ConnectedWallet } from './wallet';
 import React from 'react';
-import { Context } from 'sdklegacy';
+import { ChainConfig, Context } from 'sdklegacy';
 import config from 'config';
 import EventEmitter from 'eventemitter3';
 
@@ -40,10 +40,6 @@ export class ReadOnlyWallet extends EventEmitter {
     return ReadOnlyWallet.NAME;
   }
 
-  getUrl(): string {
-    return '';
-  }
-
   async connect(): Promise<string[]> {
     this._isConnected = true;
     return [this._address.toString()];
@@ -53,13 +49,8 @@ export class ReadOnlyWallet extends EventEmitter {
     this._isConnected = false;
   }
 
-  getChainId(): ChainId {
-    // TODO: wallet aggregator should use SDK ChainId type
-    return chainToChainId(this._chain) as ChainId;
-  }
-
-  getNetworkInfo() {
-    throw new Error('Method not implemented.');
+  getChainId(): WormholeChainId {
+    return chainToChainId(this._chain);
   }
 
   getAddress(): string {
@@ -70,42 +61,29 @@ export class ReadOnlyWallet extends EventEmitter {
     return [this.getAddress()];
   }
 
-  setMainAddress(address: string): void {
-    // No-op: can't change address for read-only wallet
-  }
-
-  async getBalance(): Promise<string> {
-    // Could implement this to fetch balance from RPC if needed
-    throw new Error('Address only wallet cannot fetch balance');
-  }
-
   isConnected(): boolean {
     return this._isConnected;
   }
 
-  async signTransaction(tx: any): Promise<any> {
-    throw new Error('Address only wallet cannot sign transactions');
-  }
-
-  async sendTransaction(tx: any): Promise<any> {
-    throw new Error('Address only wallet cannot send transactions');
-  }
-
-  async signMessage(msg: any): Promise<any> {
-    throw new Error('Address only wallet cannot sign messages');
-  }
-
-  async signAndSendTransaction(tx: any): Promise<any> {
-    throw new Error('Address only wallet cannot sign or send transactions');
-  }
-
-  getFeatures(): string[] {
-    return [];
-  }
-
-  supportsChain(chainId: ChainId): boolean {
+  supportsChain(chainId: WormholeChainId): boolean {
     return this.getChainId() === chainId;
   }
+}
+
+export function createReadOnlyWalletData(
+  address: NativeAddress<WormholeChain>,
+  chain: WormholeChain,
+  chainConfig: ChainConfig
+): ReadOnlyWalletData {
+  const wallet = new ReadOnlyWallet(address, chain);
+
+  return {
+    name: wallet.getName(),
+    type: chainConfig.context,
+    icon: '',
+    isReady: true,
+    wallet,
+  };
 }
 
 export function isReadOnlyWallet(wallet: any): wallet is ReadOnlyWalletData {

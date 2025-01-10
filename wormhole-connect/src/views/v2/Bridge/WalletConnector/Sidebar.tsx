@@ -26,7 +26,7 @@ import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
 import { validateWalletAddress } from 'utils/address';
 import { SANCTIONED_WALLETS } from 'consts/wallet';
-import { ReadOnlyWallet, ReadOnlyWalletData } from 'utils/wallet/ReadOnlyWallet';
+import { createReadOnlyWalletData } from 'utils/wallet/ReadOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -136,16 +136,7 @@ const WalletSidebar = (props: Props) => {
       }
     }
 
-    // TODO: Move this code to ReadOnlyWallet file
-    const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
-
-    const walletInfo: ReadOnlyWalletData = {
-      name: wallet.getName(),
-      type: chainConfig.context,
-      icon: '',
-      isReady: true,
-      wallet,
-    };
+    const walletInfo = createReadOnlyWalletData(nativeAddress, selectedChain, chainConfig)
 
     await props.onConnectWallet(walletInfo, props.type, selectedChain)
     props.onClose?.();
