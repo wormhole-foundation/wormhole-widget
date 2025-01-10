@@ -3,11 +3,9 @@ export const evmWalletOptions = [
   'metamask',
   'rabby',
   'okxwallet',
-  // "okxwalletevm",
   'walletconnect',
   'binance',
   'coinbase',
-  // "coinbaseevm",
   'phantomevm',
   'backpackevm',
   'trust',
@@ -18,6 +16,5 @@ export const evmWalletOptions = [
   'exodusevm',
   'imtoken',
   'bitgetwallet',
-  // "bitgetwalletevm",
   'uniswap',
 ];
