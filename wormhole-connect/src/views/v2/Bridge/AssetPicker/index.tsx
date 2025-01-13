@@ -49,7 +49,7 @@ const useStyles = makeStyles()((theme: any) => ({
   disabled: {
     opacity: '0.6',
     cursor: 'default',
-    clickEvent: 'none',
+    pointerEvents: 'none',
   },
   popover: {
     marginTop: '4px',

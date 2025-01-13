@@ -60,7 +60,7 @@ const useStyles = makeStyles<{ isSelected: boolean }>()(
     disabled: {
       opacity: '0.6',
       cursor: 'default',
-      clickEvent: 'none',
+      pointerEvents: 'none',
     },
     errorIcon: {
       color: theme.palette.error.main,
