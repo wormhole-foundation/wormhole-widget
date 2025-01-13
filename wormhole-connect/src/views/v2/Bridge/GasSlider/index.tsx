@@ -37,6 +37,7 @@ const useStyles = makeStyles()(() => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
   },
 }));
 
@@ -49,8 +50,11 @@ const StyledSlider = styled(Slider, {
   shouldForwardProp: (prop) =>
     !['baseColor', 'railColor'].includes(prop.toString()),
 })<SliderProps>(({ baseColor, railColor, theme }) => ({
+  alignSelf: 'start',
   color: baseColor,
   height: 8,
+  left: '10px',
+  width: 'calc(100% - 20px)',
   '& .MuiSlider-rail': {
     height: '8px',
     backgroundColor: railColor,
@@ -68,7 +72,7 @@ const StyledSlider = styled(Slider, {
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   padding: '9px 12px',
-  right: `-12px`, // reposition towards right to negate switch padding
+  right: `-9px`, // reposition towards right to negate switch padding
   '& .MuiSwitch-switchBase.Mui-checked': {
     color: theme.palette.primary.main,
   },
