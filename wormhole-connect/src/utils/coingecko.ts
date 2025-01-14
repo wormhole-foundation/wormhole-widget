@@ -103,10 +103,14 @@ export const fetchTokenPrices = async (
                   try {
                     const tokenId = Wormhole.tokenId(chain as Chain, addr);
 
-                    return {
-                      tokenId,
-                      price: data[addr].usd,
-                    };
+                    if (data[addr]) {
+                      return {
+                        tokenId,
+                        price: data[addr].usd,
+                      };
+                    } else {
+                      return null;
+                    }
                   } catch (e) {
                     // Error parsing address
                     console.error(e);
