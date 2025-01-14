@@ -21,6 +21,8 @@ const NATIVE_TOKEN_IDS: Partial<Record<Chain, string>> = {
   Klaytn: 'klay-token',
   Xlayer: 'okb',
   Mantle: 'mantle',
+  Aptos: 'aptos',
+  Sui: 'sui',
 };
 
 const CHAIN_IDS: Partial<Record<Chain, string>> = {
