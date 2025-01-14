@@ -100,7 +100,7 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
     }
   };
 
-  const tokenPricesToFetch: Set<Token> = new Set();
+  const tokenPricesToFetch: Set<TokenId> = new Set();
 
   const updateTokenPrices = useDebouncedCallback(async () => {
     if (tokenPricesToFetch.size === 0) return;
@@ -137,11 +137,14 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
   }, 250);
 
   const getTokenPrice = (token: Token): number | undefined => {
-    const cachedPrice = tokenPrices.get(token);
+    // For wrapped tokens, we use the original token's price since they are equivalent.
+    const tokenId = token.tokenBridgeOriginalTokenId ?? token;
+    const cachedPrice = tokenPrices.get(tokenId);
+
     if (cachedPrice) {
       return cachedPrice.price;
     } else {
-      tokenPricesToFetch.add(token);
+      tokenPricesToFetch.add(tokenId);
       updateTokenPrices();
       return undefined;
     }

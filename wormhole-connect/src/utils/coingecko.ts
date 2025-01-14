@@ -1,6 +1,6 @@
 import { Chain, isNative, TokenId, Wormhole } from '@wormhole-foundation/sdk';
 import config from 'config';
-import { Token, TokenMapping } from 'config/tokens';
+import { TokenMapping } from 'config/tokens';
 
 const COINGECKO_URL = 'https://api.coingecko.com/';
 const COINGECKO_URL_PRO = 'https://pro-api.coingecko.com/';
@@ -62,12 +62,12 @@ export const fetchTokenMetadata = async (
 };
 
 export const fetchTokenPrices = async (
-  tokens: Token[],
+  tokens: TokenId[],
   params?: CoingeckoParams,
 ): Promise<TokenMapping<number>> => {
   const chainsAndAddresses = {};
   // For native tokens like SOL, ETH, BNB, we use a different endpoint since these don't have a token address :)
-  const nativeTokens: Token[] = [];
+  const nativeTokens: TokenId[] = [];
 
   for (const token of tokens) {
     if (isNative(token.address)) {
@@ -141,9 +141,8 @@ export const fetchTokenPrices = async (
           .then((data) =>
             resolve(
               nativeTokens
-                .map((token) => {
-                  const { tokenId } = token;
-                  const cgid = NATIVE_TOKEN_IDS[token.chain];
+                .map((tokenId) => {
+                  const cgid = NATIVE_TOKEN_IDS[tokenId.chain];
                   if (cgid) {
                     const { usd } = data[cgid];
                     return {
