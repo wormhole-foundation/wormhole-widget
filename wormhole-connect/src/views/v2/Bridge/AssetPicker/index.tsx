@@ -164,7 +164,7 @@ const AssetPicker = (props: Props) => {
             component={'div'}
             gap={1}
           >
-            <AssetBadge chainConfig={chainConfig} token={props.sourceToken} />
+            <AssetBadge chainConfig={chainConfig} token={props.token} />
             {selection}
           </Typography>
           {popupState.isOpen ? <UpIcon /> : <DownIcon />}
