@@ -85,8 +85,9 @@ export async function getTokenMetadataEvm(
     const rpc = platform.getRpc(tokenId.chain as PlatformToChains<'Evm'>);
 
     const contract = new Contract(tokenId.address.toString(), ABI, rpc);
-    const symbol = await contract.symbol();
-    const name = await contract.name();
+    const symbolPromise = contract.symbol();
+    const namePromise = contract.name();
+    const [symbol, name] = await Promise.all([symbolPromise, namePromise]);
     return { symbol, name };
   } catch (e) {
     console.error(e);
