@@ -680,6 +680,7 @@ const Redeem = () => {
     // This will be set back to false by a hook above which looks out for isTxComplete=true
     setIsClaimInProgress(true);
     setClaimError('');
+    setUnhandledManualClaimError(undefined);
 
     if (!routeName) {
       throw new Error('Unknown route, can not claim');
