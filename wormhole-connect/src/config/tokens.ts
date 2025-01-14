@@ -11,6 +11,7 @@ import {
   isSameToken,
   Network,
   chainToPlatform,
+  UniversalAddress,
 } from '@wormhole-foundation/sdk';
 import { TokenIcon, TokenConfig, WrappedTokenAddresses } from './types';
 import { getWormholeContextV2 } from './index';
@@ -316,6 +317,16 @@ export class TokenCache extends TokenMapping<Token> {
     const tb = await chain.getTokenBridge();
     if (await tb.isWrappedAsset(tokenId.address)) {
       tokenBridgeOriginalTokenId = await tb.getOriginalAsset(tokenId.address);
+
+      if (UniversalAddress.instanceof(tokenBridgeOriginalTokenId.address)) {
+        console.log('did the thing');
+        // For move based platforms like Sui and Aptos we have to convert from UniversalAddress to NativeAddress
+        tokenBridgeOriginalTokenId.address = await wh.getTokenNativeAddress(
+          tokenBridgeOriginalTokenId.chain,
+          tokenBridgeOriginalTokenId.chain,
+          tokenBridgeOriginalTokenId.address,
+        );
+      }
 
       // For wrapped tokens, if we have an icon & symbol for its original token,
       // override the wrapped token's metadata with those to ensure they match.
