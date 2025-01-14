@@ -39,9 +39,15 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
     let active = true;
 
     const computeDestTokens = async () => {
+      let supported: Token[] = [];
+
       // Start fetching and setting all supported tokens
 
-      if (sourceChain && destChain) {
+      if (!sourceChain && destChain) {
+        // User hasn't selected a source chain yet, so we
+        // return all of the known tokens on the destination chain.
+        supported = config.tokens.getAllForChain(destChain);
+      } else if (sourceChain && destChain) {
         let supportedIds: TokenId[] = [];
         setIsFetching(true);
 
@@ -55,8 +61,6 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
           console.error(e);
         }
 
-        const supported: Token[] = [];
-
         await Promise.all(
           supportedIds.map(async (tokenId) => {
             const t = await getOrFetchToken(tokenId);
@@ -66,16 +70,18 @@ const useComputeDestinationTokens = (props: Props): ReturnProps => {
           }),
         );
 
-        setSupportedDestTokens(supported);
-
         // Done fetching and setting all supported tokens
         setIsFetching(false);
+      } else {
+        return;
+      }
 
-        // Auto-select if there's only one option
-        if (destChain && supported.length === 1) {
-          if (active) {
-            dispatch(setDestToken(supported[0].tuple));
-          }
+      setSupportedDestTokens(supported);
+
+      // Auto-select if there's only one option
+      if (destChain && supported.length === 1) {
+        if (active) {
+          dispatch(setDestToken(supported[0].tuple));
         }
       }
     };
