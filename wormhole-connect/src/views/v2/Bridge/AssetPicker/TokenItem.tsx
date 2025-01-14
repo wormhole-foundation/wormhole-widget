@@ -86,7 +86,7 @@ function TokenItem(props: TokenItemProps) {
                   token.tokenBridgeOriginalTokenId.chain,
                 )}`}
               >
-                <Box margin={0.3} marginRight={0.7}>
+                <Box margin="2px" marginRight="5px">
                   <ChainIcon
                     height={10}
                     icon={token.tokenBridgeOriginalTokenId.chain}
