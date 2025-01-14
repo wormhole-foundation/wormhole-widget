@@ -100,7 +100,7 @@ export const TESTNET_WRAPPED_TOKENS: WrappedTokenAddresses = {
     },
   },
   Sui: {
-    '0x2::sui::SUI': {
+    native: {
       Bsc: '0x5A73D76e09Af2E428EC64aE10F91B78AC990B298',
       Avalanche: '0xfc5128F8556a6F059466E67740e6cC31EE5C2C47',
       Fantom: '0xd882AB49372eC093E8697B5153f54ab5e7738e3b',
@@ -113,7 +113,7 @@ export const TESTNET_WRAPPED_TOKENS: WrappedTokenAddresses = {
     },
   },
   Aptos: {
-    '0x1::Aptos_coin::AptosCoin': {
+    native: {
       Bsc: '0x4A7Bd5E135f421057F97BbA8BCeeE5c18334f454',
       Avalanche: '0x996a3f12C1FcD7339Ea8801f629201e4d42EAD04',
       Fantom: '0xAb2297E8994149BA91737944E40891881aF762a4',

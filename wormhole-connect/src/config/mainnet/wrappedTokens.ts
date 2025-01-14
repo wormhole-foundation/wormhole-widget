@@ -413,7 +413,7 @@ export const MAINNET_WRAPPED_TOKENS = {
     },
   },
   Sui: {
-    '0x2::sui::SUI': {
+    native: {
       Ethereum: '0x84074EA631dEc7a4edcD5303d164D5dEa4c653D6',
       Bsc: '0x8314f6Bf1B4dd8604A0fC33C84F9AF2fc07AABC8',
       Polygon: '0x34bE049fEbfc6C64Ffd82Da08a8931A9a45f2cc8',
@@ -435,7 +435,7 @@ export const MAINNET_WRAPPED_TOKENS = {
     },
   },
   Aptos: {
-    '0x1::aptos_coin::AptosCoin': {
+    native: {
       Ethereum: '0x8CDf7AF57E4c8B930e1B23c477c22f076530585e',
       Bsc: '0x2Ba98cf7Edd2c5C794e21bc3Dc6973D3C2585eE3',
       Polygon: '0xa4ef199d3ad524E9C3C51Ac46B303B103A307Cef',

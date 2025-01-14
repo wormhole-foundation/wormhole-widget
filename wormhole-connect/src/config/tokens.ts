@@ -248,6 +248,21 @@ export class TokenMapping<T> {
 }
 
 export class TokenCache extends TokenMapping<Token> {
+  add(id: TokenId, token: Token) {
+    if (token.tokenBridgeOriginalTokenId) {
+      const original = this.get(token.tokenBridgeOriginalTokenId);
+      if (token.symbol === 'APT') {
+        console.log(token, original);
+      }
+      if (original) {
+        token.icon = original.icon;
+        token.name = original.name;
+        token.symbol = original.symbol;
+      }
+    }
+    super.add(id, token);
+  }
+
   // Fetches token metadata (decimals, symbol)
   getGasToken(chain: Chain): Token | undefined {
     if (chain === 'Celo') {
