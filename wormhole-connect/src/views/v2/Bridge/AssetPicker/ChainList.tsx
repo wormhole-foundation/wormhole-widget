@@ -115,7 +115,7 @@ const ChainList = (props: Props) => {
     return (
       <List component={Stack} direction="row">
         {topChains.map((chain: ChainConfig) => (
-          <Tooltip title={chain.displayName}>
+          <Tooltip key={chain.key} title={chain.displayName}>
             <ListItemButton
               key={chain.key}
               selected={selectedChainConfig?.key === chain.key}

@@ -417,6 +417,20 @@ export const MAINNET_TOKENS: TokensConfig = {
     color: '#8457EF',
     decimals: 8,
   },
+  USDCapt: {
+    key: 'USDCapt',
+    symbol: 'USDC',
+    nativeChain: 'Aptos',
+    tokenId: {
+      chain: 'Aptos',
+      address:
+        '0xbae207659db88bea0cbead6da0ed00aac12edcdda169e591cd41c94180b46f3b',
+    },
+    icon: TokenIcon.USDC,
+    coinGeckoId: 'usd-coin',
+    color: '#2774CA',
+    decimals: 6,
+  },
   ETHarbitrum: {
     key: 'ETHarbitrum',
     symbol: 'ETH',

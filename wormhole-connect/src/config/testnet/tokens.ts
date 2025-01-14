@@ -202,6 +202,20 @@ export const TESTNET_TOKENS: TokensConfig = {
     color: '#8457EF',
     decimals: 8,
   },
+  USDCapt: {
+    key: 'USDCapt',
+    symbol: 'USDC',
+    nativeChain: 'Aptos',
+    tokenId: {
+      chain: 'Aptos',
+      address:
+        '0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832',
+    },
+    icon: TokenIcon.USDC,
+    coinGeckoId: 'usd-coin',
+    color: '#2774CA',
+    decimals: 6,
+  },
   KLAY: {
     key: 'KLAY',
     symbol: 'KLAY',
