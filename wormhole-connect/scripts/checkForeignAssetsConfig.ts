@@ -66,6 +66,20 @@ const checkEnvConfig = async (
   let recommendedUpdates: TokenAddressesByChain = {};
   const wh = await wormhole(env, [evm, solana, aptos, sui]);
 
+  for (const chain of Object.keys(chainsConfig)) {
+    const context = await wh.getChain(chain as Chain);
+    console.log('checking', env);
+    if (chainToPlatform(chain as Chain) === 'Evm') {
+      console.log(`Checking ${chain}...`);
+      const provider = (await context.platform.getRpc(
+        chain as Chain,
+      )) as JsonRpcProvider;
+      provider.on('debug', (info) => console.log(info));
+      await provider.getBlockNumber();
+      console.log('✅ Connected to', chain);
+    }
+  }
+
   for (const [tokenKey, tokenConfig] of Object.entries(tokensConfig)) {
     const nativeChain = wh.getChain(tokenConfig.nativeChain);
     const nativeTb = await nativeChain.getTokenBridge();
@@ -164,16 +178,20 @@ const checkEnvConfig = async (
 };
 
 (async () => {
-  //await checkEnvConfig(
-  //  'Testnet',
-  //  TESTNET_TOKENS,
-  //  TESTNET_WRAPPED_TOKENS,
-  //  TESTNET_CHAINS,
-  //);
-  await checkEnvConfig(
-    'Mainnet',
-    MAINNET_TOKENS,
-    MAINNET_WRAPPED_TOKENS,
-    MAINNET_CHAINS,
-  );
+  try {
+    await checkEnvConfig(
+      'Testnet',
+      TESTNET_TOKENS,
+      TESTNET_WRAPPED_TOKENS,
+      TESTNET_CHAINS,
+    );
+  } catch {}
+  try {
+    await checkEnvConfig(
+      'Mainnet',
+      MAINNET_TOKENS,
+      MAINNET_WRAPPED_TOKENS,
+      MAINNET_CHAINS,
+    );
+  } catch {}
 })();
