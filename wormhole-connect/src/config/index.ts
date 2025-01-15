@@ -28,7 +28,6 @@ import solana from '@wormhole-foundation/sdk/solana';
 import aptos from '@wormhole-foundation/sdk/aptos';
 import sui from '@wormhole-foundation/sdk/sui';
 import RouteOperator from 'routes/operator';
-//import { getTokenDecimals, getWrappedToken } from 'utils';
 import { CHAIN_ORDER } from './constants';
 import { createUiConfig } from './ui';
 import { buildTokenCache } from './tokens';
