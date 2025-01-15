@@ -68,7 +68,7 @@ export const useDynamicWalletOptions = () => {
           }),
         );
     },
-    [walletOptions, selectWalletOption, sdkHasLoaded],
+    [walletOptions, sdkHasLoaded, walletAllowed],
   );
 
   const selectDynamicWalletOption = React.useCallback(
@@ -89,7 +89,7 @@ export const useDynamicWalletOptions = () => {
 
       await selectWalletOption(walletId, false);
     },
-    [sdkHasLoaded, primaryWallet, selectWalletOption],
+    [sdkHasLoaded, primaryWallet, selectWalletOption, userWallets],
   );
 
   return {
@@ -133,7 +133,7 @@ export const useDynamicWalletHelpers = () => {
       userWallets,
       handleUnlinkWallet,
       handleLogOut,
-      sdkHasLoaded,
+      switchWallet,
     ],
   );
 

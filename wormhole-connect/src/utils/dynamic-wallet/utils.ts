@@ -10,7 +10,6 @@ import { getSigner } from '@dynamic-labs/ethers-v6';
 import { Signer } from 'ethers';
 import { Context } from 'sdklegacy';
 import { ConnectedWallet } from 'utils/wallet/wallet';
-import { getChainByChainId } from 'utils';
 import config from 'config';
 import { isEVMChain, TransferWallet } from 'utils/wallet';
 import { Dispatch } from '@reduxjs/toolkit';
