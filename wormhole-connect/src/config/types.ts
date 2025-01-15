@@ -158,6 +158,13 @@ export interface InternalConfig<N extends Network> {
   ui: UiConfig;
 
   guardianSet: GuardianSetData;
+
+  // Dynamic Wallet
+  dynamicWalletConfig: DynamicWalletConfig;
+}
+
+export interface DynamicWalletConfig {
+  environmentId: string
 }
 
 export type TokenConfig = {

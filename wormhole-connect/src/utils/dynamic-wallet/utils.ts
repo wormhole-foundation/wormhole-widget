@@ -77,10 +77,9 @@ export const toDynamicChain = (wormholeChain: WormholeChain): Chain => {
 
 const switchChain = async (wallet: DynamicWallet, chainId: number) => {
   if (wallet.connector.supportsNetworkSwitching()) {
-    const config = getChainByChainId(chainId)!;
     const currentChain = await wallet.connector.getNetwork();
     if (Number(currentChain || 0) === chainId) return;
-    if (config.context === Context.ETH) {
+    if (await wallet.connector.supportsNetworkSwitching()) {
       console.log('Switching network to', chainId);
       await wallet.switchNetwork(chainId);
     }
