@@ -20,6 +20,7 @@ console.warn = function (x: any, ...rest: any) {
 
 import {
   Chain,
+  chainToPlatform,
   Network,
   toNative,
   UniversalAddress,
@@ -46,6 +47,7 @@ import evm from '@wormhole-foundation/sdk/evm';
 import solana from '@wormhole-foundation/sdk/solana';
 import aptos from '@wormhole-foundation/sdk/aptos';
 import sui from '@wormhole-foundation/sdk/sui';
+import { JsonRpcProvider } from 'ethers';
 
 const WORMCHAIN_ERROR_MESSAGES = [
   '3104 RPC not configured',
@@ -78,6 +80,13 @@ const checkEnvConfig = async (
         return (async () => {
           const chain = unTypedChain as Chain;
           const context = await wh.getChain(chain);
+          if (chainToPlatform(chain) === 'Evm') {
+            console.log(`Checking ${chain}...`);
+            const provider = (await context.platform.getRpc(
+              chain,
+            )) as JsonRpcProvider;
+            provider.on('debug', (info) => console.log(info));
+          }
           const tb = await context.getTokenBridge();
 
           const configForeignAddress = wrappedTokens[tokenKey]?.[chain];
@@ -153,12 +162,12 @@ const checkEnvConfig = async (
 };
 
 (async () => {
-  await checkEnvConfig(
-    'Testnet',
-    TESTNET_TOKENS,
-    TESTNET_WRAPPED_TOKENS,
-    TESTNET_CHAINS,
-  );
+  //await checkEnvConfig(
+  //  'Testnet',
+  //  TESTNET_TOKENS,
+  //  TESTNET_WRAPPED_TOKENS,
+  //  TESTNET_CHAINS,
+  //);
   await checkEnvConfig(
     'Mainnet',
     MAINNET_TOKENS,
