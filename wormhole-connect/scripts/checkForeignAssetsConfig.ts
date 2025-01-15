@@ -74,7 +74,7 @@ const checkEnvConfig = async (
       const provider = (await context.platform.getRpc(
         chain as Chain,
       )) as JsonRpcProvider;
-      provider.on('debug', (info) => console.log(info));
+      // provider.on('debug', (info) => console.log(info));
       await provider.getBlockNumber();
       console.log('✅ Connected to', chain);
     }

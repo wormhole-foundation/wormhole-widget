@@ -133,7 +133,7 @@ const TESTNET_CONFIG: WormholeConfig = {
     Evmos: 'https://evmos-testnet-rpc.polkachu.com',
     Kujira: 'https://kujira-testnet-rpc.polkachu.com',
     Injective: 'https://injective-testnet-rpc.polkachu.com',
-    Klaytn: 'https://rpc.ankr.com/klaytn_testnet',
+    Klaytn: 'https://rpc.ankr.com/kaia_testnet',
     Sepolia: 'https://rpc.ankr.com/eth_sepolia',
     ArbitrumSepolia: 'https://sepolia-rollup.arbitrum.io/rpc',
     BaseSepolia: 'https://base-sepolia-rpc.publicnode.com',
