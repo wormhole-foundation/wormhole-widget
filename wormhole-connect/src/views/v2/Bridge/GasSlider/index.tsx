@@ -37,6 +37,7 @@ const useStyles = makeStyles()(() => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
   },
 }));
 
@@ -49,8 +50,11 @@ const StyledSlider = styled(Slider, {
   shouldForwardProp: (prop) =>
     !['baseColor', 'railColor'].includes(prop.toString()),
 })<SliderProps>(({ baseColor, railColor, theme }) => ({
+  alignSelf: 'start',
   color: baseColor,
   height: 8,
+  left: '10px',
+  width: 'calc(100% - 20px)',
   '& .MuiSlider-rail': {
     height: '8px',
     backgroundColor: railColor,
@@ -68,7 +72,7 @@ const StyledSlider = styled(Slider, {
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   padding: '9px 12px',
-  right: `-12px`, // reposition towards right to negate switch padding
+  right: `-9px`, // reposition towards right to negate switch padding
   '& .MuiSwitch-switchBase.Mui-checked': {
     color: theme.palette.primary.main,
   },
@@ -100,14 +104,14 @@ const GasSlider = (props: {
   const destChainConfig = config.chains[destChain!];
   const nativeGasTokenConfig = config.tokens[destChainConfig!.gasToken];
 
-  const [isGasSliderOpen, setIsGasSliderOpen] = useState(!props.disabled);
+  const [isGasSliderOpen, setIsGasSliderOpen] = useState(false);
   const [percentage, setPercentage] = useState(0);
 
   const [debouncedPercentage] = useDebounce(percentage, 500);
 
   useEffect(() => {
     dispatch(setToNativeToken(debouncedPercentage / 100));
-  }, [debouncedPercentage]);
+  }, [debouncedPercentage, dispatch]);
 
   const nativeGasPrice = useMemo(() => {
     if (!destChain) {
@@ -151,6 +155,7 @@ const GasSlider = (props: {
           <Typography>{`Need more gas on ${destChain}?`}</Typography>
           <StyledSwitch
             checked={isGasSliderOpen}
+            disabled={props.disabled}
             onClick={(e: any) => {
               const { checked } = e.target;
 
@@ -172,6 +177,7 @@ const GasSlider = (props: {
               <StyledSlider
                 aria-label="Native gas conversion amount"
                 defaultValue={0}
+                disabled={props.disabled}
                 value={percentage}
                 baseColor={theme.palette.primary.main}
                 railColor={theme.palette.background.default}

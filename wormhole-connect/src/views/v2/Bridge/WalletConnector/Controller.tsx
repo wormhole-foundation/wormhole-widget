@@ -17,6 +17,7 @@ import { RootState } from 'store';
 import { disconnectWallet as disconnectFromStore } from 'store/wallet';
 import { TransferWallet } from 'utils/wallet';
 import { copyTextToClipboard, displayWalletAddress } from 'utils';
+import { joinClass } from 'utils/style';
 
 import DownIcon from 'icons/Down';
 import WalletIcons from 'icons/WalletIcons';
@@ -47,6 +48,11 @@ const useStyles = makeStyles()((theme: any) => ({
   up: {
     transform: 'scaleY(-1)',
   },
+  disabled: {
+    opacity: '0.6',
+    cursor: 'default',
+    pointerEvents: 'none',
+  },
   dropdown: {
     backgroundColor: theme.palette.popover.background,
     display: 'flex',
@@ -76,6 +82,10 @@ const ConnectedWallet = (props: Props) => {
 
   const { classes } = useStyles();
 
+  const { isTransactionInProgress } = useSelector(
+    (state: RootState) => state.transferInput,
+  );
+
   const wallet = useSelector((state: RootState) => state.wallet[props.type]);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -89,18 +99,18 @@ const ConnectedWallet = (props: Props) => {
   const connectWallet = useCallback(() => {
     popupState?.close();
     setIsOpen(true);
-  }, []);
+  }, [popupState]);
 
   const copyAddress = useCallback(() => {
     copyTextToClipboard(wallet.address);
     popupState?.close();
     setIsCopied(true);
-  }, [wallet.address]);
+  }, [popupState, wallet.address]);
 
   const disconnectWallet = useCallback(() => {
     dispatch(disconnectFromStore(props.type));
     popupState?.close();
-  }, [props.type]);
+  }, [dispatch, popupState, props.type]);
 
   useEffect(() => {
     if (isCopied) {
@@ -110,13 +120,21 @@ const ConnectedWallet = (props: Props) => {
     }
   }, [isCopied]);
 
+  const popupTrigger = isTransactionInProgress ? {} : bindTrigger(popupState);
+
   if (!wallet?.address) {
     return <></>;
   }
 
   return (
     <>
-      <div className={classes.connectWallet} {...bindTrigger(popupState)}>
+      <div
+        className={joinClass([
+          classes.connectWallet,
+          isTransactionInProgress && classes.disabled,
+        ])}
+        {...popupTrigger}
+      >
         <WalletIcons name={wallet.name} icon={wallet.icon} size={20} />
         <Tooltip title="Copied" open={isCopied} placement="top" arrow>
           <Typography

@@ -57,7 +57,7 @@ const DebouncedTextField = memo(
         setInnerValue(e.target.value);
         deferredOnChange(e.target.value);
       },
-      [],
+      [deferredOnChange],
     );
 
     // Propagate any outside changes to the inner TextField value
@@ -133,9 +133,11 @@ const AmountInput = (props: Props) => {
     amount ? sdkAmount.display(amount) : '',
   );
 
-  const { fromChain: sourceChain, token: sourceToken } = useSelector(
-    (state: RootState) => state.transferInput,
-  );
+  const {
+    fromChain: sourceChain,
+    token: sourceToken,
+    isTransactionInProgress,
+  } = useSelector((state: RootState) => state.transferInput);
 
   const { balances, isFetching } = useGetTokenBalances(
     sendingWallet?.address || '',
@@ -159,8 +161,8 @@ const AmountInput = (props: Props) => {
   );
 
   const isInputDisabled = useMemo(
-    () => !sourceChain || !sourceToken,
-    [sourceChain, sourceToken],
+    () => isTransactionInProgress || !sourceChain || !sourceToken,
+    [isTransactionInProgress, sourceChain, sourceToken],
   );
 
   const balance = useMemo(() => {
@@ -193,12 +195,21 @@ const AmountInput = (props: Props) => {
         )}
       </Stack>
     );
-  }, [isInputDisabled, balances, tokenBalance, sendingWallet.address]);
+  }, [
+    isInputDisabled,
+    sendingWallet.address,
+    classes.balance,
+    isFetching,
+    tokenBalance,
+  ]);
 
-  const handleChange = useCallback((newValue: string): void => {
-    dispatch(setAmount(newValue));
-    setAmountInput(newValue);
-  }, []);
+  const handleChange = useCallback(
+    (newValue: string): void => {
+      dispatch(setAmount(newValue));
+      setAmountInput(newValue);
+    },
+    [dispatch],
+  );
 
   const maxButton = useMemo(() => {
     const maxButtonDisabled =
