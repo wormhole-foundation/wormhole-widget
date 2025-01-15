@@ -86,6 +86,7 @@ const checkEnvConfig = async (
               chain,
             )) as JsonRpcProvider;
             provider.on('debug', (info) => console.log(info));
+            await provider.getBlockNumber();
             console.log('✅ Connected to', chain);
           }
           const tb = await context.getTokenBridge();
