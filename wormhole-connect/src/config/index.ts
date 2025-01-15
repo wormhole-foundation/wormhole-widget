@@ -228,7 +228,7 @@ export function setConfig(customConfig: WormholeConnectConfig = {}) {
     config[key] = newConfig[key];
   }
   /* @ts-ignore */
-  window.config = config;
+  window._connectConfig = config;
 }
 
 // TODO: add config validation step to buildConfig
