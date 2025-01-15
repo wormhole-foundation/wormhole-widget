@@ -67,6 +67,7 @@ export class WormholeContext extends MultiProvider<Domain> {
       });
       // register RPC provider
       if (this.conf.chains[chain]?.context === Context.ETH) {
+        console.log('starting json provider', this.conf.rpcs[chain]);
         this.registerRpcProvider(chain, this.conf.rpcs[chain]);
       }
     }
