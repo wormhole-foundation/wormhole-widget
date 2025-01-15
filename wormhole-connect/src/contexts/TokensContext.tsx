@@ -19,9 +19,6 @@ interface TokensContextType {
   getTokenPrice: (token: Token) => number | undefined;
   isFetchingTokenPrices: boolean;
   lastTokenPriceUpdate: Date;
-
-  // Returns either the symbol, or `Wormhole-wrapped ${original.symbol}` for wrapped tokens
-  getSmallDisplayName: (token: Token) => string;
 }
 
 // TokensContext offers token-related info:
@@ -150,17 +147,6 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
     }
   };
 
-  const getSmallDisplayName = (token: Token): string => {
-    if (token.isTokenBridgeWrappedToken) {
-      const original = config.tokens.get(token.tokenBridgeOriginalTokenId!);
-      if (original) {
-        // In theory if there was a wrapped wrapped token this would be recursive lol
-        return `Wormhole-wrapped from ${original.chain}`;
-      }
-    }
-    return ''; //token.symbol || token.shortAddress;
-  };
-
   return (
     <TokensContext.Provider
       value={{
@@ -171,8 +157,6 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
         getTokenPrice,
         isFetchingTokenPrices,
         lastTokenPriceUpdate,
-
-        getSmallDisplayName,
       }}
     >
       {children}

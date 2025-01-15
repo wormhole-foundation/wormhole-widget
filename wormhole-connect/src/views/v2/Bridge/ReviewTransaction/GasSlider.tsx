@@ -94,8 +94,7 @@ const GasSlider = (props: {
     (state: RootState) => state.transferInput,
   );
 
-  const { getTokenPrice, isFetchingTokenPrices, getSmallDisplayName } =
-    useTokens();
+  const { getTokenPrice, isFetchingTokenPrices } = useTokens();
 
   const destChainConfig = config.chains[destChain!];
   const nativeGasToken = config.tokens.getGasToken(destChain!);
@@ -126,7 +125,7 @@ const GasSlider = (props: {
 
     return (
       <Typography fontSize={14}>
-        {`${tokenAmount} ${getSmallDisplayName(nativeGasToken)} ${tokenPrice}`}
+        {`${tokenAmount} ${nativeGasToken.symbol} ${tokenPrice}`}
       </Typography>
     );
   }, [
