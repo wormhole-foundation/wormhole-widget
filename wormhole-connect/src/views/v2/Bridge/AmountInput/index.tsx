@@ -25,7 +25,10 @@ import AlertBannerV2 from 'components/v2/AlertBanner';
 import { setAmount } from 'store/transferInput';
 import { Token } from 'config/tokens';
 import type { RootState } from 'store';
+import { calculateUSDPrice } from 'utils';
 import { useGetTokens } from 'hooks/useGetTokens';
+import useGetTokenBalances from 'hooks/useGetTokenBalances';
+import { useTokens } from 'contexts/TokensContext';
 
 const INPUT_DEBOUNCE = 500;
 
@@ -94,6 +97,11 @@ const useStyles = makeStyles()((theme) => ({
   amountCardContent: {
     display: 'flex',
     alignItems: 'center',
+    height: '72px',
+    padding: '12px 20px',
+    ':last-child': {
+      padding: '12px 20px',
+    },
   },
   amountTitle: {
     color: theme.palette.text.secondary,
@@ -107,6 +115,9 @@ const useStyles = makeStyles()((theme) => ({
   },
   balance: {
     color: theme.palette.text.secondary,
+    fontSize: '14px',
+    lineHeight: '14px',
+    textAlign: 'right',
   },
 }));
 
@@ -130,13 +141,23 @@ const AmountInput = (props: Props) => {
   const { sending: sendingWallet } = useSelector(
     (state: RootState) => state.wallet,
   );
-  const { amount } = useSelector((state: RootState) => state.transferInput);
+  const { amount, fromChain: sourceChain } = useSelector(
+    (state: RootState) => state.transferInput,
+  );
 
   const [amountInput, setAmountInput] = useState(
     amount ? sdkAmount.display(amount) : '',
   );
 
   const { sourceToken } = useGetTokens();
+
+  const { balances } = useGetTokenBalances(
+    sendingWallet,
+    sourceChain,
+    sourceToken ? [sourceToken] : [],
+  );
+
+  const { getTokenPrice } = useTokens();
 
   // Clear the amount input value if the amount is reset outside of this component
   // This can happen if user swaps selected source and destination assets.
@@ -161,10 +182,9 @@ const AmountInput = (props: Props) => {
     return (
       <Stack direction="row" alignItems="center">
         <Typography
-          fontSize={14}
-          textAlign="right"
-          sx={{ marginRight: '4px' }}
           className={classes.balance}
+          component="span"
+          sx={{ marginRight: '4px' }}
         >
           Balance:
         </Typography>
@@ -190,6 +210,16 @@ const AmountInput = (props: Props) => {
     setAmountInput(newValue);
   }, []);
 
+  const tokenPrice = useMemo(() => {
+    const tokenBalance = sourceToken
+      ? balances?.[sourceToken.key]?.balance
+      : undefined;
+
+    return tokenBalance
+      ? calculateUSDPrice(getTokenPrice, tokenBalance, sourceToken)
+      : undefined;
+  }, [balances, getTokenPrice, sourceToken]);
+
   const maxButton = useMemo(() => {
     const maxButtonDisabled =
       isInputDisabled || !sendingWallet.address || !props.tokenBalance;
@@ -212,7 +242,12 @@ const AmountInput = (props: Props) => {
         </Typography>
       </Button>
     );
-  }, [handleChange, isInputDisabled, sendingWallet.address, props.tokenBalance]);
+  }, [
+    handleChange,
+    isInputDisabled,
+    sendingWallet.address,
+    props.tokenBalance,
+  ]);
 
   return (
     <div className={classes.amountContainer}>
@@ -220,10 +255,7 @@ const AmountInput = (props: Props) => {
         <Typography variant="body2">Amount</Typography>
       </div>
       <Card className={classes.amountCard} variant="elevation">
-        <CardContent
-          className={classes.amountCardContent}
-          style={{ paddingBottom: '16px' }}
-        >
+        <CardContent className={classes.amountCardContent}>
           <DebouncedTextField
             fullWidth
             disabled={isInputDisabled}
@@ -233,8 +265,9 @@ const AmountInput = (props: Props) => {
                   ? theme.palette.error.main
                   : theme.palette.text.primary,
                 fontSize: 24,
-                height: '40px',
-                padding: '4px',
+                height: '28px',
+                marginBottom: isInputDisabled ? 0 : '16px',
+                padding: 0,
               },
               onWheel: (e) => {
                 // IMPORTANT: We need to prevent the scroll behavior on number inputs.
@@ -250,9 +283,30 @@ const AmountInput = (props: Props) => {
             onChange={handleChange}
             InputProps={{
               disableUnderline: true,
+              startAdornment: (
+                <InputAdornment
+                  position="end"
+                  sx={{
+                    position: 'absolute',
+                    top: '38px',
+                    margin: 0,
+                  }}
+                >
+                  <Stack alignItems="start">
+                    <Typography
+                      color={theme.palette.text.secondary}
+                      component="span"
+                      fontSize="14px"
+                      lineHeight="14px"
+                    >
+                      {tokenPrice}
+                    </Typography>
+                  </Stack>
+                </InputAdornment>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <Stack alignItems="end">
+                  <Stack alignItems="end" justifyContent="space-between">
                     {maxButton}
                     {balance}
                   </Stack>
