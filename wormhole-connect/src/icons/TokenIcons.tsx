@@ -49,6 +49,7 @@ const useStyles = makeStyles<{ size: number }>()((theme, { size }) => ({
   iconImage: {
     width: size,
     height: size,
+    borderRadius: '50px',
   },
   icon: {
     maxHeight: '100%',

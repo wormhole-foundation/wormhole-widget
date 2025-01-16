@@ -1,4 +1,4 @@
-import { amount as sdkAmount } from '@wormhole-foundation/sdk';
+import { isSameToken, amount as sdkAmount } from '@wormhole-foundation/sdk';
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from 'store';
@@ -14,12 +14,14 @@ import { QuoteParams, QuoteResult } from 'routes/operator';
 import { calculateUSDPriceRaw } from 'utils';
 
 import config from 'config';
+import { Token } from 'config/tokens';
+import { useTokens } from 'contexts/TokensContext';
 
 type Params = {
   sourceChain?: Chain;
-  sourceToken: string;
+  sourceToken: Token | undefined;
   destChain?: Chain;
-  destToken: string;
+  destToken: Token | undefined;
   amount?: sdkAmount.Amount;
   nativeGas: number;
 };
@@ -45,16 +47,14 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
 
   // TODO temporary
   // Calculate USD amount for temporary $10,000 Mayan limit
-  const sourceTokenConfig = config.tokens[params.sourceToken];
-  const destTokenConfig = config.tokens[params.destToken];
-  const { usdPrices } = useSelector((state: RootState) => state.tokenPrices);
+  const { getTokenPrice } = useTokens();
   const { isTransactionInProgress } = useSelector(
     (state: RootState) => state.transferInput,
   );
   const usdValue = calculateUSDPriceRaw(
+    getTokenPrice,
     params.amount,
-    usdPrices.data,
-    sourceTokenConfig,
+    params.sourceToken,
   );
 
   useEffect(() => {
@@ -87,6 +87,19 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
       onComplete();
     } else {
       setIsFetching(true);
+
+      const quotesValues = quotes.filter((q) => q.success);
+      // Immediately invalidate quotes if token inputs changed
+      if (quotesValues.length > 0) {
+        const { sourceToken, destinationToken } = quotesValues[0];
+        if (
+          !isSameToken(sourceToken.token, rParams.sourceToken) ||
+          !isSameToken(destinationToken.token, rParams.destToken)
+        ) {
+          setQuotes([]);
+        }
+      }
+
       config.routes.getQuotes(routes, rParams).then((quoteResults) => {
         if (!unmounted) {
           setQuotes(quoteResults);
@@ -139,9 +152,9 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
     const quote = quotesMap[name];
     if (quote !== undefined && quote.success) {
       const usdValueOut = calculateUSDPriceRaw(
+        getTokenPrice,
         quote.destinationToken.amount,
-        usdPrices.data,
-        destTokenConfig,
+        params.destToken,
       );
 
       if (usdValue && usdValueOut) {
@@ -182,14 +195,14 @@ const useRoutesQuotesBulk = (routes: string[], params: Params): HookReturn => {
           };
         } else {
           const approxInputUsdValue = calculateUSDPriceRaw(
+            getTokenPrice,
             params.amount,
-            usdPrices.data,
-            sourceTokenConfig,
+            params.sourceToken,
           );
           const approxOutputUsdValue = calculateUSDPriceRaw(
+            getTokenPrice,
             mayanQuote.destinationToken.amount,
-            usdPrices.data,
-            config.tokens[params.destToken],
+            params.destToken,
           );
 
           if (approxInputUsdValue && approxOutputUsdValue) {

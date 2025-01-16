@@ -22,7 +22,7 @@ export const useGasSlider = (
   const disabled = !valid || isTransactionInProgress;
   const toChainConfig = destChain ? config.chains[destChain] : undefined;
   const gasTokenConfig = toChainConfig
-    ? config.tokens[toChainConfig.gasToken]
+    ? config.tokens.getGasToken(toChainConfig.sdkName)
     : undefined;
   const wrappedGasTokenConfig = gasTokenConfig
     ? getWrappedToken(gasTokenConfig)

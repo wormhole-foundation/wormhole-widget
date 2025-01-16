@@ -2,7 +2,6 @@ import { Dispatch, useEffect, useMemo } from 'react';
 import { AnyAction } from '@reduxjs/toolkit';
 
 import config from 'config';
-import { TokenConfig } from 'config/types';
 import { SANCTIONED_WALLETS } from 'consts/wallet';
 import { RootState } from 'store';
 import {
@@ -49,42 +48,6 @@ export const validateToChain = (
       fromChain !== requiredChain
     )
       return `Must select ${requiredConfig.displayName} as either the source or destination chain`;
-  }
-  return '';
-};
-
-export const validateToken = (
-  token: string,
-  chain: Chain | undefined,
-): ValidationErr => {
-  if (!token) return 'Select an asset';
-  const tokenConfig = config.tokens[token];
-  if (!tokenConfig) return 'Select an asset';
-  if (chain) {
-    const chainConfig = config.chains[chain];
-    if (!chainConfig || !!tokenConfig.tokenId) return '';
-    if (!tokenConfig.tokenId && tokenConfig.nativeChain !== chain)
-      return `${token} not available on ${chain}, select a different token`;
-  }
-  return '';
-};
-
-export const validateDestToken = (
-  token: string,
-  chain: Chain | undefined,
-  supportedTokens: TokenConfig[],
-): ValidationErr => {
-  if (!token) return 'Select an asset';
-  const tokenConfig = config.tokens[token];
-  if (!tokenConfig) return 'Select an asset';
-  if (chain) {
-    const chainConfig = config.chains[chain];
-    if (!chainConfig || !!tokenConfig.tokenId) return '';
-    if (!tokenConfig.tokenId && tokenConfig.nativeChain !== chain)
-      return `${token} not available on ${chain}, select a different token`;
-  }
-  if (!supportedTokens.some((t) => t.key === token)) {
-    return 'No route available for this token, please select another';
   }
   return '';
 };
@@ -156,32 +119,24 @@ export const validateAll = async (
   relayData: RelayState,
   walletData: WalletState,
 ): Promise<TransferValidations> => {
-  const {
-    fromChain,
-    toChain,
-    token,
-    destToken,
-    amount,
-    balances,
-    route,
-    supportedDestTokens,
-  } = transferData;
+  const { fromChain, toChain, amount, balances, route } = transferData;
+
+  const token = transferData.token
+    ? config.tokens.get(transferData.token)
+    : undefined;
+
   const { maxSwapAmt, toNativeToken } = relayData;
   const { sending, receiving } = walletData;
   const isAutomatic = getIsAutomatic(route);
-  const sendingTokenBalance = accessBalance(
-    balances,
-    sending.address,
-    fromChain,
-    token,
-  );
+  const sendingTokenBalance = token
+    ? accessBalance(balances, sending.address, fromChain, token)
+    : null;
+
   const baseValidations = {
     sendingWallet: await validateWallet(sending, fromChain),
     receivingWallet: await validateWallet(receiving, toChain),
     fromChain: validateFromChain(fromChain),
     toChain: validateToChain(toChain, fromChain),
-    token: validateToken(token, fromChain),
-    destToken: validateDestToken(destToken, toChain, supportedDestTokens),
     amount: validateAmount(amount, sendingTokenBalance?.balance || null),
     toNativeToken: '',
     relayerFee: '',

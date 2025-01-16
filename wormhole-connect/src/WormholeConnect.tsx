@@ -13,6 +13,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { WormholeConnectConfig } from './config/types';
 import { WormholeConnectTheme } from 'theme';
 import { RouteProvider } from './contexts/RouteContext';
+import { TokensProvider } from './contexts/TokensContext';
 
 export interface WormholeConnectProps {
   // theme can be updated at any time to change the colors of Connect
@@ -36,9 +37,11 @@ export default function WormholeConnect({
       <ThemeProvider theme={muiTheme}>
         <ScopedCssBaseline enableColorScheme>
           <ErrorBoundary>
-            <RouteProvider>
-              <AppRouter config={config} />
-            </RouteProvider>
+            <TokensProvider>
+              <RouteProvider>
+                <AppRouter config={config} />
+              </RouteProvider>
+            </TokensProvider>
           </ErrorBoundary>
         </ScopedCssBaseline>
       </ThemeProvider>

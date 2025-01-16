@@ -19,13 +19,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { amount as sdkAmount } from '@wormhole-foundation/sdk';
+import { Chain, amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 import AlertBannerV2 from 'components/v2/AlertBanner';
-import useGetTokenBalances from 'hooks/useGetTokenBalances';
 import { setAmount } from 'store/transferInput';
-import type { TokenConfig } from 'config/types';
+import { Token } from 'config/tokens';
 import type { RootState } from 'store';
+import { useGetTokens } from 'hooks/useGetTokens';
 
 const INPUT_DEBOUNCE = 500;
 
@@ -111,7 +111,10 @@ const useStyles = makeStyles()((theme) => ({
 }));
 
 type Props = {
-  supportedSourceTokens: Array<TokenConfig>;
+  sourceChain?: Chain;
+  supportedSourceTokens: Array<Token>;
+  tokenBalance: sdkAmount.Amount | null;
+  isFetchingTokenBalance: boolean;
   error?: string;
   warning?: string;
 };
@@ -133,15 +136,7 @@ const AmountInput = (props: Props) => {
     amount ? sdkAmount.display(amount) : '',
   );
 
-  const { fromChain: sourceChain, token: sourceToken } = useSelector(
-    (state: RootState) => state.transferInput,
-  );
-
-  const { balances, isFetching } = useGetTokenBalances(
-    sendingWallet?.address || '',
-    sourceChain,
-    props.supportedSourceTokens || [],
-  );
+  const { sourceToken } = useGetTokens();
 
   // Clear the amount input value if the amount is reset outside of this component
   // This can happen if user swaps selected source and destination assets.
@@ -153,14 +148,9 @@ const AmountInput = (props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amount]);
 
-  const tokenBalance = useMemo(
-    () => balances?.[sourceToken]?.balance || null,
-    [balances, sourceToken],
-  );
-
   const isInputDisabled = useMemo(
-    () => !sourceChain || !sourceToken,
-    [sourceChain, sourceToken],
+    () => !props.sourceChain || !sourceToken,
+    [props.sourceChain, sourceToken],
   );
 
   const balance = useMemo(() => {
@@ -178,7 +168,7 @@ const AmountInput = (props: Props) => {
         >
           Balance:
         </Typography>
-        {isFetching ? (
+        {props.isFetchingTokenBalance ? (
           <CircularProgress size={14} />
         ) : (
           <Typography
@@ -186,14 +176,14 @@ const AmountInput = (props: Props) => {
             textAlign="right"
             className={classes.balance}
           >
-            {tokenBalance === null
-              ? '0'
-              : sdkAmount.display(sdkAmount.truncate(tokenBalance, 6))}
+            {props.tokenBalance
+              ? sdkAmount.display(sdkAmount.truncate(props.tokenBalance, 6))
+              : '0'}
           </Typography>
         )}
       </Stack>
     );
-  }, [isInputDisabled, balances, tokenBalance, sendingWallet.address]);
+  }, [isInputDisabled, props.tokenBalance, sendingWallet.address]);
 
   const handleChange = useCallback((newValue: string): void => {
     dispatch(setAmount(newValue));
@@ -202,14 +192,14 @@ const AmountInput = (props: Props) => {
 
   const maxButton = useMemo(() => {
     const maxButtonDisabled =
-      isInputDisabled || !sendingWallet.address || !tokenBalance;
+      isInputDisabled || !sendingWallet.address || !props.tokenBalance;
     return (
       <Button
         sx={{ minWidth: '32px', padding: '4px' }}
         disabled={maxButtonDisabled}
         onClick={() => {
-          if (tokenBalance) {
-            handleChange(sdkAmount.display(tokenBalance));
+          if (props.tokenBalance) {
+            handleChange(sdkAmount.display(props.tokenBalance));
           }
         }}
       >
@@ -222,7 +212,7 @@ const AmountInput = (props: Props) => {
         </Typography>
       </Button>
     );
-  }, [handleChange, isInputDisabled, sendingWallet.address, tokenBalance]);
+  }, [handleChange, isInputDisabled, sendingWallet.address, props.tokenBalance]);
 
   return (
     <div className={classes.amountContainer}>

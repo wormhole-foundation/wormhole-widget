@@ -27,19 +27,15 @@ import {
   wormhole,
 } from '@wormhole-foundation/sdk';
 import { MAINNET_CHAINS } from '../src/config/mainnet/chains';
-import {
-  MAINNET_TOKENS,
-  MAINNET_WRAPPED_TOKENS,
-} from '../src/config/mainnet/tokens';
+import { MAINNET_TOKENS } from '../src/config/mainnet/tokens';
+import { MAINNET_WRAPPED_TOKENS } from '../src/config/mainnet/wrappedTokens';
 import { TESTNET_CHAINS } from '../src/config/testnet/chains';
-import {
-  TESTNET_TOKENS,
-  TESTNET_WRAPPED_TOKENS,
-} from '../src/config/testnet/tokens';
+import { TESTNET_TOKENS } from '../src/config/testnet/tokens';
+import { TESTNET_WRAPPED_TOKENS } from '../src/config/testnet/wrappedTokens';
 import {
   ChainsConfig,
-  TokensConfig,
-  TokenAddressesByChain,
+  TokenConfig,
+  WrappedTokenAddresses,
 } from '../src/config/types';
 
 import evm from '@wormhole-foundation/sdk/evm';
@@ -57,34 +53,35 @@ const WORMCHAIN_ERROR_MESSAGES = [
 // slow and steady, or something like that
 const checkEnvConfig = async (
   env: Network,
-  tokensConfig: TokensConfig,
-  wrappedTokens: TokenAddressesByChain,
+  tokensConfig: TokenConfig[],
+  wrappedTokens: WrappedTokenAddresses,
   chainsConfig: ChainsConfig,
 ) => {
-  let recommendedUpdates: TokenAddressesByChain = {};
+  let recommendedUpdates: WrappedTokenAddresses = {};
   const wh = await wormhole(env, [evm, solana, aptos, sui]);
 
-  for (const [tokenKey, tokenConfig] of Object.entries(tokensConfig)) {
-    const nativeChain = wh.getChain(tokenConfig.nativeChain);
+  for (const { tokenId } of tokensConfig) {
+    const nativeChain = wh.getChain(tokenId.chain);
     const nativeTb = await nativeChain.getTokenBridge();
     let universalAddress: UniversalAddress | null = null;
-    if (tokenConfig.tokenId) {
+    if (tokenId.address !== 'native') {
       universalAddress = await nativeTb.getTokenUniversalAddress(
-        toNative(nativeChain.chain, tokenConfig.tokenId.address),
+        toNative(nativeChain.chain, tokenId.address),
       );
     }
     await Promise.all(
       Object.keys(chainsConfig).map((unTypedChain) => {
         return (async () => {
           const chain = unTypedChain as Chain;
-          const context = await wh.getChain(chain);
+          const context = wh.getChain(chain);
           const tb = await context.getTokenBridge();
 
-          const configForeignAddress = wrappedTokens[tokenKey]?.[chain];
-          if (chain === tokenConfig.nativeChain) {
+          const configForeignAddress =
+            wrappedTokens[tokenId.chain]?.[tokenId.address]?.[chain];
+          if (chain === tokenId.chain) {
             if (configForeignAddress) {
               throw new Error(
-                `❌ Invalid native chain in foreign assets detected! Env: ${env}, Key ${tokenKey}, Chain: ${chain}`,
+                `❌ Invalid native chain in foreign assets detected! Env: ${env}, Token ${tokenId.chain} ${tokenId.address}, Chain: ${chain}`,
               );
             }
           } else if (universalAddress) {
@@ -104,7 +101,7 @@ const checkEnvConfig = async (
                 // do not throw on wormchain errors
               } else {
                 console.error(
-                  `❌ Failed to fetch foreign address. Env: ${env}, Key: ${tokenKey}, Chain: ${chain} ${e?.message}`,
+                  `❌ Failed to fetch foreign address. Env: ${env}, Token ${tokenId.chain} ${tokenId.address}, Chain: ${chain} ${e?.message}`,
                 );
               }
             }
@@ -112,19 +109,21 @@ const checkEnvConfig = async (
               if (configForeignAddress) {
                 if (configForeignAddress !== foreignAddress) {
                   throw new Error(
-                    `❌ Invalid foreign address detected! Env: ${env}, Key: ${tokenKey}, Chain: ${chain}, Expected: ${foreignAddress}, Received: ${configForeignAddress}`,
+                    `❌ Invalid foreign address detected! Env: ${env}, Token ${tokenId.chain} ${tokenId.address}, Chain: ${chain}, Expected: ${foreignAddress}, Received: ${configForeignAddress}`,
                   );
                 } else {
                   console.log('✅ Config matches');
                 }
               } else {
-                recommendedUpdates = {
-                  ...recommendedUpdates,
-                  [tokenKey]: {
-                    ...(recommendedUpdates[tokenKey] || {}),
-                    [chain]: foreignAddress,
-                  },
-                };
+                if (!recommendedUpdates[tokenId.chain]) {
+                  recommendedUpdates[tokenId.chain] = {};
+                }
+                if (!recommendedUpdates[tokenId.chain]![tokenId.address]) {
+                  recommendedUpdates[tokenId.chain]![tokenId.address] = {};
+                }
+
+                recommendedUpdates[tokenId.chain]![tokenId.address]![chain] =
+                  foreignAddress;
                 // console.warn(
                 //   '⚠️ Update available:',
                 //   tokenKey,
@@ -142,11 +141,7 @@ const checkEnvConfig = async (
   const numUpdatesAvaialable = Object.keys(recommendedUpdates).length;
   if (numUpdatesAvaialable > 0) {
     console.log(JSON.stringify(recommendedUpdates, undefined, 2));
-    console.warn(
-      `⚠️ ${numUpdatesAvaialable} update${
-        numUpdatesAvaialable > 1 ? 's' : ''
-      } available!`,
-    );
+    console.warn(`⚠️  Updates available!`);
   } else {
     console.log(`✅ ${env} config matches`);
   }

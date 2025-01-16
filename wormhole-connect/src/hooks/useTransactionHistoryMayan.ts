@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk';
+import {
+  Chain,
+  ChainId,
+  chainIdToChain,
+  TokenId,
+  toNative,
+} from '@wormhole-foundation/sdk';
 
 import config from 'config';
 
@@ -14,12 +20,11 @@ interface MayanTransaction {
   destChain: ChainId;
   fromAmount: string;
   fromTokenChain: ChainId;
-  fromTokenSymbol: string;
+  fromTokenAddress: string;
   fromTokenPrice: number;
   toTokenPrice: number;
   toTokenAddress: string;
   toTokenChain: ChainId;
-  toTokenSymbol: string;
   status: string;
   clientStatus: string;
   initiatedAt: string;
@@ -56,11 +61,10 @@ const useTransactionHistoryMayan = (
       sourceChain,
       destChain,
       fromTokenPrice,
-      fromTokenSymbol,
+      fromTokenAddress,
       initiatedAt,
       toAmount,
       toTokenAddress,
-      toTokenSymbol,
       sourceTxHash,
       trader,
       destAddress,
@@ -75,20 +79,21 @@ const useTransactionHistoryMayan = (
       return;
     }
 
-    const fromTokenConfig = config.tokensArr.find(
-      (t) =>
-        t.symbol === fromTokenSymbol &&
-        (t.nativeChain === fromChain || t.tokenId?.chain === fromChain),
-    );
+    let fromToken, toToken;
 
-    const toTokenConfig = config.tokensArr.find(
-      (t) =>
-        t.symbol === toTokenSymbol &&
-        (t.nativeChain === toChain || t.tokenId?.chain === toChain),
-    );
+    try {
+      fromToken = config.tokens.get(
+        parseMayanAddress(fromChain, fromTokenAddress),
+      );
+      toToken = config.tokens.get(parseMayanAddress(toChain, toTokenAddress));
+    } catch (e) {
+      console.error(e);
+      return undefined;
+    }
 
     // Skip this transaction if we can't find source or destination token configs
-    if (!fromTokenConfig || !toTokenConfig) {
+    if (!fromToken || !toToken) {
+      console.error('Cant find tokenz');
       return;
     }
 
@@ -103,12 +108,11 @@ const useTransactionHistoryMayan = (
       amount: fromAmount,
       amountUsd: Number(fromAmount) * fromTokenPrice,
       recipient: destAddress,
-      toChain,
       fromChain,
-      tokenKey: fromTokenConfig?.key,
-      receivedTokenKey: toTokenConfig?.key,
+      fromToken,
+      toChain,
+      toToken,
       receiveAmount: toAmount,
-      tokenAddress: toTokenAddress,
       senderTimestamp: initiatedAt,
       explorerLink: `https://explorer.mayan.finance/swap/${sourceTxHash}`,
       inProgress,
@@ -201,5 +205,13 @@ const useTransactionHistoryMayan = (
     hasMore,
   };
 };
+
+function parseMayanAddress<C extends Chain>(chain: C, addr: string): TokenId {
+  if (addr === '0x0000000000000000000000000000000000000000') {
+    return { chain, address: 'native' };
+  }
+  const corrected = toNative(chain, addr);
+  return { chain, address: corrected };
+}
 
 export default useTransactionHistoryMayan;
