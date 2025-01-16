@@ -49,6 +49,7 @@ type Props = {
 const TokenList = (props: Props) => {
   const { classes } = useStyles();
   const theme = useTheme();
+  const tokenPastingIsEnabled = config.ui?.disableArbitraryTokens !== true;
 
   const { getOrFetchToken, isFetchingToken, getTokenPrice } = useTokens();
 
@@ -64,20 +65,22 @@ const TokenList = (props: Props) => {
     // When the search query or chain changes, see if the search query is a valid address on the selected chain.
     // If it is, see if we have a token in the token cache for that address.
     // If not, try to find it.
-    try {
-      if (searchQuery !== '') {
-        const chain = props.selectedChainConfig.sdkName;
-        const address = toNative(chain, searchQuery);
+    if (tokenPastingIsEnabled) {
+      try {
+        if (searchQuery !== '') {
+          const chain = props.selectedChainConfig.sdkName;
+          const address = toNative(chain, searchQuery);
 
-        if (address) {
-          const existing = config.tokens.get(chain, searchQuery);
-          if (!existing) {
-            getOrFetchToken({ chain, address });
+          if (address) {
+            const existing = config.tokens.get(chain, searchQuery);
+            if (!existing) {
+              getOrFetchToken({ chain, address });
+            }
           }
         }
+      } catch (_e) {
+        // Failed to parse the search query as an address... this is expected to happen a lot
       }
-    } catch (_e) {
-      // Failed to parse the search query as an address... this is expected to happen a lot
     }
   }, [searchQuery, props.selectedChainConfig.sdkName]);
 
@@ -204,9 +207,13 @@ const TokenList = (props: Props) => {
   const shouldShowEmptyMessage =
     sortedTokens.length === 0 && !isFetchingTokenBalances && !props.isFetching;
 
+  const placeholder = `Search for a token${
+    tokenPastingIsEnabled ? ' or paste an address' : ''
+  }`;
+
   const searchList = (
     <SearchableList<Token>
-      searchPlaceholder="Search for a token"
+      searchPlaceholder={placeholder}
       className={classes.tokenList}
       listTitle={
         shouldShowEmptyMessage ? (
@@ -227,21 +234,6 @@ const TokenList = (props: Props) => {
       items={sortedTokens}
       onQueryChange={(query) => {
         setSearchQuery(query);
-
-        try {
-          const chain = props.selectedChainConfig.sdkName;
-          const address = toNative(chain, query);
-
-          if (address) {
-            // Parsed valid token :)
-            const existing = config.tokens.get(chain, query);
-            if (!existing) {
-              getOrFetchToken({ chain, address });
-            }
-          }
-        } catch (e) {
-          console.error(e);
-        }
       }}
       filterFn={(token, query) => {
         if (query.length === 0) return true;

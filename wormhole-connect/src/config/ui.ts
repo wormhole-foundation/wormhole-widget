@@ -20,6 +20,9 @@ export type UiConfig = {
 
   // Shows in-progress widgets
   showInProgressWidget?: boolean;
+
+  // Set to true to disable the ability to paste in a token address
+  disableArbitraryTokens?: boolean;
 };
 
 export interface DefaultInputs {
