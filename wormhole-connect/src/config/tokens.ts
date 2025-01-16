@@ -423,8 +423,10 @@ export function buildTokenCache(
         if (originalToken) {
           const wrappedAddr = wts[otherChain];
 
-          const decimals =
+          let decimals =
             chainToPlatform(otherChain as Chain) === 'Evm' ? 18 : 8;
+
+          decimals = Math.min(decimals, originalToken.decimals);
 
           const wrappedToken = new Token(
             otherChain as Chain,
