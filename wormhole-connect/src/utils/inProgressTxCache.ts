@@ -56,7 +56,7 @@ const validateSingleTransaction = (
       eta: 'number',
       fromChain: 'string',
       toChain: 'string',
-      tokenKey: 'string',
+      token: 'object',
     })
   ) {
     return false;
@@ -67,6 +67,15 @@ const validateSingleTransaction = (
     !validateChildPropTypes(tx.txDetails.amount, {
       amount: 'string',
       decimals: 'number',
+    })
+  ) {
+    return false;
+  }
+
+  if (
+    !validateChildPropTypes(tx.txDetails.token, {
+      0: 'string',
+      1: 'string',
     })
   ) {
     return false;
