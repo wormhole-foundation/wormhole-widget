@@ -252,9 +252,6 @@ export class TokenCache extends TokenMapping<Token> {
   add(id: TokenId, token: Token) {
     if (token.tokenBridgeOriginalTokenId) {
       const original = this.get(token.tokenBridgeOriginalTokenId);
-      if (token.symbol === 'APT') {
-        console.log(token, original);
-      }
       if (original) {
         token.icon = original.icon;
         token.name = original.name;
@@ -319,7 +316,6 @@ export class TokenCache extends TokenMapping<Token> {
       tokenBridgeOriginalTokenId = await tb.getOriginalAsset(tokenId.address);
 
       if (UniversalAddress.instanceof(tokenBridgeOriginalTokenId.address)) {
-        console.log('did the thing');
         // For move based platforms like Sui and Aptos we have to convert from UniversalAddress to NativeAddress
         tokenBridgeOriginalTokenId.address = await wh.getTokenNativeAddress(
           tokenBridgeOriginalTokenId.chain,
