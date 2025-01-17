@@ -27,7 +27,6 @@ import { Token } from 'config/tokens';
 import type { RootState } from 'store';
 import { calculateUSDPrice } from 'utils';
 import { useGetTokens } from 'hooks/useGetTokens';
-import useGetTokenBalances from 'hooks/useGetTokenBalances';
 import { useTokens } from 'contexts/TokensContext';
 
 const INPUT_DEBOUNCE = 500;
@@ -36,14 +35,19 @@ const DebouncedTextField = memo(
   ({
     value,
     onChange,
+    onDebouncedChange,
     ...props
-  }: Omit<ComponentProps<typeof TextField>, 'onChange' | 'value'> & {
+  }: Omit<ComponentProps<typeof TextField>, 'value' | 'onChange'> & {
     value: string;
     onChange: (event: string) => void;
+    onDebouncedChange: (event: string) => void;
   }) => {
     const [innerValue, setInnerValue] = useState<string>(value);
     const [isFocused, setIsFocused] = useState(false);
-    const deferredOnChange = useDebouncedCallback(onChange, INPUT_DEBOUNCE);
+    const deferredOnChange = useDebouncedCallback(
+      onDebouncedChange,
+      INPUT_DEBOUNCE,
+    );
 
     const onInnerChange: ChangeEventHandler<HTMLInputElement> = useCallback(
       (e) => {
@@ -58,9 +62,10 @@ const DebouncedTextField = memo(
         }
 
         setInnerValue(e.target.value);
+        onChange(e.target.value); // callback with no delay
         deferredOnChange(e.target.value);
       },
-      [],
+      [deferredOnChange, onChange],
     );
 
     // Propagate any outside changes to the inner TextField value
@@ -141,29 +146,25 @@ const AmountInput = (props: Props) => {
   const { sending: sendingWallet } = useSelector(
     (state: RootState) => state.wallet,
   );
-  const { amount, fromChain: sourceChain } = useSelector(
-    (state: RootState) => state.transferInput,
-  );
+  const { amount } = useSelector((state: RootState) => state.transferInput);
 
   const [amountInput, setAmountInput] = useState(
     amount ? sdkAmount.display(amount) : '',
   );
+  const [debouncedAmountInput, setDebouncedAmountInput] = useState(
+    amount ? sdkAmount.display(amount) : '',
+  );
 
   const { sourceToken } = useGetTokens();
-
-  const { balances } = useGetTokenBalances(
-    sendingWallet,
-    sourceChain,
-    sourceToken ? [sourceToken] : [],
-  );
 
   const { getTokenPrice } = useTokens();
 
   // Clear the amount input value if the amount is reset outside of this component
   // This can happen if user swaps selected source and destination assets.
   useEffect(() => {
-    if (!amount && amountInput) {
-      setAmountInput('');
+    if (!amount && (amountInput || debouncedAmountInput)) {
+      handleChange('');
+      handleDebouncedChange('');
     }
     // We should run this sife-effect only when the amount changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,22 +204,65 @@ const AmountInput = (props: Props) => {
         )}
       </Stack>
     );
-  }, [isInputDisabled, props.tokenBalance, sendingWallet.address]);
+  }, [
+    classes.balance,
+    isInputDisabled,
+    props.isFetchingTokenBalance,
+    props.tokenBalance,
+    sendingWallet.address,
+  ]);
 
   const handleChange = useCallback((newValue: string): void => {
-    dispatch(setAmount(newValue));
     setAmountInput(newValue);
   }, []);
 
-  const tokenPrice = useMemo(() => {
-    const tokenBalance = sourceToken
-      ? balances?.[sourceToken.key]?.balance
-      : undefined;
+  const tokenPriceAdornment = useMemo(() => {
+    const price = calculateUSDPrice(
+      getTokenPrice,
+      Number(amountInput),
+      sourceToken,
+    );
 
-    return tokenBalance
-      ? calculateUSDPrice(getTokenPrice, tokenBalance, sourceToken)
-      : undefined;
-  }, [balances, getTokenPrice, sourceToken]);
+    if (!price) {
+      return null;
+    }
+
+    return (
+      <InputAdornment
+        position="end"
+        sx={{
+          position: 'absolute',
+          top: '38px',
+          margin: 0,
+        }}
+      >
+        <Stack alignItems="start">
+          <Typography
+            color={theme.palette.text.secondary}
+            component="span"
+            fontSize="14px"
+            lineHeight="14px"
+          >
+            {price}
+          </Typography>
+        </Stack>
+      </InputAdornment>
+    );
+  }, [
+    amountInput,
+    getTokenPrice,
+    isInputDisabled,
+    sourceToken,
+    theme.palette.text.secondary,
+  ]);
+
+  const handleDebouncedChange = useCallback(
+    (newValue: string): void => {
+      dispatch(setAmount(newValue));
+      setDebouncedAmountInput(newValue);
+    },
+    [dispatch],
+  );
 
   const maxButton = useMemo(() => {
     const maxButtonDisabled =
@@ -229,7 +273,7 @@ const AmountInput = (props: Props) => {
         disabled={maxButtonDisabled}
         onClick={() => {
           if (props.tokenBalance) {
-            handleChange(sdkAmount.display(props.tokenBalance));
+            handleDebouncedChange(sdkAmount.display(props.tokenBalance));
           }
         }}
       >
@@ -243,10 +287,10 @@ const AmountInput = (props: Props) => {
       </Button>
     );
   }, [
-    handleChange,
     isInputDisabled,
     sendingWallet.address,
     props.tokenBalance,
+    handleDebouncedChange,
   ]);
 
   return (
@@ -266,7 +310,7 @@ const AmountInput = (props: Props) => {
                   : theme.palette.text.primary,
                 fontSize: 24,
                 height: '28px',
-                marginBottom: isInputDisabled ? 0 : '16px',
+                marginBottom: tokenPriceAdornment ? '16px' : 0, // make sure there is enough space for token price
                 padding: 0,
               },
               onWheel: (e) => {
@@ -279,31 +323,12 @@ const AmountInput = (props: Props) => {
             }}
             placeholder="0"
             variant="standard"
-            value={amountInput}
+            value={debouncedAmountInput}
             onChange={handleChange}
+            onDebouncedChange={handleDebouncedChange}
             InputProps={{
               disableUnderline: true,
-              startAdornment: (
-                <InputAdornment
-                  position="end"
-                  sx={{
-                    position: 'absolute',
-                    top: '38px',
-                    margin: 0,
-                  }}
-                >
-                  <Stack alignItems="start">
-                    <Typography
-                      color={theme.palette.text.secondary}
-                      component="span"
-                      fontSize="14px"
-                      lineHeight="14px"
-                    >
-                      {tokenPrice}
-                    </Typography>
-                  </Stack>
-                </InputAdornment>
-              ),
+              startAdornment: tokenPriceAdornment,
               endAdornment: (
                 <InputAdornment position="end">
                   <Stack alignItems="end" justifyContent="space-between">
