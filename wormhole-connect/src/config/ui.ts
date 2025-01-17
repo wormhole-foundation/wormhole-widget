@@ -28,8 +28,8 @@ export type UiConfig = {
 export interface DefaultInputs {
   fromChain?: Chain;
   toChain?: Chain;
-  tokenKey?: string;
-  toTokenKey?: string;
+  fromToken?: string; // Address or symbol
+  toToken?: string; // Address or symbol
   requiredChain?: Chain;
   preferredRouteName?: string;
 }

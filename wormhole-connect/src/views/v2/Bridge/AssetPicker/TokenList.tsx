@@ -8,7 +8,7 @@ import { amount as sdkAmount, toNative } from '@wormhole-foundation/sdk';
 
 import useGetTokenBalances from 'hooks/useGetTokenBalances';
 import type { ChainConfig } from 'config/types';
-import { Token } from 'config/tokens';
+import { isTokenTuple, Token, tokenIdFromTuple } from 'config/tokens';
 import type { WalletData } from 'store/wallet';
 import SearchableList from 'views/v2/Bridge/AssetPicker/SearchableList';
 import TokenItem from 'views/v2/Bridge/AssetPicker/TokenItem';
@@ -49,7 +49,7 @@ type Props = {
 const TokenList = (props: Props) => {
   const { classes } = useStyles();
   const theme = useTheme();
-  const tokenPastingIsEnabled = config.ui?.disableArbitraryTokens !== true;
+  const tokenPastingIsEnabled = config.ui.disableArbitraryTokens !== true;
 
   const { getOrFetchToken, isFetchingToken, getTokenPrice } = useTokens();
 
@@ -180,6 +180,69 @@ const TokenList = (props: Props) => {
         tokenSet.add(t.address.toString());
         tokens.push(t);
       });
+    }
+
+    if (config.tokenWhitelist) {
+      // If integrator has specified a token whitelist, the last step is to filter the token list by this whitelist.
+      //
+      // The logic behind how this works is a little complicated. The whitelist is an array of (string | TokenTuple).
+      // The strings can be symbols like "USDC", which lets the integrator easily whitelist tokens across all supported chains.
+      //
+      // The way we handle symbols is that for each chain:
+      // 1. If there is a single native token with that symbol, we simply use that
+      // 2. If there is NO native token with that symbol but there is a wrapped token, we show that.
+      // 3. If there are somehow multiple wrapped tokens with that symbol, which all passed through the isFrankensteinToken check above,
+      //    we include them all but log a warning to the console for the integrator's benefit.
+      //
+      // The integrator can also specify exact tokens using TokenTuples like ["Solana", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"].
+
+      let filteredTokens: Set<string> = new Set();
+      const desiredSymbols: string[] = [];
+
+      for (const item of config.tokenWhitelist) {
+        if (typeof item === 'string') {
+          // Treated as a symbol
+          desiredSymbols.push(item);
+        } else if (isTokenTuple(item)) {
+          const tokenId = tokenIdFromTuple(item);
+          if (tokenId.chain === props.selectedChainConfig.sdkName) {
+            filteredTokens.add(tokenId.address.toString());
+          }
+        }
+      }
+
+      for (const symbol of desiredSymbols) {
+        let foundNative = false;
+        const wrapped: Token[] = [];
+
+        for (const token of tokens) {
+          if (token.symbol === symbol) {
+            if (!token.isTokenBridgeWrappedToken) {
+              filteredTokens.add(token.address.toString());
+              foundNative = true;
+              break;
+            } else {
+              wrapped.push(token);
+            }
+          }
+        }
+
+        if (!foundNative && wrapped.length > 0) {
+          for (const { address } of wrapped) {
+            filteredTokens.add(address.toString());
+          }
+
+          if (wrapped.length > 1) {
+            console.warn(
+              `Ambigous token whitelist item "${symbol}"; found ${wrapped.length} matching wrapped tokens.`,
+            );
+          }
+        }
+      }
+
+      return tokens.filter(({ address }) =>
+        filteredTokens.has(address.toString()),
+      );
     }
 
     return tokens;

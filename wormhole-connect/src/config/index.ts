@@ -79,6 +79,14 @@ export function buildConfig(
     validateDefaults(customConfig.ui.defaultInputs, networkData.chains, tokens);
   }
 
+  const ui = createUiConfig(customConfig.ui ?? {});
+
+  if (customConfig.tokens) {
+    // If the integrator has provided a whitelist of tokens, we can reasonably assume they also don't want
+    // users pasting in arbitrary token addresses.
+    ui.disableArbitraryTokens = true;
+  }
+
   return {
     whLegacy,
     sdkConfig,
@@ -138,14 +146,7 @@ export function buildConfig(
         return 0;
       }),
     tokens,
-
-    /*
-    // For token bridge =^_^=
-    wrappedTokenAddressCache: new WrappedTokenAddressCache(
-      tokens,
-      wrappedTokens,
-    ),
-    */
+    tokenWhitelist: customConfig.tokens,
 
     routes: new RouteOperator(customConfig.routes),
 

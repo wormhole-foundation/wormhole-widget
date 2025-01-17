@@ -233,6 +233,10 @@ export class TokenMapping<T> {
     );
   }
 
+  get chains(): Chain[] {
+    return Array.from(this._mapping.keys());
+  }
+
   // Merge values from another TokenMapping into this one
   merge(other: TokenMapping<T>) {
     other.forEach(this.add);
@@ -249,7 +253,7 @@ export class TokenMapping<T> {
 }
 
 export class TokenCache extends TokenMapping<Token> {
-  add(id: TokenId, token: Token) {
+  add(token: Token) {
     if (token.tokenBridgeOriginalTokenId) {
       const original = this.get(token.tokenBridgeOriginalTokenId);
       if (token.symbol === 'APT') {
@@ -261,7 +265,7 @@ export class TokenCache extends TokenMapping<Token> {
         token.symbol = original.symbol;
       }
     }
-    super.add(id, token);
+    super.add(token, token);
   }
 
   // Fetches token metadata (decimals, symbol)
@@ -274,13 +278,36 @@ export class TokenCache extends TokenMapping<Token> {
     return this.get(chain, 'native');
   }
 
+  findByAddressOrSymbol(
+    chain: Chain,
+    addressOrSymbol: string,
+  ): Token | undefined {
+    const byAddress = this.get(chain, addressOrSymbol);
+    if (byAddress) return byAddress;
+
+    const bySymbol = this.findBySymbol(chain, addressOrSymbol);
+    if (bySymbol) return bySymbol;
+
+    return undefined;
+  }
+
   // This should be used sparingly/never... use addresses instead.
+  // Excludes wrapped tokens
   findBySymbol(chain: Chain, symbol: string): Token | undefined {
-    const matching = this.getAllForChain(chain).filter(
+    let matching = this.getAllForChain(chain).filter(
       (t) => t.symbol === symbol,
     );
+
+    if (matching.length > 1) {
+      // Exclude wrapped tokens if there's multiple matches
+      matching = matching.filter((t) => !t.isTokenBridgeWrappedToken);
+    }
+
     if (matching.length === 1) {
       return matching[0];
+    } else if (matching.length > 1) {
+      // This means there's more than one native token (not wrapped) with this symbol
+      console.error(`Ambiguous token symbol: ${symbol}`);
     }
 
     return undefined;
@@ -349,7 +376,7 @@ export class TokenCache extends TokenMapping<Token> {
       tokenBridgeOriginalTokenId,
     );
 
-    this.add(tokenId, t);
+    this.add(t);
 
     return t;
   }
@@ -378,10 +405,9 @@ export class TokenCache extends TokenMapping<Token> {
 
         mapping.setLocalStorageKey(localStorageKey);
 
-        for (const [key, tokenData] of Object.entries(asJson.tokens)) {
-          const tokenId = parseTokenKey(key);
+        for (const [_key, tokenData] of Object.entries(asJson.tokens)) {
           const token = Token.fromJson(tokenData as TokenJson);
-          mapping.add(tokenId, token);
+          mapping.add(token);
         }
 
         return mapping;
@@ -402,8 +428,10 @@ export function buildTokenCache(
   network: Network,
   tokens: TokenConfig[],
   wrappedTokens: WrappedTokenAddresses,
+  tokenFilter?: string[],
 ): TokenCache {
   const cache = TokenCache.load(`wormhole-connect:token-cache:${network}`);
+
   for (const { tokenId, symbol, name, icon, decimals } of tokens) {
     const token = new Token(
       tokenId.chain,
@@ -413,7 +441,7 @@ export function buildTokenCache(
       name,
       icon,
     );
-    cache.add(token, token);
+    cache.add(token);
   }
 
   // Temporary hack... use wrappedTokens to populate the cache with all of the known
@@ -440,14 +468,13 @@ export function buildTokenCache(
             originalToken,
           );
 
-          cache.add(wrappedToken, wrappedToken);
+          cache.add(wrappedToken);
         }
       }
     }
   }
 
   cache.persist();
-
   return cache;
 }
 

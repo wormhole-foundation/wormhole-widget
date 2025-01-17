@@ -176,27 +176,32 @@ export const validateDefaults = (
     }
   }
 
-  if (defaults.fromChain && defaults.tokenKey) {
-    const token =
-      tokens.get(defaults.fromChain, defaults.tokenKey) ||
-      tokens.findBySymbol(defaults.fromChain, defaults.tokenKey);
+  if (defaults.fromChain && defaults.fromToken) {
+    const token = tokens.findByAddressOrSymbol(
+      defaults.fromChain,
+      defaults.fromToken,
+    );
     if (!token) {
       error(
-        `Invalid token "${defaults.tokenKey}" specified for defaultInputs.tokenKey`,
+        `Invalid token "${defaults.fromToken}" specified for defaultInputs.fromToken`,
       );
-      delete defaults.tokenKey;
+      delete defaults.fromToken;
     }
   }
 
-  if (defaults.fromChain && defaults.tokenKey) {
-    const chain = chains[defaults.fromChain]!;
-    const { tokenId, nativeChain } = tokens[defaults.tokenKey]!;
-    if (!tokenId && nativeChain !== chain.key) {
+  if (defaults.toChain && defaults.toToken) {
+    const token = tokens.findByAddressOrSymbol(
+      defaults.toChain,
+      defaults.toToken,
+    );
+    if (!token) {
       error(
-        `Invalid token "${defaults.tokenKey}" specified for defaultInputs.tokenKey. It does not exist on "${defaults.fromChain}"`,
+        `Invalid token "${defaults.toToken}" specified for defaultInputs.toToken`,
       );
+      delete defaults.toToken;
     }
   }
+
   return defaults;
 };
 
