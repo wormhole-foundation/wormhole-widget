@@ -140,10 +140,8 @@ export interface InternalConfig<N extends Network> {
   tokens: TokenCache;
   tokenWhitelist?: (string | TokenTuple)[];
 
-  // White lists
   chains: ChainsConfig;
   chainsArr: ChainConfig[];
-  tokensConfig?: TokensConfig;
 
   routes: RouteOperator;
 
@@ -159,7 +157,6 @@ export interface InternalConfig<N extends Network> {
 }
 
 export type TokenConfig = {
-  key: string;
   symbol: string;
   name?: string;
   decimals: number;

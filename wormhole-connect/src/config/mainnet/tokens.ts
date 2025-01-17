@@ -2,14 +2,12 @@ import { TokenIcon, TokenConfig } from '../types';
 
 export const MAINNET_TOKENS: TokenConfig[] = [
   {
-    key: 'ETH',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.ETH,
     tokenId: { chain: 'Ethereum', address: 'native' },
   },
   {
-    key: 'WETH',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -19,7 +17,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCeth',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -29,7 +26,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'WBTC',
     symbol: 'WBTC',
     decimals: 8,
     icon: TokenIcon.WBTC,
@@ -39,7 +35,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDT',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -49,7 +44,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'DAI',
     symbol: 'DAI',
     decimals: 18,
     icon: TokenIcon.DAI,
@@ -59,7 +53,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'BUSD',
     symbol: 'BUSD',
     decimals: 18,
     icon: TokenIcon.BUSD,
@@ -69,14 +62,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'POL',
     symbol: 'POL',
     decimals: 18,
     icon: TokenIcon.POLYGON,
     tokenId: { chain: 'Polygon', address: 'native' },
   },
   {
-    key: 'WPOL',
     symbol: 'WPOL',
     decimals: 18,
     icon: TokenIcon.POLYGON,
@@ -86,7 +77,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'WETHpolygon',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -96,7 +86,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCpolygon',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -106,7 +95,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTpolygon',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -116,14 +104,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'BNB',
     symbol: 'BNB',
     decimals: 18,
     icon: TokenIcon.BNB,
     tokenId: { chain: 'Bsc', address: 'native' },
   },
   {
-    key: 'WBNB',
     symbol: 'WBNB',
     decimals: 18,
     icon: TokenIcon.BNB,
@@ -133,7 +119,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCbnb',
     symbol: 'USDC',
     decimals: 18,
     icon: TokenIcon.USDC,
@@ -143,14 +128,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'AVAX',
     symbol: 'AVAX',
     decimals: 18,
     icon: TokenIcon.AVAX,
     tokenId: { chain: 'Avalanche', address: 'native' },
   },
   {
-    key: 'WAVAX',
     symbol: 'WAVAX',
     decimals: 18,
     icon: TokenIcon.AVAX,
@@ -160,7 +143,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCavax',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -170,7 +152,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTavax',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -180,7 +161,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'WETHavax',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -190,14 +170,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'FTM',
     symbol: 'FTM',
     decimals: 18,
     icon: TokenIcon.FANTOM,
     tokenId: { chain: 'Fantom', address: 'native' },
   },
   {
-    key: 'WFTM',
     symbol: 'WFTM',
     name: 'Wrapped Fantom',
     decimals: 18,
@@ -208,7 +186,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCfantom',
     symbol: 'USDC.e',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -218,7 +195,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'CELO',
     symbol: 'CELO',
     decimals: 18,
     icon: TokenIcon.CELO,
@@ -228,7 +204,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTcelo',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -238,14 +213,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'GLMR',
     symbol: 'GLMR',
     decimals: 18,
     icon: TokenIcon.GLMR,
     tokenId: { chain: 'Moonbeam', address: 'native' },
   },
   {
-    key: 'WGLMR',
     symbol: 'WGLMR',
     decimals: 18,
     icon: TokenIcon.GLMR,
@@ -255,14 +228,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'SOL',
     symbol: 'SOL',
     decimals: 9,
     icon: TokenIcon.SOLANA,
     tokenId: { chain: 'Solana', address: 'native' },
   },
   {
-    key: 'WSOL',
     symbol: 'WSOL',
     decimals: 9,
     tokenId: {
@@ -272,7 +243,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.SOLANA,
   },
   {
-    key: 'USDCsol',
     symbol: 'USDC',
     decimals: 6,
     tokenId: {
@@ -282,7 +252,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.USDC,
   },
   {
-    key: 'USDTsol',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -292,14 +261,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'SUI',
     symbol: 'SUI',
     decimals: 9,
     tokenId: { chain: 'Sui', address: 'native' },
     icon: TokenIcon.SUI,
   },
   {
-    key: 'USDCsui',
     symbol: 'USDC',
     decimals: 6,
     tokenId: {
@@ -310,21 +277,18 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.USDC,
   },
   {
-    key: 'APT',
     symbol: 'APT',
     decimals: 8,
     tokenId: { chain: 'Aptos', address: 'native' },
     icon: TokenIcon.APT,
   },
   {
-    key: 'ETHarbitrum',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.ETH,
     tokenId: { chain: 'Arbitrum', address: 'native' },
   },
   {
-    key: 'WETHarbitrum',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -334,7 +298,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCarbitrum',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -344,7 +307,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTarbitrum',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -354,14 +316,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'ETHoptimism',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.ETH,
     tokenId: { chain: 'Optimism', address: 'native' },
   },
   {
-    key: 'WETHoptimism',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -371,7 +331,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCoptimism',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -381,7 +340,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDToptimism',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -391,7 +349,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'WETHbsc',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -401,7 +358,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTbsc',
     symbol: 'USDT',
     decimals: 18,
     icon: TokenIcon.USDT,
@@ -411,14 +367,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'ETHbase',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.ETH,
     tokenId: { chain: 'Base', address: 'native' },
   },
   {
-    key: 'WETHbase',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.ETH,
@@ -428,7 +382,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDCbase',
     symbol: 'USDC',
     decimals: 6,
     icon: TokenIcon.USDC,
@@ -438,7 +391,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'USDTbase',
     symbol: 'USDT',
     decimals: 6,
     icon: TokenIcon.USDT,
@@ -448,7 +400,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'wstETHbase',
     symbol: 'wstETH',
     decimals: 18,
     tokenId: {
@@ -458,7 +409,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WSTETH,
   },
   {
-    key: 'wstETH',
     symbol: 'wstETH',
     decimals: 18,
     tokenId: {
@@ -468,7 +418,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WSTETH,
   },
   {
-    key: 'wstETHarbitrum',
     symbol: 'wstETH',
     decimals: 18,
     tokenId: {
@@ -478,7 +427,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WSTETH,
   },
   {
-    key: 'wstETHoptimism',
     symbol: 'wstETH',
     decimals: 18,
     tokenId: {
@@ -488,7 +436,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WSTETH,
   },
   {
-    key: 'wstETHpolygon',
     symbol: 'wstETH',
     decimals: 18,
     tokenId: {
@@ -498,14 +445,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WSTETH,
   },
   {
-    key: 'KLAY',
     symbol: 'KLAY',
     decimals: 18,
     icon: TokenIcon.KLAY,
     tokenId: { chain: 'Klaytn', address: 'native' },
   },
   {
-    key: 'WKLAY',
     symbol: 'WKLAY',
     decimals: 18,
     name: 'wKLAY',
@@ -516,7 +461,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'PYTH',
     symbol: 'PYTH',
     decimals: 6,
     tokenId: {
@@ -526,14 +470,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.PYTH,
   },
   {
-    key: 'ETHscroll',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.SCROLL,
     tokenId: { chain: 'Scroll', address: 'native' },
   },
   {
-    key: 'WETHscroll',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.SCROLL,
@@ -543,14 +485,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'ETHblast',
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.BLAST,
     tokenId: { chain: 'Blast', address: 'native' },
   },
   {
-    key: 'WETHblast',
     symbol: 'WETH',
     decimals: 18,
     icon: TokenIcon.BLAST,
@@ -560,14 +500,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'OKB',
     symbol: 'OKB',
     decimals: 18,
     icon: TokenIcon.XLAYER,
     tokenId: { chain: 'Xlayer', address: 'native' },
   },
   {
-    key: 'WOKB',
     symbol: 'WOKB',
     decimals: 18,
     icon: TokenIcon.XLAYER,
@@ -577,14 +515,12 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'MNT',
     symbol: 'MNT',
     decimals: 18,
     icon: TokenIcon.MANTLE,
     tokenId: { chain: 'Mantle', address: 'native' },
   },
   {
-    key: 'WMNT',
     symbol: 'WMNT',
     decimals: 18,
     icon: TokenIcon.MANTLE,
@@ -594,7 +530,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     },
   },
   {
-    key: 'tBTC',
     symbol: 'tBTC',
     decimals: 18,
     tokenId: {
@@ -604,7 +539,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'tBTCpolygon',
     symbol: 'tBTC',
     decimals: 18,
     tokenId: {
@@ -614,7 +548,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'tBTCoptimism',
     symbol: 'tBTC',
     decimals: 18,
     tokenId: {
@@ -624,7 +557,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'tBTCarbitrum',
     symbol: 'tBTC',
     decimals: 18,
     tokenId: {
@@ -634,7 +566,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'tBTCbase',
     symbol: 'tBTC',
     decimals: 18,
     tokenId: {
@@ -644,7 +575,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'tBTCsol',
     symbol: 'tBTC',
     decimals: 8,
     tokenId: {
@@ -654,7 +584,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.TBTC,
   },
   {
-    key: 'ETHworldchain',
     symbol: 'ETH',
     tokenId: {
       chain: 'Worldchain',
@@ -664,7 +593,6 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.WORLDCHAIN,
   },
   {
-    key: 'WETHworldchain',
     symbol: 'WETH',
     tokenId: {
       chain: 'Worldchain',
