@@ -182,7 +182,7 @@ const TokenList = (props: Props) => {
       });
     }
 
-    if (config.tokenWhitelist) {
+    if (config.tokenWhitelist && config.tokenWhitelist.length > 0) {
       // If integrator has specified a token whitelist, the last step is to filter the token list by this whitelist.
       //
       // The logic behind how this works is a little complicated. The whitelist is an array of (string | TokenTuple).
