@@ -149,6 +149,9 @@ const WidgetItem = (props: Props) => {
     }
 
     return eta - timePassed;
+    // totalSeconds is not used in this hook but we still need it here
+    // to update the remaining eta every second.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eta, timestamp, totalSeconds]);
 
   // Displays the countdown
@@ -195,7 +198,7 @@ const WidgetItem = (props: Props) => {
     }
 
     return ((eta - etaRemaining) / eta) * 100;
-  }, [eta, etaRemaining, isCompleted]);
+  }, [eta, etaExpired, etaRemaining]);
 
   // Start the countdown timer
   useEffect(() => {
@@ -206,7 +209,7 @@ const WidgetItem = (props: Props) => {
       //   3- we have the remaining eta
       restart(new Date(Date.now() + etaRemaining), true);
     }
-  }, [etaRemaining, isCompleted, isRunning]);
+  }, [etaRemaining, isCompleted, isRunning, restart]);
 
   // Action handler to navigate user to the Redeem view of this transaction
   const resumeTransaction = useCallback(async () => {
@@ -244,6 +247,7 @@ const WidgetItem = (props: Props) => {
     }
   }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
+  // Do not render this widget if we don't have the transaction
   if (!transaction) {
     return <></>;
   }
