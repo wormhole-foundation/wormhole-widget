@@ -33,6 +33,7 @@ const {
   AutomaticCCTPRoute,
   CCTPRoute,
   AutomaticPorticoRoute,
+  AutomaticMockRoute,
 } = routes;
 
 export default WormholeConnect;
@@ -59,6 +60,7 @@ export {
   AutomaticCCTPRoute,
   CCTPRoute,
   AutomaticPorticoRoute,
+  AutomaticMockRoute,
   MayanRoute,
   MayanRouteWH,
   MayanRouteMCTP,

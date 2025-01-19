@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const WORK_ROOT = process.env['WORK_ROOT'];
+const SKIP_3RD_PARTY = process.env['SKIP_3RD_PARTY'];
 
 const thirdPartyPkgs = {
   '@mayanfinance/wormhole-sdk-route': 'wormhole-sdk-route',
@@ -26,9 +27,11 @@ const SDK_PATH = path.join(WORK_ROOT, 'wormhole-sdk-ts');
 
 let sdkPackages = {};
 
-for (let packageName in thirdPartyPkgs) {
-  const packageDir = thirdPartyPkgs[packageName];
-  sdkPackages[packageName] = path.join(WORK_ROOT, packageDir);
+if (!SKIP_3RD_PARTY) {
+  for (let packageName in thirdPartyPkgs) {
+    const packageDir = thirdPartyPkgs[packageName];
+    sdkPackages[packageName] = path.join(WORK_ROOT, packageDir);
+  }
 }
 
 const { execSync } = require('child_process');

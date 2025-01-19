@@ -88,6 +88,14 @@ export const RoutesConfig: Record<string, RouteData> = {
     icon: WormholeIcon,
     pendingMessage: 'Waiting for Wormhole network consensus . . .',
   },
+  AutomaticMock: {
+    name: 'AutomaticMock',
+    displayName: 'Mock',
+    providedBy: 'Wormhole Labs Web Team',
+    link: 'https://wormhole.com/',
+    icon: WormholeIcon,
+    pendingMessage: 'Waiting for Wormhole network consensus . . .',
+  },
 
   ManualNtt: {
     name: 'ManualNtt',
