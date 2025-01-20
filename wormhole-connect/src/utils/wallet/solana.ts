@@ -35,6 +35,7 @@ import {
   isVersionedTransaction,
   SolanaUnsignedTransaction,
   determinePriorityFee,
+  determinePriorityFeeTritonOne,
 } from '@wormhole-foundation/sdk-solana';
 import { Network } from '@wormhole-foundation/sdk';
 import { TransactionMessage } from '@solana/web3.js';
@@ -321,13 +322,60 @@ async function createPriorityFeeInstructions(
     }),
   );
 
-  const priorityFee = await determinePriorityFee(
-    connection,
-    transaction,
-    0.95,
-    1,
-    100_000, // 100k microLamports minimum priority fee
-  );
+  const priorityFeeConfig =
+    config.transactionSettings?.Solana?.priorityFee || {};
+
+  const {
+    percentile = 0.9,
+    percentileMultiple = 1,
+    min = 100_000,
+    max = 100_000_000,
+    feeEstimator,
+  } = priorityFeeConfig;
+
+  const calculateFee = async (
+    method: 'triton' | 'default',
+  ): Promise<number | null> => {
+    try {
+      const fee =
+        method === 'triton'
+          ? await determinePriorityFeeTritonOne(
+              connection,
+              transaction,
+              percentile,
+              percentileMultiple,
+              min,
+              max,
+            )
+          : await determinePriorityFee(
+              connection,
+              transaction,
+              percentile,
+              percentileMultiple,
+              min,
+              max,
+            );
+
+      const feeInSol = (fee / 1e6 / 1e9) * unitsUsed * 1.2;
+      console.log(
+        `${
+          method === 'triton' ? 'Triton One' : 'Default'
+        } priority fee set to ${feeInSol} SOL`,
+      );
+      return fee;
+    } catch (e) {
+      console.warn(`Failed to determine priority fee using ${method}:`, e);
+      return null;
+    }
+  };
+
+  let priorityFee =
+    feeEstimator === 'triton' ? await calculateFee('triton') : null;
+
+  if (priorityFee === null) {
+    priorityFee = (await calculateFee('default')) ?? 0;
+  }
+
   instructions.push(
     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
   );
