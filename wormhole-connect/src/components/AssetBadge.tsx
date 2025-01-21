@@ -7,7 +7,8 @@ import { makeStyles } from 'tss-react/mui';
 import ChainIcon from 'icons/ChainIcons';
 import TokenIcon from 'icons/TokenIcons';
 
-import type { ChainConfig, TokenConfig } from 'config/types';
+import type { ChainConfig } from 'config/types';
+import { Token } from 'config/tokens';
 
 const useStyles = makeStyles()((theme: any) => ({
   badgeContent: {
@@ -18,12 +19,12 @@ const useStyles = makeStyles()((theme: any) => ({
 
 type Props = {
   chainConfig?: ChainConfig;
-  tokenConfig?: TokenConfig;
+  token?: Token;
 };
 
 function AssetBadge(props: Props) {
   const { classes } = useStyles();
-  const { chainConfig, tokenConfig } = props;
+  const { chainConfig, token } = props;
 
   return (
     <Badge
@@ -41,7 +42,7 @@ function AssetBadge(props: Props) {
         },
       }}
     >
-      <TokenIcon icon={tokenConfig?.icon} height={36} />
+      <TokenIcon icon={token?.icon} height={36} />
     </Badge>
   );
 }

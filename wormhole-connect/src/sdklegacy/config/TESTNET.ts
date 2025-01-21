@@ -120,7 +120,7 @@ const TESTNET_CONFIG: WormholeConfig = {
   rpcs: {
     Bsc: 'https://data-seed-prebsc-1-s3.binance.org:8545',
     Avalanche: 'https://api.avax-test.network/ext/bc/C/rpc',
-    Fantom: 'https://rpc.ankr.com/fantom_testnet',
+    Fantom: 'https://rpc.testnet.fantom.network',
     Celo: 'https://alfajores-forno.celo-testnet.org',
     Solana: 'https://api.devnet.solana.com',
     Moonbeam: 'https://rpc.api.moonbase.moonbeam.network',

@@ -5,7 +5,8 @@ import {
   TESTNET_REST_MAPPING,
   TESTNET_RPC_MAPPING,
 } from './rpcs';
-import { TESTNET_TOKENS, TESTNET_WRAPPED_TOKENS } from './tokens';
+import { TESTNET_TOKENS } from './tokens';
+import { TESTNET_WRAPPED_TOKENS } from './wrappedTokens';
 
 export * from './chains';
 export * from './rpcs';

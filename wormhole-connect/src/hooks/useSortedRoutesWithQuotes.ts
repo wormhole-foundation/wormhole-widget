@@ -5,6 +5,7 @@ import { routes } from '@wormhole-foundation/sdk';
 import useRoutesQuotesBulk from 'hooks/useRoutesQuotesBulk';
 import config from 'config';
 import useFetchSupportedRoutes from './useFetchSupportedRoutes';
+import { useGetTokens } from './useGetTokens';
 
 type Quote = routes.Quote<
   routes.Options,
@@ -25,10 +26,13 @@ type HookReturn = {
 };
 
 export const useSortedRoutesWithQuotes = (): HookReturn => {
-  const { amount, fromChain, token, toChain, destToken, preferredRouteName } =
-    useSelector((state: RootState) => state.transferInput);
+  const { amount, fromChain, toChain, preferredRouteName } = useSelector(
+    (state: RootState) => state.transferInput,
+  );
 
   const { toNativeToken } = useSelector((state: RootState) => state.relay);
+
+  const { sourceToken, destToken } = useGetTokens();
 
   const { supportedRoutes, isFetching: isFetchingSupportedRoutes } =
     useFetchSupportedRoutes();
@@ -37,12 +41,12 @@ export const useSortedRoutesWithQuotes = (): HookReturn => {
     () => ({
       amount,
       sourceChain: fromChain,
-      sourceToken: token,
+      sourceToken,
       destChain: toChain,
       destToken,
       nativeGas: toNativeToken,
     }),
-    [amount, fromChain, token, toChain, destToken, toNativeToken],
+    [amount, fromChain, sourceToken, destToken, toChain, toNativeToken],
   );
 
   const { quotesMap, isFetching: isFetchingQuotes } = useRoutesQuotesBulk(

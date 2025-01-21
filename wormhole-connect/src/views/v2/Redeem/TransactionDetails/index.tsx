@@ -24,6 +24,7 @@ import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 
 import type { RootState } from 'store';
 import { toFixedDecimals } from 'utils/balance';
+import { useTokens } from 'contexts/TokensContext';
 
 const useStyles = makeStyles()((theme: any) => ({
   container: {
@@ -47,8 +48,8 @@ const TransactionDetails = () => {
     recipient,
     toChain,
     fromChain,
-    tokenKey,
-    receivedTokenKey,
+    token,
+    receivedToken,
     receiveAmount,
     receiveNativeAmount,
     relayerFee,
@@ -57,9 +58,11 @@ const TransactionDetails = () => {
 
   const { route: routeName } = useSelector((state: RootState) => state.redeem);
 
-  const { usdPrices: tokenPrices } = useSelector(
-    (state: RootState) => state.tokenPrices,
-  );
+  const sourceToken = config.tokens.get(token);
+  const destToken = config.tokens.get(receivedToken);
+
+  const { getTokenPrice, isFetchingTokenPrices, lastTokenPriceUpdate } =
+    useTokens();
 
   // Separator with a unicode dot in the middle
   const separator = useMemo(
@@ -71,16 +74,16 @@ const TransactionDetails = () => {
 
   // Render details for the sent amount
   const sentAmount = useMemo(() => {
-    if (!tokenKey || !fromChain) {
+    if (!sourceToken || !fromChain) {
       return <></>;
     }
 
-    const sourceTokenConfig = config.tokens[tokenKey];
+    const sourceTokenConfig = config.tokens.get(token);
     const sourceChainConfig = config.chains[fromChain]!;
 
     const usdAmount = calculateUSDPrice(
+      getTokenPrice,
       amount,
-      tokenPrices.data,
       sourceTokenConfig,
     );
 
@@ -92,14 +95,14 @@ const TransactionDetails = () => {
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <AssetBadge
           chainConfig={sourceChainConfig}
-          tokenConfig={sourceTokenConfig}
+          token={sourceTokenConfig}
         />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
-            {formattedAmount} {sourceTokenConfig.symbol}
+            {formattedAmount} {sourceToken.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
-            {tokenPrices.isFetching ? (
+            {isFetchingTokenPrices ? (
               <CircularProgress size={14} />
             ) : (
               <>
@@ -119,25 +122,24 @@ const TransactionDetails = () => {
     fromChain,
     sender,
     separator,
+    token,
     theme.palette.text.secondary,
-    tokenKey,
-    tokenPrices.data,
-    tokenPrices.isFetching,
+    isFetchingTokenPrices,
+    lastTokenPriceUpdate,
   ]);
 
   // Render details for the received amount
   const receivedAmount = useMemo(() => {
-    if (!receivedTokenKey || !toChain) {
+    if (!destToken || !toChain) {
       return <></>;
     }
 
-    const destTokenConfig = config.tokens[receivedTokenKey];
     const destChainConfig = config.chains[toChain]!;
 
     const usdAmount = calculateUSDPrice(
+      getTokenPrice,
       receiveAmount,
-      tokenPrices.data,
-      destTokenConfig,
+      destToken,
     );
 
     const recipientAddress = recipient ? trimAddress(recipient) : '';
@@ -150,14 +152,14 @@ const TransactionDetails = () => {
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <AssetBadge
           chainConfig={destChainConfig}
-          tokenConfig={destTokenConfig}
+          token={destToken}
         />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
-            {formattedReceiveAmount} {destTokenConfig.symbol}
+            {formattedReceiveAmount} {destToken!.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
-            {tokenPrices.isFetching ? (
+            {isFetchingTokenPrices ? (
               <CircularProgress size={14} />
             ) : (
               <>
@@ -174,13 +176,14 @@ const TransactionDetails = () => {
     );
   }, [
     receiveAmount,
-    receivedTokenKey,
+
+    receivedToken,
     recipient,
     separator,
     theme.palette.text.secondary,
     toChain,
-    tokenPrices.data,
-    tokenPrices.isFetching,
+    isFetchingTokenPrices,
+    lastTokenPriceUpdate,
   ]);
 
   // Vertical line that connects sender and receiver token icons
@@ -196,18 +199,18 @@ const TransactionDetails = () => {
   );
 
   const bridgeFee = useMemo(() => {
-    if (!relayerFee) {
+    if (!relayerFee || !relayerFee.token) {
       return <></>;
     }
 
-    const feeTokenConfig = config.tokens[relayerFee.tokenKey];
+    const feeTokenConfig = config.tokens.get(relayerFee.token);
     if (!feeTokenConfig) {
       return <></>;
     }
 
     const feePrice = calculateUSDPrice(
+      getTokenPrice,
       relayerFee.fee,
-      tokenPrices.data,
       feeTokenConfig,
     );
 
@@ -232,20 +235,15 @@ const TransactionDetails = () => {
         <Typography color={theme.palette.text.secondary} fontSize={14}>
           Network cost
         </Typography>
-        {tokenPrices.isFetching ? <CircularProgress size={14} /> : feeValue}
+        {isFetchingTokenPrices ? <CircularProgress size={14} /> : feeValue}
       </Stack>
     );
-  }, [
-    relayerFee,
-    routeName,
-    theme.palette.text.secondary,
-    tokenPrices.data,
-    tokenPrices.isFetching,
-  ]);
+
+  }, [relayerFee, routeName, theme.palette.text.secondary, isFetchingTokenPrices]);
 
   const destinationGas = useMemo(() => {
     if (
-      !receivedTokenKey ||
+      !receivedToken ||
       !receiveNativeAmount ||
       sdkAmount.units(receiveNativeAmount) === 0n
     ) {
@@ -259,9 +257,9 @@ const TransactionDetails = () => {
     }
 
     const gasTokenPrice = calculateUSDPrice(
+      getTokenPrice,
       receiveNativeAmount,
-      tokenPrices.data,
-      config.tokens[destChainConfig.gasToken],
+      config.tokens.getGasToken(destChainConfig.sdkName),
     );
 
     return (
@@ -269,7 +267,7 @@ const TransactionDetails = () => {
         <Typography color={theme.palette.text.secondary} fontSize={14}>
           Additional gas
         </Typography>
-        {tokenPrices.isFetching ? (
+        {isFetchingTokenPrices ? (
           <CircularProgress size={14} />
         ) : (
           <Typography fontSize={14}>{gasTokenPrice}</Typography>
@@ -278,12 +276,12 @@ const TransactionDetails = () => {
     );
   }, [
     receiveNativeAmount,
-    receivedTokenKey,
     theme.palette.text.secondary,
     toChain,
-    tokenPrices.data,
-    tokenPrices.isFetching,
+    isFetchingTokenPrices,
+    lastTokenPriceUpdate,
   ]);
+
 
   const explorerLink = useMemo(() => {
     // Fallback to routeName if RouteContext value is not available

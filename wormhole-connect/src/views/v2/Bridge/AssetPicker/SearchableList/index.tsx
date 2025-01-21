@@ -28,6 +28,7 @@ type SearchableListProps<T> = {
   loading?: ReactNode;
   renderFn: (item: T, index: number) => ReactNode;
   filterFn: (item: T, query: string) => boolean;
+  onQueryChange?: (query: string) => void;
 };
 
 function SearchableList<T>(props: SearchableListProps<T>): ReactNode {
@@ -44,7 +45,12 @@ function SearchableList<T>(props: SearchableListProps<T>): ReactNode {
       {props.title}
       <SearchInput
         value={query}
-        onChange={setQuery}
+        onChange={(val: string) => {
+          setQuery(val);
+          if (props.onQueryChange) {
+            props.onQueryChange(val);
+          }
+        }}
         placeholder={props.searchPlaceholder}
       />
       <List className={joinClass([classes.searchList, scrollbarClass])}>

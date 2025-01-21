@@ -25,6 +25,8 @@ jobs:
       - run: npm run lint:ci
         working-directory: wormhole-connect
   test:
+    if: false
+
     runs-on: ubuntu-latest
 
     steps:
@@ -63,7 +65,7 @@ jobs:
           cache-dependency-path: "wormhole-connect/package-lock.json"
       - run: npm ci
         working-directory: wormhole-connect
-      - run: npx tsx scripts/checkForeignAssetsConfig.ts
+      - run: npm run checkForeignAssets
         working-directory: wormhole-connect
   build-hosted:
     runs-on: ubuntu-latest

@@ -18,7 +18,7 @@ import {
 } from 'utils';
 
 import type { Transaction } from 'config/types';
-import type { TokenPrices } from 'store/tokenPrices';
+import { useTokens } from 'contexts/TokensContext';
 
 const useStyles = makeStyles()((theme: any) => ({
   container: {
@@ -36,7 +36,6 @@ const useStyles = makeStyles()((theme: any) => ({
 
 type Props = {
   data: Transaction;
-  tokenPrices: TokenPrices | null;
 };
 
 const TxHistoryItem = (props: Props) => {
@@ -47,10 +46,11 @@ const TxHistoryItem = (props: Props) => {
     txHash,
     amount,
     amountUsd,
-    toChain,
+    recipient,
     fromChain,
-    tokenKey,
-    receivedTokenKey,
+    fromToken,
+    toChain,
+    toToken,
     receiveAmount,
     senderTimestamp,
     explorerLink,
@@ -63,21 +63,22 @@ const TxHistoryItem = (props: Props) => {
     ),
     [],
   );
+  const { getTokenPrice, isFetchingTokenPrices, lastTokenPriceUpdate } =
+    useTokens();
 
   // Render details for the sent amount
   const sentAmount = useMemo(() => {
-    const sourceTokenConfig = config.tokens[tokenKey];
     const sourceChainConfig = config.chains[fromChain]!;
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <AssetBadge
           chainConfig={sourceChainConfig}
-          tokenConfig={sourceTokenConfig}
+          token={fromToken}
         />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
-            {amount} {sourceTokenConfig?.symbol}
+            {amount} {fromToken?.symbol}
           </Typography>
           <Typography color={theme.palette.text.secondary} fontSize={14}>
             {getUSDFormat(amountUsd)}
@@ -93,19 +94,18 @@ const TxHistoryItem = (props: Props) => {
     fromChain,
     separator,
     theme.palette.text.secondary,
-    tokenKey,
+    fromToken,
   ]);
 
   // Render details for the received amount
   const receivedAmount = useMemo(() => {
     const destChainConfig = config.chains[toChain]!;
-    const destTokenConfig = receivedTokenKey
-      ? config.tokens[receivedTokenKey]
-      : undefined;
+    const destTokenConfig = toToken;
+
 
     const receiveAmountPrice = calculateUSDPrice(
+      getTokenPrice,
       parseFloat(receiveAmount),
-      props.tokenPrices,
       destTokenConfig,
     );
 
@@ -120,7 +120,7 @@ const TxHistoryItem = (props: Props) => {
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
         <AssetBadge
           chainConfig={destChainConfig}
-          tokenConfig={destTokenConfig}
+          token={destTokenConfig}
         />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
@@ -134,9 +134,12 @@ const TxHistoryItem = (props: Props) => {
       </Stack>
     );
   }, [
-    props.tokenPrices,
+
+    isFetchingTokenPrices,
+    lastTokenPriceUpdate,
     receiveAmount,
-    receivedTokenKey,
+    toToken,
+    recipient,
     separator,
     theme.palette.text.secondary,
     toChain,

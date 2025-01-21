@@ -6,7 +6,7 @@ import { makeStyles } from 'tss-react/mui';
 
 import config from 'config';
 import { RootState } from 'store';
-import { setAmount, setDestToken, swapInputs } from 'store/transferInput';
+import { setAmount, swapInputs } from 'store/transferInput';
 import { useWalletManager } from 'contexts/WalletManager';
 
 const useStyles = makeStyles()(() => ({
@@ -50,20 +50,6 @@ function SwapInputs() {
     dispatch(swapInputs());
     swapWallets();
     dispatch(setAmount(''));
-
-    if (destToken) {
-      config.routes
-        .allSupportedDestTokens(config.tokens[destToken], toChain, fromChain)
-        .then((tokenConfigs) => {
-          const isTokenSupportedAsDest = tokenConfigs.find(
-            (tc) => tc.key === sourceToken,
-          );
-
-          if (!isTokenSupportedAsDest) {
-            dispatch(setDestToken(''));
-          }
-        });
-    }
   }, [
     fromChain,
     toChain,

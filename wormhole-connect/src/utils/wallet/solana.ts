@@ -271,7 +271,13 @@ async function createPriorityFeeInstructions(
     }),
   );
 
-  const priorityFee = await determinePriorityFee(connection, transaction, 0.95);
+  const priorityFee = await determinePriorityFee(
+    connection,
+    transaction,
+    0.95,
+    1,
+    100_000, // 100k microLamports minimum priority fee
+  );
   instructions.push(
     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
   );

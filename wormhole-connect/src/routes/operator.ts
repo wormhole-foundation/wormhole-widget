@@ -1,11 +1,12 @@
 import config from 'config';
-import { TokenConfig } from 'config/types';
+import { parseTokenKey, Token, tokenKey } from 'config/tokens';
 
 import {
   Chain,
   routes,
   TransactionId,
   amount as sdkAmount,
+  TokenId,
 } from '@wormhole-foundation/sdk';
 
 import SDKv2Route from './sdkv2';
@@ -40,9 +41,9 @@ export const DEFAULT_ROUTES = [
 
 export interface QuoteParams {
   sourceChain: Chain;
-  sourceToken: string;
+  sourceToken: Token;
   destChain: Chain;
-  destToken: string;
+  destToken: Token;
   amount: sdkAmount.Amount;
   nativeGas: number;
 }
@@ -154,20 +155,11 @@ export default class RouteOperator {
     return Array.from(supported);
   }
 
-  async allSupportedSourceTokens(
-    destToken: TokenConfig | undefined,
-    sourceChain?: Chain,
-    destChain?: Chain,
-  ): Promise<TokenConfig[]> {
-    const supported: { [key: string]: TokenConfig } = {};
+  async allSupportedSourceTokens(sourceChain?: Chain): Promise<Token[]> {
+    const supported: { [key: string]: Token } = {};
     await this.forEach(async (_name, route) => {
       try {
-        const sourceTokens = await route.supportedSourceTokens(
-          config.tokensArr,
-          destToken,
-          sourceChain,
-          destChain,
-        );
+        const sourceTokens = await route.supportedSourceTokens(sourceChain);
 
         for (const token of sourceTokens) {
           supported[token.key] = token;
@@ -180,28 +172,36 @@ export default class RouteOperator {
   }
 
   async allSupportedDestTokens(
-    sourceToken: TokenConfig | undefined,
-    sourceChain?: Chain,
-    destChain?: Chain,
-  ): Promise<TokenConfig[]> {
-    const supported: { [key: string]: TokenConfig } = {};
-    await this.forEach(async (_name, route) => {
-      try {
-        const destTokens = await route.supportedDestTokens(
-          config.tokensArr,
-          sourceToken,
-          sourceChain,
-          destChain,
-        );
+    sourceToken: Token | undefined,
+    sourceChain: Chain,
+    destChain: Chain,
+  ): Promise<TokenId[]> {
+    const supported: Set<string> = new Set();
 
-        for (const token of destTokens) {
-          supported[token.key] = token;
+    await this.forEach(async (name, route) => {
+      try {
+        // TODO remove once the SDK has a special return value that represents infinite supported tokens
+        if (name.includes('Mayan')) {
+          config.tokens.getAllForChain(destChain).map((t) => {
+            supported.add(t.key);
+          });
+        } else {
+          const destTokenIds = await route.supportedDestTokens(
+            sourceToken,
+            sourceChain,
+            destChain,
+          );
+
+          for (const token of destTokenIds) {
+            supported.add(tokenKey(token));
+          }
         }
       } catch (e) {
         console.error(e);
       }
     });
-    return Object.values(supported);
+
+    return Array.from(supported).map(parseTokenKey);
   }
 
   async getQuotes(
@@ -251,11 +251,13 @@ class QuoteCache {
   }
 
   quoteParamsKey(routeName: string, params: QuoteParams): string {
-    return `${routeName}:${params.sourceChain}:${params.sourceToken}:${
+    return `${routeName}:${
+      params.sourceChain
+    }:${params.sourceToken.address.toString()}:${
       params.destChain
-    }:${params.destToken}:${sdkAmount.units(params.amount)}:${
-      params.nativeGas
-    }`;
+    }:${params.destToken.address.toString()}:${sdkAmount.units(
+      params.amount,
+    )}:${params.nativeGas}`;
   }
 
   get(routeName: string, params: QuoteParams): QuoteResult | null {

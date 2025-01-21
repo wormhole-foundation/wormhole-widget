@@ -96,7 +96,14 @@ const WidgetItem = (props: Props) => {
     txDetails,
     txHash,
   } = transaction;
-  const { amount, eta, fromChain, toChain, tokenKey } = txDetails || {};
+  const {
+    amount,
+    eta,
+    fromChain,
+    toChain,
+    token: tokenTuple,
+  } = txDetails || {};
+  const token = config.tokens.get(tokenTuple);
 
   // Initialize the countdown
   const { seconds, minutes, totalSeconds, isRunning, restart } = useTimer({
@@ -266,7 +273,7 @@ const WidgetItem = (props: Props) => {
               <Stack direction="row" alignItems="center">
                 <Typography fontSize={14} marginRight="8px">
                   {`${sdkAmount.display(sdkAmount.truncate(amount, 4))} ${
-                    config.tokens[tokenKey].symbol
+                    token?.symbol || ''
                   }`}
                 </Typography>
                 <Box className={classes.chainIcon}>

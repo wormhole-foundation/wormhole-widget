@@ -5,13 +5,14 @@ import config from 'config';
 import { setToken, setSupportedSourceTokens } from 'store/transferInput';
 
 import type { Chain } from '@wormhole-foundation/sdk';
-import type { TokenConfig } from 'config/types';
+import type { Token } from 'config/tokens';
+import { useTokens } from 'contexts/TokensContext';
 
 type Props = {
   sourceChain: Chain | undefined;
-  sourceToken: string;
+  sourceToken: Token | undefined;
   destChain: Chain | undefined;
-  destToken: string;
+  destToken: Token | undefined;
   route?: string;
 };
 
@@ -26,6 +27,8 @@ const useComputeSourceTokens = (props: Props): ReturnProps => {
 
   const [isFetching, setIsFetching] = useState(false);
 
+  const { lastTokenCacheUpdate } = useTokens();
+
   useEffect(() => {
     if (!sourceChain) {
       return;
@@ -34,30 +37,26 @@ const useComputeSourceTokens = (props: Props): ReturnProps => {
     let active = true;
 
     const computeSrcTokens = async () => {
-      let supported: Array<TokenConfig> = [];
+      let supported: Token[] = [];
 
       // Start fetching and setting all supported tokens
       setIsFetching(true);
 
       try {
-        supported = await config.routes.allSupportedSourceTokens(
-          config.tokens[destToken],
-          sourceChain,
-          destChain,
-        );
+        supported = await config.routes.allSupportedSourceTokens(sourceChain);
       } catch (e) {
         console.error(e);
       }
 
       if (active) {
-        dispatch(setSupportedSourceTokens(supported));
+        dispatch(setSupportedSourceTokens(supported.map((t) => t.tuple)));
         const isTokenSupported =
-          sourceToken && supported.some((t) => t.key === sourceToken);
+          sourceToken && supported.some((t) => t.equals(sourceToken));
         if (!isTokenSupported) {
-          dispatch(setToken(''));
+          // No routes found for this token :(((((
         }
-        if (supported.length === 1 && sourceToken === '') {
-          dispatch(setToken(supported[0].key));
+        if (supported.length === 1) {
+          dispatch(setToken(supported[0].tuple));
         }
       }
 
@@ -74,7 +73,14 @@ const useComputeSourceTokens = (props: Props): ReturnProps => {
     // because it's not needed and it will also cause an extra round unnecessary updates when the side-affect automatically sets the sourceToken.
     // Please See dispatch(setToken(...)) calls above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [destChain, destToken, dispatch, route, sourceChain]);
+  }, [
+    destChain,
+    destToken,
+    dispatch,
+    route,
+    sourceChain,
+    lastTokenCacheUpdate,
+  ]);
 
   return { isFetching };
 };

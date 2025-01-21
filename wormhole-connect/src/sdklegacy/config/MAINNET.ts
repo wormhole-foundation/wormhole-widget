@@ -129,7 +129,7 @@ const MAINNET_CONFIG: WormholeConfig = {
     Polygon: 'https://rpc.ankr.com/polygon',
     Bsc: 'https://bscrpc.com',
     Avalanche: 'https://rpc.ankr.com/avalanche',
-    Fantom: 'https://rpc.ankr.com/fantom',
+    Fantom: 'https://rpcapi.fantom.network',
     Celo: 'https://rpc.ankr.com/celo',
     Moonbeam: 'https://rpc.ankr.com/moonbeam',
     Sui: 'https://rpc.mainnet.sui.io',

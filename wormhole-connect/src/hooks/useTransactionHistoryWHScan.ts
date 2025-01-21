@@ -8,11 +8,10 @@ import {
 
 import config from 'config';
 import { WORMSCAN } from 'config/constants';
-import { getGasToken, getTokenById, getWrappedToken } from 'utils';
+import { getGasToken } from 'utils';
 
 import type { Chain, ChainId } from '@wormhole-foundation/sdk';
 import type { Transaction } from 'config/types';
-import { getNativeVersionOfToken } from 'store/transferInput';
 import { toFixedDecimals } from 'utils/balance';
 
 interface WormholeScanTransaction {
@@ -140,31 +139,29 @@ const useTransactionHistoryWHScan = (
 
     const tokenChain = chainIdToChain(tokenChainId);
 
-    let tokenConfig = getTokenById({
-      chain: tokenChain,
-      address: standarizedProperties.tokenAddress,
-    });
+    let token = config.tokens.get(
+      tokenChain,
+      standarizedProperties.tokenAddress,
+    );
 
-    if (!tokenConfig) {
+    if (!token) {
       // IMPORTANT:
       // If we don't have the token config from the token address,
       // we can check if we can use the symbol to get it.
       // So far this case is only for SUI and APT
-      if (data?.symbol && config.tokens[data.symbol]) {
-        tokenConfig = config.tokens[data.symbol];
-      } else {
-        return;
+      const foundBySymbol =
+        data?.symbol && config.tokens.findBySymbol(tokenChain, data.symbol);
+      if (foundBySymbol) {
+        token = foundBySymbol;
       }
     }
 
-    const toChain = chainIdToChain(toChainId) as Chain;
+    // If we've still failed to get the token, return early
+    if (!token) {
+      return;
+    }
 
-    // If the sent token is native to the destination chain, use sent token.
-    // Otherwise get the wrapped token for the destination chain.
-    const receivedTokenKey =
-      tokenConfig.nativeChain === toChain
-        ? tokenConfig.key
-        : getWrappedToken(tokenConfig)?.key;
+    const toChain = chainIdToChain(toChainId) as Chain;
 
     // data.tokenAmount holds the normalized token amount value.
     // Otherwise we need to format standarizedProperties.amount using decimals
@@ -210,10 +207,9 @@ const useTransactionHistoryWHScan = (
       amountUsd: usdAmount ? Number(usdAmount) : 0,
       receiveAmount: receiveAmountDisplay,
       fromChain,
+      fromToken: token,
       toChain,
-      tokenKey: tokenConfig.key,
-      tokenAddress: standarizedProperties.tokenAddress,
-      receivedTokenKey,
+      toToken: token,
       senderTimestamp: sourceChain?.timestamp,
       receiverTimestamp: targetChain?.timestamp,
       explorerLink: `${WORMSCAN}tx/${txHash}${
@@ -274,43 +270,37 @@ const useTransactionHistoryWHScan = (
         relayerFee,
       } = payload;
 
-      const nativeTokenKey = getNativeVersionOfToken(
-        tx.data.symbol,
+      const nativeToken = config.tokens.get(
         txData.fromChain,
+        tx.content.standarizedProperties.tokenAddress,
       );
-      const nativeToken = config.tokens[nativeTokenKey];
       if (!nativeToken) return;
 
       const startToken = flagSet.flags?.shouldWrapNative
         ? getGasToken(txData.fromChain)
         : nativeToken;
 
-      const finalTokenConfig = config.sdkConverter.findTokenConfigV1(
+      const finalToken = config.tokens.get(
         Wormhole.tokenId(
           txData.toChain,
           toNative(txData.toChain, finalTokenAddress).toString(),
         ),
-        config.tokensArr,
       );
 
-      if (!finalTokenConfig) return;
+      if (!finalToken) return;
 
       const receiveAmount = BigInt(minAmountFinish) - BigInt(relayerFee);
 
       // Override with Portico specific data
-      txData.tokenKey = startToken.key;
-      txData.tokenAddress = startToken.tokenId?.address || 'native';
-      txData.receivedTokenKey = flagSet.flags?.shouldUnwrapNative
-        ? getGasToken(txData.toChain).key
-        : finalTokenConfig.key;
+      txData.fromToken = startToken;
+      txData.toToken = flagSet.flags.shouldUnwrapNative
+        ? getGasToken(txData.toChain)
+        : finalToken;
       txData.receiveAmount =
         receiveAmount > 0
           ? toFixedDecimals(
               sdkAmount.display(
-                sdkAmount.fromBaseUnits(
-                  receiveAmount,
-                  finalTokenConfig.decimals,
-                ),
+                sdkAmount.fromBaseUnits(receiveAmount, finalToken.decimals),
                 0,
               ),
               DECIMALS,

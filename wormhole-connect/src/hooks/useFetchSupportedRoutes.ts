@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from 'store';
 import config from 'config';
 import { getTokenDetails } from 'telemetry';
+import { useGetTokens } from './useGetTokens';
 import { maybeLogSdkError } from 'utils/errors';
 import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
@@ -16,9 +17,11 @@ const useFetchSupportedRoutes = (): HookReturn => {
   const [routes, setRoutes] = useState<string[]>([]);
   const [isFetching, setIsFetching] = useState<boolean>(false);
 
-  const { token, destToken, fromChain, toChain, amount } = useSelector(
+  const { fromChain, toChain, amount } = useSelector(
     (state: RootState) => state.transferInput,
   );
+
+  const { sourceToken, destToken } = useGetTokens();
 
   const { toNativeToken } = useSelector((state: RootState) => state.relay);
 
@@ -27,7 +30,7 @@ const useFetchSupportedRoutes = (): HookReturn => {
   );
 
   useEffect(() => {
-    if (!fromChain || !toChain || !token || !destToken) {
+    if (!fromChain || !toChain || !sourceToken || !destToken) {
       setRoutes([]);
       setIsFetching(false);
       return;
@@ -52,17 +55,18 @@ const useFetchSupportedRoutes = (): HookReturn => {
 
         try {
           supported = await route.isRouteSupported(
-            token,
+            sourceToken,
             destToken,
             fromChain,
             toChain,
           );
+
           if (supported && config.isRouteSupportedHandler) {
             supported = await config.isRouteSupportedHandler({
               route: name,
               fromChain,
               toChain,
-              fromToken: getTokenDetails(token),
+              fromToken: getTokenDetails(sourceToken),
               toToken: getTokenDetails(destToken),
             });
           }
@@ -71,6 +75,12 @@ const useFetchSupportedRoutes = (): HookReturn => {
             e,
             `Error when checking route (${name}) is supported`,
           );
+        }
+
+        // HAX
+        // TODO token refactor
+        if (route.rc.name.includes('Mayan')) {
+          supported = true;
         }
 
         if (supported) {
@@ -89,15 +99,7 @@ const useFetchSupportedRoutes = (): HookReturn => {
     return () => {
       isActive = false;
     };
-  }, [
-    token,
-    destToken,
-    amount,
-    fromChain,
-    toChain,
-    toNativeToken,
-    receivingWallet,
-  ]);
+  }, [sourceToken, destToken, amount, fromChain, toChain, toNativeToken, receivingWallet]);
 
   return {
     supportedRoutes: routes,
