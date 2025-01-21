@@ -117,7 +117,7 @@ const WidgetItem = (props: Props) => {
     isReadyToClaim,
     receipt: trackingReceipt,
   } = useTrackTransfer({
-    eta,
+    eta: eta ? new Date(timestamp + eta) : undefined,
     receipt: initialReceipt,
     route,
   });
