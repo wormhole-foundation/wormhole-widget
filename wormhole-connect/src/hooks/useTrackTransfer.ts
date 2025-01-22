@@ -60,12 +60,11 @@ const useTrackTransfer = (props: Props): ReturnProps => {
 
       while (isActive && !isCompleted(receipt)) {
         if (eta !== undefined) {
-          // If we have an ETA, and it's longer than 2 minutes out, we wait until 2 minutes are left
+          // If we have an ETA, and it's longer than 1 minute out, we wait until 1 minute is left
           // before trying to track the transfer's progress.
           const msRemaining = millisUntilEta(eta);
 
           if (msRemaining > MINIMUM_ETA) {
-            // Sleep until 1 minute from ETA
             await sleep(msRemaining - MINIMUM_ETA);
           }
         }

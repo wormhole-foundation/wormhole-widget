@@ -196,7 +196,7 @@ const Redeem = () => {
     } else {
       return undefined;
     }
-  }, [eta]);
+  }, [eta, txTimestamp]);
 
   // Initialize the countdown with 0, 0 as we might not have eta or txTimestamp yet
   const { seconds, minutes, isRunning, restart } = useTimer({
