@@ -219,7 +219,7 @@ const AmountInput = (props: Props) => {
   const tokenPriceAdornment = useMemo(() => {
     const price = calculateUSDPrice(
       getTokenPrice,
-      Number(amountInput),
+      Number(amountInput === '.' ? '0.' : amountInput),
       sourceToken,
     );
 
@@ -248,13 +248,7 @@ const AmountInput = (props: Props) => {
         </Stack>
       </InputAdornment>
     );
-  }, [
-    amountInput,
-    getTokenPrice,
-    isInputDisabled,
-    sourceToken,
-    theme.palette.text.secondary,
-  ]);
+  }, [amountInput, getTokenPrice, sourceToken, theme.palette.text.secondary]);
 
   const handleDebouncedChange = useCallback(
     (newValue: string): void => {
@@ -273,7 +267,9 @@ const AmountInput = (props: Props) => {
         disabled={maxButtonDisabled}
         onClick={() => {
           if (props.tokenBalance) {
-            handleDebouncedChange(sdkAmount.display(props.tokenBalance));
+            const tokenBalance = sdkAmount.display(props.tokenBalance);
+            handleChange(tokenBalance);
+            handleDebouncedChange(tokenBalance);
           }
         }}
       >
@@ -290,6 +286,7 @@ const AmountInput = (props: Props) => {
     isInputDisabled,
     sendingWallet.address,
     props.tokenBalance,
+    handleChange,
     handleDebouncedChange,
   ]);
 
