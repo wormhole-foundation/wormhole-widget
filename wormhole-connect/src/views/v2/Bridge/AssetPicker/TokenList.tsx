@@ -79,7 +79,7 @@ const TokenList = (props: Props) => {
     } catch (_e) {
       // Failed to parse the search query as an address... this is expected to happen a lot
     }
-  }, [searchQuery, props.selectedChainConfig.sdkName]);
+  }, [searchQuery, props.selectedChainConfig.sdkName, getOrFetchToken]);
 
   const sortedTokens = useMemo(() => {
     const nativeToken = config.tokens.getGasToken(

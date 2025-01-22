@@ -6,7 +6,13 @@ import {
 } from '@wormhole-foundation/sdk';
 import config, { clearWormholeContextV2 } from 'config';
 import { Token, TokenMapping } from 'config/tokens';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+} from 'react';
 import { fetchTokenPrices } from 'utils/coingecko';
 import { useDebouncedCallback } from 'use-debounce';
 import { getAddress } from 'ethers';
@@ -55,47 +61,48 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
   const [isFetchingTokenPrices, setIsFetchingPrices] = useState(false);
   const [lastTokenPriceUpdate, setLastPriceUpdate] = useState(new Date());
 
-  const getOrFetchToken = async (
-    tokenId: TokenId,
-  ): Promise<Token | undefined> => {
-    if (
-      !isNative(tokenId.address) &&
-      chainToPlatform(tokenId.chain) === 'Evm'
-    ) {
-      // ensure address is checksummed correctly
-      const addr = tokenId.address.toString();
-      const checksummedAddr = getAddress(addr);
-      if (addr !== checksummedAddr) {
-        console.warn(
-          `Correcting improperly checksummed EVM address: ${addr} -> ${checksummedAddr}`,
-        );
-        tokenId.address = toNative(tokenId.chain, checksummedAddr);
+  const getOrFetchToken = useCallback(
+    async (tokenId: TokenId): Promise<Token | undefined> => {
+      if (
+        !isNative(tokenId.address) &&
+        chainToPlatform(tokenId.chain) === 'Evm'
+      ) {
+        // ensure address is checksummed correctly
+        const addr = tokenId.address.toString();
+        const checksummedAddr = getAddress(addr);
+        if (addr !== checksummedAddr) {
+          console.warn(
+            `Correcting improperly checksummed EVM address: ${addr} -> ${checksummedAddr}`,
+          );
+          tokenId.address = toNative(tokenId.chain, checksummedAddr);
+        }
       }
-    }
 
-    const cached = config.tokens.get(tokenId);
-    if (cached) return cached;
+      const cached = config.tokens.get(tokenId);
+      if (cached) return cached;
 
-    try {
-      setIsFetchingToken(true);
-      const t = await config.tokens.addFromTokenId(tokenId);
-      setLastUpdate(config.tokens.lastUpdate);
-      console.info(
-        `Added new token to cache`,
-        t,
-        lastTokenCacheUpdate,
-        config.tokens.lastUpdate,
-      );
-      config.tokens.persist();
-      clearWormholeContextV2();
-      return t;
-    } catch (e) {
-      console.error('Error getting token', e);
-      return undefined;
-    } finally {
-      setIsFetchingToken(false);
-    }
-  };
+      try {
+        setIsFetchingToken(true);
+        const t = await config.tokens.addFromTokenId(tokenId);
+        setLastUpdate(config.tokens.lastUpdate);
+        console.info(
+          `Added new token to cache`,
+          t,
+          lastTokenCacheUpdate,
+          config.tokens.lastUpdate,
+        );
+        config.tokens.persist();
+        clearWormholeContextV2();
+        return t;
+      } catch (e) {
+        console.error('Error getting token', e);
+        return undefined;
+      } finally {
+        setIsFetchingToken(false);
+      }
+    },
+    [],
+  );
 
   const tokenPricesToFetch: Set<TokenId> = new Set();
 
