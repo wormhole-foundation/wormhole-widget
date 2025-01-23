@@ -262,8 +262,6 @@ export interface TransactionLocal {
 
 export interface TransactionSettings {
   Solana?: {
-    priorityFee?: PriorityFeeOptions & {
-      feeEstimator?: 'triton';
-    };
+    priorityFee?: PriorityFeeOptions;
   };
 }
