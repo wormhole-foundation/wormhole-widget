@@ -171,7 +171,7 @@ async function createPriorityFeeInstructions(
 
   const calculateFee = async (
     rpcProvider?: SolanaRpcProvider,
-  ): Promise<{ fee: number; methodUsed: 'triton' | 'default' }> => {
+  ): Promise<{ fee: number; methodUsed: 'triton' | 'default' | 'minimum' }> => {
     if (rpcProvider === 'triton') {
       // Triton has an experimental RPC method that accepts a percentile paramater
       // and usually gives more accurate fee numbers.
@@ -190,35 +190,38 @@ async function createPriorityFeeInstructions(
           methodUsed: 'triton',
         };
       } catch (e) {
-        console.warn(
-          `Failed to determine priority fee using ${rpcProvider} RPC:`,
-          e,
-        );
-
-        // Fall back to default calculation
-        return calculateFee(undefined);
+        console.warn(`Failed to determine priority fee using Triton RPC:`, e);
       }
     }
 
-    // By default, use generic Solana RPC method
-    const fee = await determinePriorityFee(
-      connection,
-      transaction,
-      percentile,
-      percentileMultiple,
-      min,
-      max,
-    );
+    try {
+      // By default, use generic Solana RPC method
+      const fee = await determinePriorityFee(
+        connection,
+        transaction,
+        percentile,
+        percentileMultiple,
+        min,
+        max,
+      );
 
-    return {
-      fee,
-      methodUsed: 'default',
-    };
+      return {
+        fee,
+        methodUsed: 'default',
+      };
+    } catch (e) {
+      console.warn(`Failed to determine priority fee using Triton RPC:`, e);
+
+      return {
+        fee: min,
+        methodUsed: 'minimum',
+      };
+    }
   };
 
   const rpcProvider = determineRpcProvider(connection.rpcEndpoint);
 
-  const { fee, methodUsed } = (await calculateFee(rpcProvider)) ?? min;
+  const { fee, methodUsed } = await calculateFee(rpcProvider);
 
   const maxFeeInSol =
     (fee /
