@@ -29,7 +29,7 @@ function determineRpcProvider(endpoint: string): SolanaRpcProvider {
   } else if (endpoint.includes('helius-rpc.com')) {
     return 'helius';
   } else if (endpoint.includes('rpc.ankr.com')) {
-    return 'triton';
+    return 'ankr';
   } else {
     return 'unknown';
   }
