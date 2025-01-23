@@ -8,6 +8,7 @@ import {
   VersionedTransaction,
   Commitment,
   SimulatedTransactionResponse,
+  LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 
 import {
@@ -148,11 +149,13 @@ async function createPriorityFeeInstructions(
     }
   }
 
+  const unitBudget = Math.floor(unitsUsed * 1.2); // Budget in 20% headroom
+
   const instructions: TransactionInstruction[] = [];
   instructions.push(
     ComputeBudgetProgram.setComputeUnitLimit({
       // Set compute budget to 120% of the units used in the simulated transaction
-      units: unitsUsed * 1.2,
+      units: unitBudget,
     }),
   );
 
@@ -167,52 +170,77 @@ async function createPriorityFeeInstructions(
   } = priorityFeeConfig;
 
   const calculateFee = async (
-    method: SolanaRpcProvider,
-  ): Promise<number | null> => {
-    try {
-      const fee =
-        method === 'triton'
-          ? await determinePriorityFeeTritonOne(
-              connection,
-              transaction,
-              percentile,
-              percentileMultiple,
-              min,
-              max,
-            )
-          : await determinePriorityFee(
-              connection,
-              transaction,
-              percentile,
-              percentileMultiple,
-              min,
-              max,
-            );
+    rpcProvider?: SolanaRpcProvider,
+  ): Promise<{ fee: number; methodUsed: 'triton' | 'default' }> => {
+    if (rpcProvider === 'triton') {
+      // Triton has an experimental RPC method that accepts a percentile paramater
+      // and usually gives more accurate fee numbers.
+      try {
+        const fee = await determinePriorityFeeTritonOne(
+          connection,
+          transaction,
+          percentile,
+          percentileMultiple,
+          min,
+          max,
+        );
 
-      const feeInSol = (fee / 1e6 / 1e9) * unitsUsed * 1.2;
-      console.log(
-        `${
-          method === 'triton' ? 'Triton One' : 'Default'
-        } priority fee set to ${feeInSol} SOL`,
-      );
-      return fee;
-    } catch (e) {
-      console.warn(`Failed to determine priority fee using ${method}:`, e);
-      return null;
+        return {
+          fee,
+          methodUsed: 'triton',
+        };
+      } catch (e) {
+        console.warn(
+          `Failed to determine priority fee using ${rpcProvider} RPC:`,
+          e,
+        );
+
+        // Fall back to default calculation
+        return calculateFee(undefined);
+      }
     }
+
+    // By default, use generic Solana RPC method
+    const fee = await determinePriorityFee(
+      connection,
+      transaction,
+      percentile,
+      percentileMultiple,
+      min,
+      max,
+    );
+
+    return {
+      fee,
+      methodUsed: 'default',
+    };
   };
 
   const rpcProvider = determineRpcProvider(connection.rpcEndpoint);
 
-  let priorityFee =
-    rpcProvider === 'triton' ? await calculateFee('triton') : null;
+  const { fee, methodUsed } = (await calculateFee(rpcProvider)) ?? min;
 
-  if (priorityFee === null) {
-    priorityFee = (await calculateFee('unknown')) ?? 0;
-  }
+  const maxFeeInSol =
+    (fee /
+      // convert microlamports to lamports
+      1e6 /
+      // convert lamports to SOL
+      LAMPORTS_PER_SOL) *
+    // multiply by maximum compute units used
+    unitBudget;
+
+  console.table({
+    'RPC Provider': rpcProvider,
+    'Method used': methodUsed,
+    'Percentile used': percentile,
+    'Multiple used': percentileMultiple,
+    'Compute budget': unitBudget,
+    'Priority fee': fee,
+    'Max fee in SOL': maxFeeInSol,
+  });
 
   instructions.push(
-    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: fee }),
   );
   return instructions;
 }
