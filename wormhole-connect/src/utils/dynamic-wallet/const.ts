@@ -1,0 +1,20 @@
+// FIXME: There are a lot of evm wallets, the code is not ready to render all of them, so we select only the most popular ones
+export const evmWalletOptions = [
+  'metamask',
+  'rabby',
+  'okxwallet',
+  'walletconnect',
+  'binance',
+  'coinbase',
+  'phantomevm',
+  'backpackevm',
+  'trust',
+  'fireblocks',
+  'rainbow',
+  'safe',
+  'braveevm',
+  'exodusevm',
+  'imtoken',
+  'bitgetwallet',
+  'uniswap',
+];

@@ -1,10 +1,6 @@
 import { Context } from 'sdklegacy';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-  disconnect,
-  swapWalletConnections,
-  TransferWallet,
-} from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
 import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 
 export type WalletData = {
@@ -12,7 +8,6 @@ export type WalletData = {
   address: string;
   currentAddress: string;
   error: string;
-  icon?: string; // the wallet's icon encoded as a base64 string
   name: string;
 };
 
@@ -26,7 +21,6 @@ const NO_WALLET: WalletData = {
   type: undefined,
   currentAddress: '',
   error: '',
-  icon: undefined,
   name: '',
 };
 
@@ -38,7 +32,6 @@ const initialState: WalletState = {
 export type ConnectPayload = {
   address: string;
   type: Context;
-  icon?: string;
   name: string;
 };
 
@@ -55,7 +48,6 @@ export const walletSlice = createSlice({
       state.sending.type = payload.type;
       state.sending.name = payload.name;
       state.sending.error = '';
-      state.sending.icon = payload.icon;
     },
     connectReceivingWallet: (
       state: WalletState,
@@ -66,7 +58,6 @@ export const walletSlice = createSlice({
       state.receiving.type = payload.type;
       state.receiving.name = payload.name;
       state.receiving.error = '';
-      state.receiving.icon = payload.icon;
     },
     clearWallet: (
       state: WalletState,
@@ -78,7 +69,6 @@ export const walletSlice = createSlice({
       state: WalletState,
       { payload }: PayloadAction<TransferWallet>,
     ) => {
-      disconnect(payload);
       state[payload] = NO_WALLET;
     },
     setWalletError: (
@@ -107,12 +97,9 @@ export const walletSlice = createSlice({
       state.sending = state.receiving;
       state.receiving = tmp;
 
-      swapWalletConnections();
-
       // If the new sending wallet is a ReadOnlyWallet,
       // disconnect it since it can't be used for signing
       if (state.sending.name === ReadOnlyWallet.NAME) {
-        disconnect(TransferWallet.SENDING);
         state[TransferWallet.SENDING] = NO_WALLET;
       }
     },

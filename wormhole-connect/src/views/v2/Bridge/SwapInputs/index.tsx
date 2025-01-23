@@ -7,7 +7,7 @@ import { makeStyles } from 'tss-react/mui';
 import config from 'config';
 import { RootState } from 'store';
 import { setAmount, swapInputs } from 'store/transferInput';
-import { swapWallets } from 'store/wallet';
+import { useWalletManager } from 'contexts/WalletManager';
 
 const useStyles = makeStyles()(() => ({
   swapButton: {
@@ -23,6 +23,7 @@ const useStyles = makeStyles()(() => ({
 
 function SwapInputs() {
   const dispatch = useDispatch();
+  const { swapWalletConnections: swapWallets } = useWalletManager();
   const [rotateAnimation, setRotateAnimation] = useState('');
 
   const {
@@ -47,7 +48,7 @@ function SwapInputs() {
     );
 
     dispatch(swapInputs());
-    dispatch(swapWallets());
+    swapWallets();
     dispatch(setAmount(''));
   }, [
     fromChain,

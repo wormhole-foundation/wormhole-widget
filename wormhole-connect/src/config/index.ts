@@ -6,7 +6,7 @@ import {
 import MAINNET from './mainnet';
 import TESTNET from './testnet';
 import DEVNET from './devnet';
-import type { WormholeConnectConfig } from './types';
+import type { DynamicWalletConfig, WormholeConnectConfig } from './types';
 import { InternalConfig } from './types';
 import { mergeCustomWrappedTokens, validateDefaults } from './utils';
 import { wrapEventHandler } from './events';
@@ -79,12 +79,20 @@ export function buildConfig(
     validateDefaults(customConfig.ui.defaultInputs, networkData.chains, tokens);
   }
 
+  const isMainnet = network === 'Mainnet';
+
+  const dynamicWalletConfig: DynamicWalletConfig = {
+    environmentId: isMainnet
+      ? '12430fd8-3f08-42d3-9b7c-7c70c66535b3'
+      : 'b1f4a038-1092-4656-b91d-e61648740572',
+  };
+
   return {
     whLegacy,
     sdkConfig,
 
     network,
-    isMainnet: network === 'Mainnet',
+    isMainnet,
 
     // External resources
     rpcs,
@@ -154,6 +162,9 @@ export function buildConfig(
 
     // Guardian Set
     guardianSet: networkData.guardianSet,
+
+    // Dynamic Wallet
+    dynamicWalletConfig,
   };
 }
 

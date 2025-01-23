@@ -13,6 +13,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { WormholeConnectConfig } from './config/types';
 import { WormholeConnectTheme } from 'theme';
 import { RouteProvider } from './contexts/RouteContext';
+import { WalletManagerProvider } from 'contexts/WalletManager';
 import { TokensProvider } from './contexts/TokensContext';
 
 export interface WormholeConnectProps {
@@ -39,7 +40,9 @@ export default function WormholeConnect({
           <ErrorBoundary>
             <TokensProvider>
               <RouteProvider>
-                <AppRouter config={config} />
+                <WalletManagerProvider>
+                  <AppRouter config={config} />
+                </WalletManagerProvider>
               </RouteProvider>
             </TokensProvider>
           </ErrorBoundary>
