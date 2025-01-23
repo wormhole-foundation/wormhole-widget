@@ -196,7 +196,7 @@ const TokenList = (props: Props) => {
       //
       // The integrator can also specify exact tokens using TokenTuples like ["Solana", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"].
 
-      let filteredTokens: Set<string> = new Set();
+      const filteredTokens: Set<string> = new Set();
       const desiredSymbols: string[] = [];
 
       for (const item of config.tokenWhitelist) {
