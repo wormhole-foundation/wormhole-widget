@@ -81,7 +81,7 @@ export function buildConfig(
 
   const ui = createUiConfig(customConfig.ui ?? {});
 
-  if (customConfig.tokens) {
+  if (customConfig.tokens && ui.disableArbitraryTokens === undefined) {
     // If the integrator has provided a whitelist of tokens, we can reasonably assume they also don't want
     // users pasting in arbitrary token addresses.
     ui.disableArbitraryTokens = true;
