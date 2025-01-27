@@ -49,7 +49,7 @@ type Props = {
 const TokenList = (props: Props) => {
   const { classes } = useStyles();
   const theme = useTheme();
-  const tokenPastingIsEnabled = config.ui.disableArbitraryTokens !== true;
+  const tokenPastingIsEnabled = config.ui.disableUserInputtedTokens !== true;
 
   const { getOrFetchToken, isFetchingToken, getTokenPrice } = useTokens();
 
