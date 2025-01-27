@@ -81,7 +81,11 @@ export function buildConfig(
 
   const ui = createUiConfig(customConfig.ui ?? {});
 
-  if (customConfig.tokens && ui.disableUserInputtedTokens === undefined) {
+  if (
+    customConfig.tokens &&
+    customConfig.tokens.length > 0 &&
+    ui.disableUserInputtedTokens === undefined
+  ) {
     // If the integrator has provided a whitelist of tokens, we can reasonably assume they also don't want
     // users pasting in arbitrary token addresses.
     ui.disableUserInputtedTokens = true;
