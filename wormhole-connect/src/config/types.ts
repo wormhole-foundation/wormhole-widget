@@ -26,7 +26,7 @@ import {
 import RouteOperator from 'routes/operator';
 import { UiConfig } from './ui';
 import { TransferInfo } from 'utils/sdkv2';
-import { Token, TokenCache } from './tokens';
+import { Token, TokenCache, TokenTuple } from './tokens';
 
 export enum TokenIcon {
   'AVAX' = 1,
@@ -99,7 +99,7 @@ export interface WormholeConnectConfig {
 
   // White lists
   chains?: Chain[];
-  tokens?: string[];
+  tokens?: (string | TokenTuple)[];
   routes?: routes.RouteConstructor<any>[];
 
   // Custom tokens
@@ -143,11 +143,10 @@ export interface InternalConfig<N extends Network> {
   coinGeckoApiKey?: string;
 
   tokens: TokenCache;
+  tokenWhitelist?: (string | TokenTuple)[];
 
-  // White lists
   chains: ChainsConfig;
   chainsArr: ChainConfig[];
-  tokensConfig?: TokensConfig;
 
   routes: RouteOperator;
 
@@ -165,7 +164,6 @@ export interface InternalConfig<N extends Network> {
 }
 
 export type TokenConfig = {
-  key: string;
   symbol: string;
   name?: string;
   decimals: number;
