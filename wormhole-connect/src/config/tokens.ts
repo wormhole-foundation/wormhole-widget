@@ -405,7 +405,7 @@ export class TokenCache extends TokenMapping<Token> {
 
         mapping.setLocalStorageKey(localStorageKey);
 
-        for (const [_key, tokenData] of Object.entries(asJson.tokens)) {
+        for (const [, tokenData] of Object.entries(asJson.tokens)) {
           const token = Token.fromJson(tokenData as TokenJson);
           mapping.add(token);
         }

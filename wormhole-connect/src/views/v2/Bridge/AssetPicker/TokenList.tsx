@@ -220,7 +220,6 @@ const TokenList = (props: Props) => {
             if (!token.isTokenBridgeWrappedToken) {
               filteredTokens.add(token.address.toString());
               foundNative = true;
-              break;
             } else {
               wrapped.push(token);
             }
