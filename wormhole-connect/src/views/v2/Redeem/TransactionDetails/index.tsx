@@ -93,10 +93,7 @@ const TransactionDetails = () => {
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <AssetBadge
-          chainConfig={sourceChainConfig}
-          token={sourceTokenConfig}
-        />
+        <AssetBadge chainConfig={sourceChainConfig} token={sourceTokenConfig} />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {formattedAmount} {sourceToken.symbol}
@@ -150,10 +147,7 @@ const TransactionDetails = () => {
 
     return (
       <Stack alignItems="center" direction="row" justifyContent="flex-start">
-        <AssetBadge
-          chainConfig={destChainConfig}
-          token={destToken}
-        />
+        <AssetBadge chainConfig={destChainConfig} token={destToken} />
         <Stack direction="column" marginLeft="12px">
           <Typography fontSize={16}>
             {formattedReceiveAmount} {destToken!.symbol}
@@ -238,8 +232,12 @@ const TransactionDetails = () => {
         {isFetchingTokenPrices ? <CircularProgress size={14} /> : feeValue}
       </Stack>
     );
-
-  }, [relayerFee, routeName, theme.palette.text.secondary, isFetchingTokenPrices]);
+  }, [
+    relayerFee,
+    routeName,
+    theme.palette.text.secondary,
+    isFetchingTokenPrices,
+  ]);
 
   const destinationGas = useMemo(() => {
     if (
@@ -281,7 +279,6 @@ const TransactionDetails = () => {
     isFetchingTokenPrices,
     lastTokenPriceUpdate,
   ]);
-
 
   const explorerLink = useMemo(() => {
     // Fallback to routeName if RouteContext value is not available

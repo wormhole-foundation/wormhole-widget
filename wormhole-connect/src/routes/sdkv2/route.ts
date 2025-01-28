@@ -16,9 +16,7 @@ import { SDKv2Signer } from './signer';
 
 import { amount as sdkAmount } from '@wormhole-foundation/sdk';
 import config, { getWormholeContextV2 } from 'config';
-import {
-  sleep,
-} from 'utils';
+import { sleep } from 'utils';
 import { isFrankensteinToken } from 'utils';
 import { TransferWallet } from 'utils/wallet';
 
