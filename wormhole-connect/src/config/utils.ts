@@ -53,6 +53,8 @@ export const mergeCustomWrappedTokens = (
 
   for (const chain in custom) {
     for (const addr in custom[chain]) {
+      // Prevent error when chain is not defined in built-in config
+      if (!builtin[chain]) builtin[chain] = {};
       builtin[chain][addr] = {
         ...custom[chain][addr],
         // Prevent overwriting built-in wrapped token addresses
