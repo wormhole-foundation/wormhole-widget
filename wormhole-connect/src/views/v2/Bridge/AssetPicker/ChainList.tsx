@@ -6,6 +6,7 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import ChainIcon from 'icons/ChainIcons';
@@ -114,22 +115,23 @@ const ChainList = (props: Props) => {
     return (
       <List component={Stack} direction="row">
         {topChains.map((chain: ChainConfig) => (
-          <ListItemButton
-            key={chain.key}
-            selected={selectedChainConfig?.key === chain.key}
-            className={classes.chainButton}
-            onClick={() => onChainSelect(chain.key)}
-          >
-            <ChainIcon icon={chain.icon} />
-            <Typography
-              fontSize="12px"
-              lineHeight="12px"
-              marginTop="8px"
-              whiteSpace="nowrap"
+          <Tooltip key={chain.key} title={chain.displayName}>
+            <ListItemButton
+              selected={selectedChainConfig?.key === chain.key}
+              className={classes.chainButton}
+              onClick={() => onChainSelect(chain.key)}
             >
-              {chain.symbol}
-            </Typography>
-          </ListItemButton>
+              <ChainIcon icon={chain.icon} />
+              <Typography
+                fontSize="12px"
+                lineHeight="12px"
+                marginTop="8px"
+                whiteSpace="nowrap"
+              >
+                {chain.symbol}
+              </Typography>
+            </ListItemButton>
+          </Tooltip>
         ))}
         <ListItemButton
           className={classes.chainButton}
