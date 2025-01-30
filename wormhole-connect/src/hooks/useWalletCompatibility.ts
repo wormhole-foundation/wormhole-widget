@@ -27,6 +27,7 @@ export const useWalletCompatibility = ({
     if (isManualCCTPRoute) {
       // Aptos CCTP requires modern (AIP-62 standard) wallets with support for signing move script transaction types
       const compatibleWallets: AvailableWallets[] = [
+        'Petra',
         'Pontem Wallet',
         'Nightly',
       ];
