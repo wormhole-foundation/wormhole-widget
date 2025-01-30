@@ -283,6 +283,16 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     icon: TokenIcon.APT,
   },
   {
+    symbol: 'USDC',
+    decimals: 6,
+    tokenId: {
+      chain: 'Aptos',
+      address:
+        '0xbae207659db88bea0cbead6da0ed00aac12edcdda169e591cd41c94180b46f3b',
+    },
+    icon: TokenIcon.USDC,
+  },
+  {
     symbol: 'ETH',
     decimals: 18,
     icon: TokenIcon.ETH,

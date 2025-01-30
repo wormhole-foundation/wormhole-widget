@@ -135,6 +135,16 @@ export const TESTNET_TOKENS: TokenConfig[] = [
     decimals: 8,
   },
   {
+    symbol: 'USDC',
+    decimals: 6,
+    tokenId: {
+      chain: 'Aptos',
+      address:
+        '0x69091fbab5f7d635ee7ac5098cf0c1efbe31d68fec0f2cd565e8d168daf52832',
+    },
+    icon: TokenIcon.USDC,
+  },
+  {
     symbol: 'KLAY',
     icon: TokenIcon.KLAY,
     decimals: 18,
