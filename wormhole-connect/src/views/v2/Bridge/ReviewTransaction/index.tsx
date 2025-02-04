@@ -394,7 +394,7 @@ const ReviewTransaction = (props: Props) => {
       </div>
       <SingleRoute
         route={RoutesConfig[route]}
-        isSelected={false}
+        isSelected={true}
         destinationGasDrop={receiveNativeAmount}
         quote={quote}
       />

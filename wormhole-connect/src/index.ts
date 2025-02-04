@@ -9,7 +9,7 @@ import type { WormholeConnectConfig } from './config/types';
 import type { WormholeConnectEvent } from './telemetry/types';
 
 // Routes
-import { DEFAULT_ROUTES, nttRoutes } from './routes/operator';
+import { DEFAULT_ROUTES, MonadBridgeRoute, nttRoutes } from './routes/operator';
 import { routes } from '@wormhole-foundation/sdk';
 import {
   MayanRoute,
@@ -63,6 +63,7 @@ export {
   MayanRouteWH,
   MayanRouteMCTP,
   MayanRouteSWIFT,
+  MonadBridgeRoute,
 
   // Utility function for CDN-hosted version of Connect
   wormholeConnectHosted,
