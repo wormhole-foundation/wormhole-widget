@@ -86,6 +86,17 @@ export function buildConfig(
       ? '12430fd8-3f08-42d3-9b7c-7c70c66535b3'
       : 'b1f4a038-1092-4656-b91d-e61648740572',
   };
+  const ui = createUiConfig(customConfig.ui ?? {});
+
+  if (
+    customConfig.tokens &&
+    customConfig.tokens.length > 0 &&
+    ui.disableUserInputtedTokens === undefined
+  ) {
+    // If the integrator has provided a whitelist of tokens, we can reasonably assume they also don't want
+    // users pasting in arbitrary token addresses.
+    ui.disableUserInputtedTokens = true;
+  }
 
   return {
     whLegacy,
@@ -146,14 +157,7 @@ export function buildConfig(
         return 0;
       }),
     tokens,
-
-    /*
-    // For token bridge =^_^=
-    wrappedTokenAddressCache: new WrappedTokenAddressCache(
-      tokens,
-      wrappedTokens,
-    ),
-    */
+    tokenWhitelist: customConfig.tokens,
 
     routes: new RouteOperator(customConfig.routes),
 
@@ -165,6 +169,8 @@ export function buildConfig(
 
     // Dynamic Wallet
     dynamicWalletConfig,
+    // Transaction settings
+    transactionSettings: customConfig?.transactionSettings || {},
   };
 }
 

@@ -51,14 +51,19 @@ const useStyles = makeStyles()((theme: any) => ({
     width: '100%',
     boxShadow: `0px 0px 3.5px 0px ${theme.palette.primary.main}`,
   },
+  cardContent: {
+    padding: '16px 20px',
+    ':last-child': {
+      padding: '16px 20px',
+    },
+  },
   cardActionArea: {
-    height: '76px',
+    height: '72px',
   },
   chainIcon: {
     background: theme.palette.background.default,
     border: `2px solid ${theme.palette.modal.background}`,
     borderRadius: '6px',
-    padding: '2px',
   },
   completedIcon: {
     color: theme.palette.success.main,
@@ -112,12 +117,20 @@ const WidgetItem = (props: Props) => {
     onExpire: () => setEtaExpired(true),
   });
 
+  const etaDate: Date | undefined = useMemo(() => {
+    if (eta && timestamp) {
+      return new Date(timestamp + eta);
+    } else {
+      return undefined;
+    }
+  }, [eta, timestamp]);
+
   const {
     isCompleted,
     isReadyToClaim,
     receipt: trackingReceipt,
   } = useTrackTransfer({
-    eta,
+    eta: etaDate,
     receipt: initialReceipt,
     route,
   });
@@ -257,7 +270,7 @@ const WidgetItem = (props: Props) => {
           className={classes.cardActionArea}
           onClick={resumeTransaction}
         >
-          <CardContent>
+          <CardContent className={classes.cardContent}>
             <Stack
               direction="row"
               alignItems="center"
