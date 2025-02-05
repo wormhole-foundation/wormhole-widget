@@ -4,7 +4,8 @@ import type { Context } from 'sdklegacy';
 import { Chain } from '@wormhole-foundation/sdk';
 
 import config from 'config';
-import { WalletData, getWalletOptions } from 'utils/wallet';
+import { WalletData } from 'utils/wallet';
+import { useWalletManager } from 'contexts/WalletManager';
 
 type WalletOptions = {
   state: 'result' | 'loading' | 'error';
@@ -26,6 +27,7 @@ const FAILED_TO_LOAD_ERR =
 
 export const useAvailableWallets = (props: Props): ReturnProps => {
   const { chain, supportedChains } = props;
+  const { getWalletOptions } = useWalletManager();
 
   const [walletOptionsResult, setWalletOptionsResult] = useState<WalletOptions>(
     {
@@ -65,7 +67,7 @@ export const useAvailableWallets = (props: Props): ReturnProps => {
     return () => {
       cancelled = true;
     };
-  }, [chain, supportedChains]);
+  }, [chain, supportedChains, getWalletOptions]);
 
   return {
     walletOptionsResult,

@@ -1,83 +1,32 @@
-import { WalletAdapterNetwork as SolanaNetwork } from '@solana/wallet-adapter-base';
-
-import { Wallet } from '@xlabs-libs/wallet-aggregator-core';
 import {
-  BitgetWalletAdapter,
-  CloverWalletAdapter,
-  Coin98WalletAdapter,
-  SolongWalletAdapter,
-  TorusWalletAdapter,
-  NightlyWalletAdapter,
-  WalletConnectWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
-
-import {
-  clusterApiUrl,
   ConfirmOptions,
   Connection,
   RpcResponseAndContext,
   SignatureResult,
-  Transaction,
 } from '@solana/web3.js';
-
-import {
-  SolanaWallet,
-  getSolanaStandardWallets,
-} from '@xlabs-libs/wallet-aggregator-solana';
 
 import config from 'config';
 
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
 import { Network } from '@wormhole-foundation/sdk';
 import { setPriorityFeeInstructions } from 'utils/solana';
-
-const getWalletName = (wallet: Wallet) =>
-  wallet.getName().toLowerCase().replaceAll('wallet', '').trim();
-
-export function fetchOptions() {
-  const tag = config.isMainnet ? 'mainnet-beta' : 'devnet';
-  const connection = new Connection(config.rpcs.Solana || clusterApiUrl(tag));
-
-  return {
-    ...getSolanaStandardWallets(connection).reduce((acc, w) => {
-      acc[getWalletName(w)] = w;
-      return acc;
-    }, {} as Record<string, Wallet>),
-    bitget: new SolanaWallet(new BitgetWalletAdapter(), connection),
-    clover: new SolanaWallet(new CloverWalletAdapter(), connection),
-    coin98: new SolanaWallet(new Coin98WalletAdapter(), connection),
-    solong: new SolanaWallet(new SolongWalletAdapter(), connection),
-    torus: new SolanaWallet(new TorusWalletAdapter(), connection),
-    nightly: new SolanaWallet(new NightlyWalletAdapter(), connection),
-    ...(config.ui.walletConnectProjectId
-      ? {
-          walletConnect: new SolanaWallet(
-            new WalletConnectWalletAdapter({
-              network: config.isMainnet
-                ? SolanaNetwork.Mainnet
-                : SolanaNetwork.Devnet,
-              options: {
-                projectId: config.ui.walletConnectProjectId,
-                customStoragePrefix: 'wh-connect-solana-adapter',
-              },
-            }),
-            connection,
-          ),
-        }
-      : {}),
-  };
-}
+import { isSolanaWallet } from '@dynamic-labs/solana';
+import { ConnectedWallet } from './wallet';
+import { DynamicWallet } from 'utils/dynamic-wallet/utils';
 
 // This function signs and sends the transaction while constantly checking for confirmation
 // and resending the transaction if it hasn't been confirmed after the specified interval
 // See https://docs.triton.one/chains/solana/sending-txs for more information
 export async function signAndSendTransaction(
   request: SolanaUnsignedTransaction<Network>,
-  wallet: Wallet | undefined,
+  connectedWallet: ConnectedWallet,
   options?: ConfirmOptions,
 ) {
-  if (!wallet) throw new Error('Wallet not found');
+  if (!connectedWallet) throw new Error('Wallet not found');
   if (!config.rpcs.Solana) throw new Error('Solana RPC not found');
+  const wallet = connectedWallet.getWallet() as DynamicWallet;
+
+  if (!isSolanaWallet(wallet)) throw new Error('Wallet is not a Solana wallet');
 
   const commitment = options?.commitment ?? 'finalized';
   const connection = new Connection(config.rpcs.Solana);
@@ -97,8 +46,8 @@ export async function signAndSendTransaction(
   let confirmedTx: RpcResponseAndContext<SignatureResult> | null = null;
   let txSendAttempts = 1;
   let signature = '';
-  // TODO: VersionedTransaction is supported, but the interface needs to be updated
-  const tx = await wallet.signTransaction(unsignedTx as Transaction);
+  const solanaSigner = await wallet.getSigner();
+  const tx = await solanaSigner.signTransaction(unsignedTx);
   const serializedTx = tx.serialize();
   const sendOptions = {
     skipPreflight: true,

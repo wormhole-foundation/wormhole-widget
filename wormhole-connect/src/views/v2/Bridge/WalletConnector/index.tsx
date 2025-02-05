@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
@@ -10,9 +10,9 @@ import Button from 'components/v2/Button';
 import { RootState } from 'store';
 import { displayWalletAddress } from 'utils';
 import { TransferWallet } from 'utils/wallet';
+import { useWalletManager } from 'contexts/WalletManager';
 
 import { TransferSide } from 'config/types';
-import WalletSidebar from './Sidebar';
 
 const useStyles = makeStyles()((theme: any) => ({
   connectWallet: {
@@ -49,26 +49,13 @@ type Props = {
 // and the sidebar for the list of available wallets.
 const WalletConnector = (props: Props) => {
   const { disabled = false, type } = props;
+  const { connectWallet } = useWalletManager();
 
   const theme = useTheme();
 
   const { classes } = useStyles();
   const mobile = useMediaQuery(theme.breakpoints.down('sm'));
   const wallet = useSelector((state: RootState) => state.wallet[type]);
-
-  const [isOpen, setIsOpen] = useState(false);
-
-  const connectWallet = useCallback(
-    async (popupState?: any) => {
-      if (disabled) {
-        return;
-      }
-
-      popupState?.close();
-      setIsOpen(true);
-    },
-    [disabled],
-  );
 
   const connected = useMemo(() => {
     if (!wallet?.address) {
@@ -97,7 +84,7 @@ const WalletConnector = (props: Props) => {
               pointerEvents: 'all !important',
             },
           }}
-          onClick={() => connectWallet()}
+          onClick={() => connectWallet(type)}
         >
           <Typography textTransform="none">
             {mobile
@@ -119,23 +106,10 @@ const WalletConnector = (props: Props) => {
         </Tooltip>
       );
     } else {
-      return (
-        <>
-          {button}
-          <WalletSidebar
-            open={isOpen}
-            type={props.type}
-            onClose={() => {
-              setIsOpen(false);
-            }}
-            showAddressInput={props.type === TransferWallet.RECEIVING}
-          />
-        </>
-      );
+      return <>{button}</>;
     }
   }, [
     disabled,
-    isOpen,
     mobile,
     props.side,
     props.type,

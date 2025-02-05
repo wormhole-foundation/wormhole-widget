@@ -20,7 +20,7 @@ import {
   sleep,
 } from 'utils';
 import { isFrankensteinToken } from 'utils';
-import { TransferWallet } from 'utils/wallet';
+import { ConnectedWallet } from 'utils/wallet/wallet';
 
 type Amount = sdkAmount.Amount;
 
@@ -267,6 +267,7 @@ export class SDKv2Route {
     toChain: Chain,
     recipientAddress: string,
     destToken: Token,
+    sendingWallet: ConnectedWallet,
     options?: routes.AutomaticTokenBridgeRoute.Options,
   ): Promise<[routes.Route<Network>, routes.Receipt]> {
     const [route, quote, req] = await this.getQuote(
@@ -286,7 +287,7 @@ export class SDKv2Route {
       fromChain,
       senderAddress,
       {},
-      TransferWallet.SENDING,
+      sendingWallet,
     );
 
     let receipt = await route.initiate(

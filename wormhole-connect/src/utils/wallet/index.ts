@@ -1,24 +1,19 @@
-import { Context, ChainConfig } from 'sdklegacy';
-import {
-  NotSupported,
-  Wallet,
-  WalletState,
-} from '@xlabs-libs/wallet-aggregator-core';
-import {
-  connectWallet as connectSourceWallet,
-  clearWallet,
-  connectReceivingWallet,
-} from 'store/wallet';
-
+import { Context } from 'sdklegacy';
 import config from 'config';
-import { getChainByChainId } from 'utils';
 
 import { RootState } from 'store';
 import { Dispatch } from 'redux';
-import { useEffect } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Network, Chain, UnsignedTransaction } from '@wormhole-foundation/sdk';
+import {
+  Network,
+  Chain as WormholeChain,
+  UnsignedTransaction,
+  chainToPlatform,
+  chainIdToChain,
+  toChainId,
+} from '@wormhole-foundation/sdk';
 
 import {
   EvmUnsignedTransaction,
@@ -33,19 +28,48 @@ import {
   AptosChains,
 } from '@wormhole-foundation/sdk-aptos';
 import { SolanaUnsignedTransaction } from '@wormhole-foundation/sdk-solana';
-import { ReadOnlyWallet } from './ReadOnlyWallet';
+import {
+  DynamicWalletData,
+  useDynamicWalletHelpers,
+  useDynamicWalletOptions,
+} from '../dynamic-wallet/useDynamicWallet';
+import { getWalletOptions, WalletAggregatorData } from './legacy';
+import { ConnectedWallet } from './wallet';
+import { isChainSupportedByDynamicWallet } from 'utils/dynamic-wallet/utils';
+import { ReadOnlyWalletData } from './ReadOnlyWallet';
+
+export type IconType = (props: {
+  size?: number;
+}) => React.FunctionComponentElement<any>;
 
 export enum TransferWallet {
   SENDING = 'sending',
   RECEIVING = 'receiving',
 }
 
-const walletConnection = {
-  sending: undefined as Wallet | undefined,
-  receiving: undefined as Wallet | undefined,
+export const isEVMChain = (chain: WormholeChain) => {
+  return chainToPlatform(chainIdToChain(toChainId(chain))) === 'Evm';
 };
 
-export const walletAcceptedChains = (context: Context | undefined): Chain[] => {
+export const fromWormholeChainToContext = (chain: WormholeChain): Context => {
+  if (isEVMChain(chain)) {
+    return Context.ETH;
+  }
+  switch (chain) {
+    case 'Solana':
+      return Context.SOLANA;
+    case 'Sui':
+      return Context.SUI;
+    case 'Aptos':
+      return Context.APTOS;
+    default:
+      throw new Error('unsupported chain');
+  }
+};
+
+export const walletAcceptedChains = (
+  context: Context | undefined,
+): WormholeChain[] => {
   if (!context) {
     return config.chainsArr.map((c) => c.key);
   }
@@ -54,177 +78,75 @@ export const walletAcceptedChains = (context: Context | undefined): Chain[] => {
     .map((c) => c.key);
 };
 
-export const setWalletConnection = (type: TransferWallet, wallet: Wallet) => {
-  walletConnection[type] = wallet;
-};
+export type WalletData =
+  | WalletAggregatorData
+  | DynamicWalletData
+  | ReadOnlyWalletData;
 
-export const connectWallet = async (
-  type: TransferWallet,
-  chain: Chain,
-  walletInfo: WalletData,
-  dispatch: Dispatch<any>,
-) => {
-  const { wallet, name } = walletInfo;
-
-  setWalletConnection(type, wallet);
-
-  const chainConfig = config.chains[chain];
-  if (!chainConfig) {
-    throw new Error(`Unable to find wallets for chain ${chain}`);
-  }
-
-  const { chainId, context } = chainConfig;
-  await wallet.connect({ chainId });
-
-  config.triggerEvent({
-    type: 'wallet.connect',
-    details: {
-      side: type,
-      chain: chain,
-      wallet: walletInfo.name.toLowerCase(),
-    },
-  });
-
-  const address = wallet.getAddress()!;
-  const payload = {
-    address,
-    type: walletInfo.type,
-    icon: wallet.getIcon(),
-    name: wallet.getName(),
-  };
-
-  if (type === TransferWallet.SENDING) {
-    dispatch(connectSourceWallet(payload));
-  } else {
-    dispatch(connectReceivingWallet(payload));
-  }
-
-  // Clear wallet when the user manually disconnects from outside the app
-  wallet.on('disconnect', () => {
-    wallet.removeAllListeners();
-    // Use setTimeout to defer the dispatch call to the next event loop tick.
-    // This ensures that the dispatch does not occur while a reducer is executing,
-    // preventing the "You may not call store.getState() while the reducer is executing" error.
-    setTimeout(() => {
-      dispatch(clearWallet(type));
-    }, 0);
-    localStorage.removeItem(`wormhole-connect:wallet:${context}`);
-  });
-
-  // when the user has multiple wallets connected and either changes
-  // or disconnects the current wallet, clear the wallet
-  wallet.on('accountsChanged', (accs: string[]) => {
-    // disconnect only if there are no accounts, or if the new account is different from the current
-    const shouldDisconnect =
-      accs.length === 0 || (accs.length && address && accs[0] !== address);
-
-    if (shouldDisconnect) {
-      wallet.disconnect();
-    }
-  });
-
-  if (name !== ReadOnlyWallet.NAME) {
-    localStorage.setItem(`wormhole-connect:wallet:${context}`, name);
-  }
-};
-
-// Checks localStorage for previously used wallet for this chain
-// and connects to it automatically if it exists.
-export const connectLastUsedWallet = async (
-  type: TransferWallet,
-  chain: Chain,
-  dispatch: Dispatch<any>,
-) => {
-  const chainConfig = config.chains[chain!]!;
-  const lastUsedWallet = localStorage.getItem(
-    `wormhole-connect:wallet:${chainConfig.context}`,
-  );
-
-  // if the last used wallet is not WalletConnect, try to connect to it
-  if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
-    const options = await getWalletOptions(chainConfig);
-    const wallet = options.find((w) => w.name === lastUsedWallet);
-    if (wallet) {
-      await connectWallet(type, chain, wallet, dispatch);
-    }
-  }
-};
-
-export const useConnectToLastUsedWallet = (): void => {
+export const useConnectToLastUsedWallet = (
+  connectWallet: (
+    wallet: WalletData,
+    type: TransferWallet,
+    chain: WormholeChain,
+    dispatch: Dispatch<any>,
+  ) => void,
+): void => {
   const dispatch = useDispatch();
+  const { getDynamicWalletOptions } = useDynamicWalletOptions();
+  const { isDynamicWalletReady } = useDynamicWalletHelpers();
   const { toChain, fromChain } = useSelector(
     (state: RootState) => state.transferInput,
   );
 
-  useEffect(() => {
+  // Checks localStorage for previously used wallet for this chain
+  // and connects to it automatically if it exists.
+  const connectLastUsedWallet = React.useCallback(
+    async (
+      type: TransferWallet,
+      chain: WormholeChain,
+      dispatch: Dispatch<any>,
+    ) => {
+      let wallet: WalletData | undefined;
+      const chainConfig = config.chains[chain!]!;
+      const lastUsedWallet = localStorage.getItem(
+        `wormhole-connect:wallet:${chainConfig.context}`,
+      );
+
+      if (lastUsedWallet && isChainSupportedByDynamicWallet(chain)) {
+        const walletOptions = await getDynamicWalletOptions(chain, {});
+        wallet = walletOptions.find((w) => w.walletKey === lastUsedWallet);
+        if (wallet?.isWalletConnect) {
+          wallet = undefined;
+        }
+      } else if (lastUsedWallet && lastUsedWallet !== 'WalletConnect') {
+        const walletOptions = await getWalletOptions(chainConfig);
+        wallet = walletOptions.find((w) => w.name === lastUsedWallet);
+      }
+
+      if (wallet) {
+        await connectWallet(wallet, type, chain, dispatch);
+      }
+    },
+    [connectWallet, getWalletOptions],
+  );
+
+  React.useEffect(() => {
+    if (!isDynamicWalletReady()) return;
     if (fromChain)
       connectLastUsedWallet(TransferWallet.SENDING, fromChain, dispatch);
     if (toChain)
       connectLastUsedWallet(TransferWallet.RECEIVING, toChain, dispatch);
+    // TODO: Should we add `connectLastUsedWallet` function as a dependency?. It will trigger many times this useEffect
   }, [fromChain, toChain]);
 };
 
-export const getWalletConnection = (type: TransferWallet) => {
-  return walletConnection[type];
-};
-
-export const swapWalletConnections = () => {
-  const temp = walletConnection.sending;
-  walletConnection.sending = walletConnection.receiving;
-  walletConnection.receiving = temp;
-};
-
-export const registerWalletSigner = async (
-  chain: Chain,
-  type: TransferWallet,
-) => {
-  const w = walletConnection[type]! as any;
-  if (!w) throw new Error('must connect wallet');
-  const signer = await w.getSigner();
-  config.whLegacy.registerSigner(chain, signer);
-};
-
-export const switchChain = async (
-  chainId: number | string,
-  type: TransferWallet,
-): Promise<string | undefined> => {
-  const w: Wallet = walletConnection[type]! as any;
-  if (!w) throw new Error('must connect wallet');
-
-  const config = getChainByChainId(chainId)!;
-  const currentChain = w.getNetworkInfo().chainId;
-  if (currentChain === chainId) return;
-  if (config.context === Context.ETH) {
-    try {
-      // some wallets may not support chain switching
-      const evm = await import('utils/wallet/evm');
-      await evm.switchChain(w, chainId as number);
-    } catch (e) {
-      if (e instanceof NotSupported) return;
-      throw e;
-    }
-  }
-  return w.getAddress();
-};
-
-export const disconnect = async (type: TransferWallet) => {
-  const w = walletConnection[type]! as any;
-  if (!w) return;
-  await w.disconnect();
-};
-
 export const signAndSendTransaction = async (
-  chain: Chain,
-  request: UnsignedTransaction<Network, Chain>,
-  walletType: TransferWallet,
+  chain: WormholeChain,
+  request: UnsignedTransaction<Network, WormholeChain>,
+  wallet: ConnectedWallet,
   options: any = {},
 ): Promise<string> => {
   const chainConfig = config.chains[chain]!;
-
-  const wallet = walletConnection[walletType];
-  if (!wallet) {
-    throw new Error('wallet is undefined');
-  }
 
   if (chainConfig.context === Context.ETH) {
     const evm = await import('utils/wallet/evm');
@@ -244,77 +166,20 @@ export const signAndSendTransaction = async (
     );
     return signature;
   } else if (chainConfig.context === Context.SUI) {
-    const sui = await import('utils/wallet/sui');
+    const sui = await import('utils/wallet/legacy/sui');
     const tx = await sui.signAndSendTransaction(
       request as SuiUnsignedTransaction<Network, SuiChains>,
-      wallet,
+      (wallet.getWallet() as WalletAggregatorData).wallet,
     );
     return tx.id;
   } else if (chainConfig.context === Context.APTOS) {
-    const aptos = await import('utils/wallet/aptos');
+    const aptos = await import('utils/wallet/legacy/aptos');
     const tx = await aptos.signAndSendTransaction(
       request as AptosUnsignedTransaction<Network, AptosChains>,
-      wallet,
+      (wallet.getWallet() as WalletAggregatorData).wallet,
     );
     return tx.id;
   } else {
     throw new Error('unimplemented');
   }
-};
-
-const getReady = (wallet: Wallet) => {
-  const ready = wallet.getWalletState();
-  return ready !== WalletState.Unsupported && ready !== WalletState.NotDetected;
-};
-
-export type WalletData = {
-  name: string;
-  type: Context;
-  icon: string;
-  isReady: boolean;
-  wallet: Wallet;
-};
-
-const mapWallets = (
-  wallets: Record<string, Wallet>,
-  type: Context,
-  skip: string[] = [],
-): WalletData[] => {
-  return Object.values(wallets)
-    .filter(
-      (wallet, index, self) =>
-        index === self.findIndex((o) => o.getName() === wallet.getName()),
-    )
-    .filter((wallet) => !skip.includes(wallet.getName()))
-    .map((wallet) => ({
-      wallet,
-      type,
-      name: wallet.getName(),
-      icon: wallet.getIcon(),
-      isReady: getReady(wallet),
-    }));
-};
-
-export const getWalletOptions = async (
-  config: ChainConfig | undefined,
-): Promise<WalletData[]> => {
-  if (config === undefined) {
-    return [];
-  } else if (config.context === Context.ETH) {
-    const evm = await import('utils/wallet/evm');
-    return Object.values(mapWallets(evm.wallets, Context.ETH));
-  } else if (config.context === Context.SOLANA) {
-    const solana = await import('utils/wallet/solana');
-    const solanaWallets = solana.fetchOptions();
-    return Object.values(mapWallets(solanaWallets, Context.SOLANA));
-  } else if (config.context === Context.SUI) {
-    const suiWallet = await import('utils/wallet/sui');
-    const suiOptions = await suiWallet.fetchOptions();
-    return Object.values(mapWallets(suiOptions, Context.SUI));
-  } else if (config.context === Context.APTOS) {
-    const aptosWallet = await import('utils/wallet/aptos');
-    const aptosOptions = aptosWallet.fetchOptions();
-    return Object.values(mapWallets(aptosOptions, Context.APTOS));
-  }
-  return [];
 };

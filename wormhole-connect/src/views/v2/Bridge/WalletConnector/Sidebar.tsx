@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { makeStyles } from 'tss-react/mui';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import CircularProgress from '@mui/material/CircularProgress';
 import Drawer from '@mui/material/Drawer';
@@ -19,14 +19,14 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import config from 'config';
 import { RootState } from 'store';
-import { TransferWallet, WalletData, connectWallet } from 'utils/wallet';
+import { TransferWallet, WalletData } from 'utils/wallet';
+import { Chain } from '@wormhole-foundation/sdk';
 
 import AlertBannerV2 from 'components/v2/AlertBanner';
 import { useAvailableWallets } from 'hooks/useAvailableWallets';
-import WalletIcon from 'icons/WalletIcons';
 import { validateWalletAddress } from 'utils/address';
-import { ReadOnlyWallet } from 'utils/wallet/ReadOnlyWallet';
 import { SANCTIONED_WALLETS } from 'consts/wallet';
+import { createReadOnlyWalletData } from 'utils/wallet/ReadOnlyWallet';
 
 const useStyles = makeStyles()((theme) => ({
   listButton: {
@@ -73,12 +73,16 @@ type Props = {
   open: boolean;
   onClose?: () => any;
   showAddressInput?: boolean;
+  onConnectWallet: (
+    newWallet: WalletData,
+    type: TransferWallet,
+    chain: Chain,
+  ) => void;
 };
 
 // Renders the sidebar on the right-side to display the list of available wallets
 // for the selected source or destination chain.
 const WalletSidebar = (props: Props) => {
-  const dispatch = useDispatch();
   const { classes } = useStyles();
 
   const { fromChain: sourceChain, toChain: destChain } = useSelector(
@@ -111,9 +115,9 @@ const WalletSidebar = (props: Props) => {
       }
 
       props.onClose?.();
-      await connectWallet(props.type, selectedChain, walletInfo, dispatch);
+      await props.onConnectWallet(walletInfo, props.type, selectedChain);
     },
-    [selectedChain, props, dispatch],
+    [selectedChain, props],
   );
 
   const submitAddress = useCallback(async () => {
@@ -124,34 +128,20 @@ const WalletSidebar = (props: Props) => {
 
     const nativeAddress = await validateWalletAddress(selectedChain, address);
     if (!nativeAddress) {
-      setAddressError('Invalid Address');
-      return;
+      throw new Error('Invalid Address');
     }
 
     for (const sanctioned of SANCTIONED_WALLETS) {
-      if (nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()) {
-        setAddressError('Sanctioned Address');
-        return;
+      if (
+        nativeAddress.toString().toLowerCase() === sanctioned.toLowerCase()
+      ) {
+        throw new Error('Sanctioned Address');
       }
     }
 
-    const wallet = new ReadOnlyWallet(nativeAddress, selectedChain);
+    const walletInfo = createReadOnlyWalletData(nativeAddress, selectedChain, chainConfig)
 
-    const walletInfo: WalletData = {
-      name: wallet.getName(),
-      type: chainConfig.context,
-      icon: wallet.getIcon(),
-      isReady: true,
-      wallet,
-    };
-
-    await connectWallet(
-      TransferWallet.RECEIVING,
-      selectedChain,
-      walletInfo,
-      dispatch,
-    );
-
+    await props.onConnectWallet(walletInfo, props.type, selectedChain)
     props.onClose?.();
   }, [address, selectedChain, props.onClose]);
 
@@ -166,7 +156,6 @@ const WalletSidebar = (props: Props) => {
               criteria.toLowerCase().includes(search.toLowerCase()),
             ),
           );
-
       return (
         <>
           {!walletsFiltered.length ? (
@@ -182,11 +171,11 @@ const WalletSidebar = (props: Props) => {
                 onClick={() =>
                   wallet.isReady
                     ? connect(wallet)
-                    : window.open(wallet.wallet.getUrl())
+                    : window.open((wallet as any).wallet.getUrl())
                 }
               >
                 <ListItemIcon>
-                  <WalletIcon name={wallet.name} icon={wallet.icon} />
+                  <wallet.icon size={32} />
                 </ListItemIcon>
                 <Typography component="div" fontSize={14}>
                   <div className={`${!wallet.isReady && classes.notInstalled}`}>
@@ -287,10 +276,10 @@ const WalletSidebar = (props: Props) => {
     props.onClose,
     props.type,
     props.showAddressInput,
+    props.onConnectWallet,
     renderWalletOptions,
     address,
     addressError,
-    submitAddress,
   ]);
 
   return (

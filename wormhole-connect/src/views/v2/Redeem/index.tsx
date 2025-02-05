@@ -37,6 +37,7 @@ import PoweredByIcon from 'icons/PoweredBy';
 import { SDKv2Signer } from 'routes/sdkv2/signer';
 import { setRoute } from 'store/router';
 import { useUSDamountGetter } from 'hooks/useUSDamountGetter';
+import { useWalletManager } from 'contexts/WalletManager';
 import { interpretTransferError } from 'utils/errors';
 import {
   removeTxFromLocalStorage,
@@ -47,14 +48,8 @@ import {
   millisToMinutesAndSeconds,
   minutesAndSecondsWithPadding,
 } from 'utils/transferValidation';
-import {
-  TransferWallet,
-  registerWalletSigner,
-  switchChain,
-} from 'utils/wallet';
+import { TransferWallet } from 'utils/wallet';
 import TransactionDetails from 'views/v2/Redeem/TransactionDetails';
-import WalletSidebar from 'views/v2/Bridge/WalletConnector/Sidebar';
-import { useConnectToLastUsedWallet } from 'utils/wallet';
 
 import type { RootState } from 'store';
 import TxCompleteIcon from 'icons/TxComplete';
@@ -145,8 +140,12 @@ const Redeem = () => {
   const [transferSuccessEventFired, setTransferSuccessEventFired] =
     useState(false);
   const [etaExpired, setEtaExpired] = useState(false);
-
-  const [isWalletSidebarOpen, setIsWalletSidebarOpen] = useState(false);
+  const {
+    connectWallet,
+    getConnectedWallet,
+    switchChain,
+    registerWalletSigner,
+  } = useWalletManager();
 
   const routeContext = React.useContext(RouteContext);
 
@@ -158,8 +157,6 @@ const Redeem = () => {
   if (!destToken) {
     // TODO
   }
-
-  useConnectToLastUsedWallet();
 
   const {
     route: routeName,
@@ -740,11 +737,19 @@ const Redeem = () => {
         throw new Error('Route is not manual or finalizable');
       }
 
+      const receivingConnectedWallet = getConnectedWallet(
+        TransferWallet.RECEIVING,
+      );
+
+      if (!receivingConnectedWallet) {
+        throw new Error('Could not get receiving connected wallet');
+      }
+
       const signer = await SDKv2Signer.fromChain(
         toChain,
         receivingWallet.address,
         {},
-        TransferWallet.RECEIVING,
+        receivingConnectedWallet,
       );
 
       const finishPromise = (() => {
@@ -816,7 +821,7 @@ const Redeem = () => {
           <Button
             variant="primary"
             className={classes.actionButton}
-            onClick={() => setIsWalletSidebarOpen(true)}
+            onClick={() => connectWallet(TransferWallet.RECEIVING)}
           >
             <Typography textTransform="none">
               Connect receiving wallet
@@ -896,6 +901,7 @@ const Redeem = () => {
     receivedToken,
     routeContext.receipt,
     theme.palette.text.secondary,
+    connectWallet,
   ]);
 
   return (
@@ -931,13 +937,6 @@ const Redeem = () => {
         className={classes.errorBox}
       />
       <PoweredByIcon color={theme.palette.text.primary} />
-      <WalletSidebar
-        open={isWalletSidebarOpen}
-        type={TransferWallet.RECEIVING}
-        onClose={() => {
-          setIsWalletSidebarOpen(false);
-        }}
-      />
     </div>
   );
 };
