@@ -46,7 +46,7 @@ const TxHistoryWidget = () => {
     // Get all in-progress transactions from localStorage
     const txs = getTxsFromLocalStorage();
 
-    // Filter out the ones with unknown token configs
+    // Filter out the ones with unknown tokens
     const verifiedTxs = txs?.filter((tx) => {
       if (!tx?.txDetails?.token) {
         return false;

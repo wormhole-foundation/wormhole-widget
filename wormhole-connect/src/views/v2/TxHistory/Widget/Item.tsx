@@ -109,7 +109,7 @@ const WidgetItem = (props: Props) => {
     token: tokenTuple,
   } = txDetails || {};
 
-  const tokenConfig = config.tokens.get(tokenTuple);
+  const token = config.tokens.get(tokenTuple);
 
   // Initialize the countdown
   const { seconds, minutes, totalSeconds, isRunning, restart } = useTimer({
@@ -261,8 +261,8 @@ const WidgetItem = (props: Props) => {
     }
   }, [dispatch, receipt, route, routeContext, timestamp, txDetails]);
 
-  // Do not render this widget if we don't have the transaction or the token config
-  if (!transaction || !tokenConfig) {
+  // Do not render this widget if we don't have the transaction or the token
+  if (!transaction || !token) {
     return <></>;
   }
 
@@ -291,7 +291,7 @@ const WidgetItem = (props: Props) => {
               <Stack direction="row" alignItems="center">
                 <Typography fontSize={14} marginRight="8px">
                   {`${sdkAmount.display(sdkAmount.truncate(amount, 4))} ${
-                    tokenConfig.symbol
+                    token.symbol
                   }`}
                 </Typography>
                 <Box className={classes.chainIcon}>
