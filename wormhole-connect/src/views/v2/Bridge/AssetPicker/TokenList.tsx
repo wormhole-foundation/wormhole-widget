@@ -249,7 +249,6 @@ const TokenList = (props: Props) => {
     balances,
     props.tokenList,
     props.selectedChainConfig.key,
-    props.selectedChainConfig.gasToken,
     props.sourceToken,
     props.isSource,
     props.wallet?.address,

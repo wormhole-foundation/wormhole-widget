@@ -100,13 +100,6 @@ export function buildConfig(
 
     // External resources
     rpcs,
-    rest: Object.assign(
-      {},
-      sdkConfig.rest,
-      networkData.rest,
-      customConfig.rest,
-    ),
-    graphql: Object.assign({}, networkData.graphql, customConfig.graphql),
     mayanApi: 'https://explorer-api.mayan.finance',
     wormholeApi: {
       Mainnet: 'https://api.wormholescan.io/',
