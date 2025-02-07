@@ -59,6 +59,10 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
   const [tokenPrices, _setTokenPrices] = useState<TokenMapping<TokenPrice>>(
     new TokenMapping(),
   );
+  const [tokenPricesToFetch, _setTokenPricesToFetch] = useState<
+    TokenMapping<boolean>
+  >(new TokenMapping());
+
   const [isFetchingTokenPrices, setIsFetchingPrices] = useState(false);
   const [lastTokenPriceUpdate, setLastPriceUpdate] = useState(new Date());
 
@@ -104,8 +108,6 @@ export const TokensProvider: React.FC<TokensProviderProps> = ({ children }) => {
     },
     [],
   );
-
-  const tokenPricesToFetch: TokenMapping<boolean> = new TokenMapping();
 
   const updateTokenPrices = useDebouncedCallback(async () => {
     if (tokenPricesToFetch.empty) return;
