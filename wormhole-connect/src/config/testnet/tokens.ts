@@ -314,7 +314,7 @@ export const TESTNET_TOKENS: TokenConfig[] = [
       address: 'native',
     },
     decimals: 18,
-    icon: TokenIcon.UNICHAIN,
+    icon: TokenIcon.ETH,
   },
   {
     symbol: 'WETH',
@@ -323,7 +323,7 @@ export const TESTNET_TOKENS: TokenConfig[] = [
       address: '0x4200000000000000000000000000000000000006',
     },
     decimals: 18,
-    icon: TokenIcon.UNICHAIN,
+    icon: TokenIcon.ETH,
   },
   {
     symbol: 'USDC',
