@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material';
 import Card from '@mui/material/Card';
@@ -74,9 +74,6 @@ const useStyles = makeStyles()((theme: any) => ({
     marginRight: '3px',
     fill: theme.palette.primary.main,
   },
-  messageContainer: {
-    padding: '12px 0px 0px',
-  },
   warningIcon: {
     color: theme.palette.warning.main,
     height: '34px',
@@ -102,16 +99,20 @@ const SingleRoute = (props: Props) => {
   const theme = useTheme();
   const routeConfig = config.routes.get(props.route.name);
 
-  const { toChain: destChain, fromChain: sourceChain } = useSelector(
-    (state: RootState) => state.transferInput,
-  );
+  const {
+    toChain: destChain,
+    fromChain: sourceChain,
+    toNonSDKChain,
+  } = useSelector((state: RootState) => state.transferInput);
 
-  const { getTokenPrice, isFetchingTokenPrices } = useTokens();
+  const { getTokenPrice } = useTokens();
 
   const { name } = props.route;
   const { quote } = props;
 
   const { sourceToken, destToken } = useGetTokens();
+
+  const isHyperliquid = useMemo(() => name === 'HyperliquidRoute', [name]);
 
   const [feePrice, isHighFee, feeToken]: [
     number | undefined,
@@ -131,7 +132,7 @@ const SingleRoute = (props: Props) => {
     }
 
     return [feePrice, feePrice > HIGH_FEE_THRESHOLD, feeToken];
-  }, [quote?.relayFee]);
+  }, [getTokenPrice, quote?.relayFee]);
 
   const relayerFee = useMemo(() => {
     if (!routeConfig.AUTOMATIC_DEPOSIT) {
@@ -234,9 +235,9 @@ const SingleRoute = (props: Props) => {
   }, [
     destChain,
     props.destinationGasDrop,
-    theme.palette.text.primary,
+    getTokenPrice,
     theme.palette.text.secondary,
-    isFetchingTokenPrices,
+    theme.palette.text.primary,
   ]);
 
   const timeToDestination = useMemo(
@@ -248,7 +249,7 @@ const SingleRoute = (props: Props) => {
           fontSize="14px"
           lineHeight="14px"
         >
-          {`Time to ${destChain}`}
+          {`Time to ${toNonSDKChain ?? destChain}`}
         </Typography>
         <Typography
           component="div"
@@ -271,6 +272,7 @@ const SingleRoute = (props: Props) => {
       theme.palette.success.main,
       theme.palette.text.primary,
       theme.palette.text.secondary,
+      toNonSDKChain,
     ],
   );
 
@@ -283,7 +285,7 @@ const SingleRoute = (props: Props) => {
   }, [props.route, routeConfig.AUTOMATIC_DEPOSIT]);
 
   const messageDivider = useMemo(
-    () => <Divider flexItem sx={{ marginTop: '24px' }} />,
+    () => <Divider flexItem sx={{ margin: '18px 0' }} />,
     [],
   );
 
@@ -295,11 +297,7 @@ const SingleRoute = (props: Props) => {
     return (
       <>
         {messageDivider}
-        <Stack
-          className={classes.messageContainer}
-          direction="row"
-          alignItems="center"
-        >
+        <Stack direction="row" alignItems="center">
           <ErrorIcon className={classes.errorIcon} />
           <Typography
             color={theme.palette.error.main}
@@ -313,44 +311,74 @@ const SingleRoute = (props: Props) => {
     );
   }, [
     classes.errorIcon,
-    classes.messageContainer,
     messageDivider,
     props.error,
     theme.palette.error.main,
   ]);
 
+  const generateWarningMessage = useCallback(
+    ({
+      key,
+      warningMsg,
+      secondaryMsg,
+    }: {
+      key: string;
+      warningMsg: string;
+      secondaryMsg: string;
+    }) => (
+      <div key={key}>
+        {messageDivider}
+        <Stack direction="row" alignItems="center">
+          <WarningIcon className={classes.warningIcon} />
+          <Stack>
+            <Typography
+              color={theme.palette.warning.main}
+              fontSize={14}
+              lineHeight="18px"
+            >
+              {warningMsg}
+            </Typography>
+            <Typography
+              color={theme.palette.text.secondary}
+              fontSize={14}
+              lineHeight="18px"
+            >
+              {secondaryMsg}
+            </Typography>
+          </Stack>
+        </Stack>
+      </div>
+    ),
+    [
+      classes.warningIcon,
+      messageDivider,
+      theme.palette.text.secondary,
+      theme.palette.warning.main,
+    ],
+  );
+
   const warningMessages = useMemo(() => {
     const messages: React.JSX.Element[] = [];
 
-    if (isManual) {
+    // Special warning message for Hyperliquid route
+    if (isHyperliquid) {
       messages.push(
-        <div key="ManualTransactionWarning">
-          {messageDivider}
-          <Stack
-            className={classes.messageContainer}
-            direction="row"
-            alignItems="center"
-          >
-            <WarningIcon className={classes.warningIcon} />
-            <Stack>
-              <Typography
-                color={theme.palette.warning.main}
-                fontSize={14}
-                lineHeight="18px"
-              >
-                This transfer requires two transactions.
-              </Typography>
-              <Typography
-                color={theme.palette.text.secondary}
-                fontSize={14}
-                lineHeight="18px"
-              >
-                You will need to make two wallet approvals and have gas on the
-                destination chain.
-              </Typography>
-            </Stack>
-          </Stack>
-        </div>,
+        generateWarningMessage({
+          key: 'HyperliquidTransactionWarning',
+          warningMsg:
+            'This transfer will first deposit to Arbitrum and then to Hyperliquid.',
+          secondaryMsg:
+            'You will need to make two wallet approvals and have gas on Arbitrum.',
+        }),
+      );
+    } else if (isManual) {
+      messages.push(
+        generateWarningMessage({
+          key: 'ManualTransactionWarning',
+          warningMsg: 'This transfer requires two transactions.',
+          secondaryMsg:
+            'You will need to make two wallet approvals and have gas on the destination chain.',
+        }),
       );
     }
 
@@ -363,11 +391,7 @@ const SingleRoute = (props: Props) => {
         messages.push(
           <div key={`${warning.type}-${warning.delayDurationSec}`}>
             {messageDivider}
-            <Stack
-              className={classes.messageContainer}
-              direction="row"
-              alignItems="center"
-            >
+            <Stack direction="row" alignItems="center">
               <WarningIcon className={classes.warningIcon} />
               <Typography
                 color={theme.palette.warning.main}
@@ -386,47 +410,26 @@ const SingleRoute = (props: Props) => {
 
     if (isHighFee) {
       messages.push(
-        <div key="HighFee">
-          {messageDivider}
-          <Stack
-            className={classes.messageContainer}
-            direction="row"
-            alignItems="center"
-          >
-            <WarningIcon className={classes.warningIcon} />
-            <Stack>
-              <Typography
-                color={theme.palette.warning.main}
-                fontSize={14}
-                lineHeight="18px"
-              >
-                Output amount is much lower than input amount.
-              </Typography>
-              <Typography
-                color={theme.palette.text.secondary}
-                fontSize={14}
-                lineHeight="18px"
-              >
-                Double check before proceeding.
-              </Typography>
-            </Stack>
-          </Stack>
-        </div>,
+        generateWarningMessage({
+          key: 'HighFee',
+          warningMsg: 'Output amount is much lower than input amount.',
+          secondaryMsg: 'Double check before proceeding.',
+        }),
       );
     }
 
     return messages;
   }, [
+    isHyperliquid,
     isManual,
     isHighFee,
+    generateWarningMessage,
+    quote?.warnings,
     messageDivider,
     classes.warningIcon,
-    classes.messageContainer,
     theme.palette.warning.main,
-    theme.palette.text.secondary,
-    quote?.warnings,
-    destToken,
     destChain,
+    destToken,
   ]);
 
   const providerText = useMemo(() => {
@@ -524,6 +527,7 @@ const SingleRoute = (props: Props) => {
   }, [
     destChain,
     destToken,
+    getTokenPrice,
     props.error,
     providerText,
     receiveAmount,

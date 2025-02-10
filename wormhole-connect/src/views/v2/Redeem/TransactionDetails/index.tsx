@@ -20,7 +20,7 @@ import {
   trimTxHash,
 } from 'utils';
 import { getExplorerInfo } from 'utils/sdkv2';
-import { amount as sdkAmount } from '@wormhole-foundation/sdk';
+import { amount as sdkAmount, isCompleted } from '@wormhole-foundation/sdk';
 
 import type { RootState } from 'store';
 import { toFixedDecimals } from 'utils/balance';
@@ -63,6 +63,16 @@ const TransactionDetails = () => {
 
   const { getTokenPrice, isFetchingTokenPrices, lastTokenPriceUpdate } =
     useTokens();
+
+  const isHyperliquid = useMemo(
+    () => routeName === 'HyperliquidRoute',
+    [routeName],
+  );
+
+  const isTxCompleted = useMemo(
+    () => routeContext.receipt && isCompleted(routeContext.receipt),
+    [routeContext.receipt],
+  );
 
   // Separator with a unicode dot in the middle
   const separator = useMemo(
@@ -132,7 +142,9 @@ const TransactionDetails = () => {
       return <></>;
     }
 
-    const destChainConfig = config.chains[toChain]!;
+    const destChainConfig = isHyperliquid
+      ? config.nonSDKChains?.Hyperliquid
+      : config.chains[toChain]!;
 
     const usdAmount = calculateUSDPrice(
       getTokenPrice,
@@ -160,7 +172,7 @@ const TransactionDetails = () => {
               <>
                 {usdAmount}
                 {usdAmount ? separator : null}
-                {destChainConfig.displayName}
+                {destChainConfig?.displayName}
                 {separator}
                 {recipientAddress}
               </>
@@ -197,7 +209,7 @@ const TransactionDetails = () => {
   );
 
   const bridgeFee = useMemo(() => {
-    if (!relayerFee || !relayerFee.token) {
+    if (!relayerFee || !relayerFee.token || !relayerFee.fee) {
       return <></>;
     }
 
@@ -297,7 +309,15 @@ const TransactionDetails = () => {
     }
 
     // Get explorer name and url for the route
-    const { name, url } = getExplorerInfo(route, sendTx);
+    let { name, url } = getExplorerInfo(route, sendTx);
+
+    // Hyperliquid transactions has two states with different explorer links:
+    // 1- During MayanSwap when we show Mayan explorer link (see getExplorerInfo).
+    // 2- After MayanSwap is completed and user approves the amount into Hyperliquid, then we show Hyperliquid explorer link.
+    if (isTxCompleted && isHyperliquid) {
+      name = 'Hyperliquid Explorer';
+      url = `https://app.hyperliquid.xyz/explorer/address/${sender}`;
+    }
 
     return (
       <Stack alignItems="center" padding="24px 12px">
@@ -316,7 +336,15 @@ const TransactionDetails = () => {
         </Link>
       </Stack>
     );
-  }, [routeContext.route, routeName, sendTx, theme.palette.text.primary]);
+  }, [
+    isHyperliquid,
+    isTxCompleted,
+    routeContext.route,
+    routeName,
+    sendTx,
+    sender,
+    theme.palette.text.primary,
+  ]);
 
   const timeToDestination = useMemo(() => {
     let etaDisplay: string | ReactNode = <CircularProgress size={14} />;
@@ -328,12 +356,12 @@ const TransactionDetails = () => {
     return (
       <Stack direction="row" justifyContent="space-between">
         <Typography color={theme.palette.text.secondary} fontSize={14}>
-          {`Time to ${toChain}`}
+          {`Time to ${isHyperliquid ? 'Hyperliquid' : toChain}`}
         </Typography>
         <Typography fontSize={14}>{etaDisplay}</Typography>
       </Stack>
     );
-  }, [eta, theme.palette.text.secondary, toChain]);
+  }, [eta, isHyperliquid, theme.palette.text.secondary, toChain]);
 
   return (
     <div className={classes.container}>

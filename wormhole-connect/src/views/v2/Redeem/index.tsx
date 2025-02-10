@@ -171,7 +171,7 @@ const Redeem = () => {
   const [unhandledManualClaimError, setUnhandledManualClaimError] =
     useState<any>(undefined);
 
-  const { receipt } = routeContext;
+  const { receipt, route } = routeContext;
   const isTxAttested = receipt && isAttested(receipt);
   const isTxRefunded = receipt && isRefunded(receipt);
   const isTxFailed =
@@ -189,6 +189,11 @@ const Redeem = () => {
   } = txData!;
 
   const getUSDAmount = useUSDamountGetter();
+
+  const isHyperliquid = useMemo(
+    () => routeName === 'HyperliquidRoute',
+    [routeName],
+  );
 
   const etaDate: Date | undefined = useMemo(() => {
     if (eta && txTimestamp) {
@@ -218,7 +223,8 @@ const Redeem = () => {
   // Start tracking changes in the transaction
   const txTrackingResult = useTrackTransfer({
     receipt,
-    route: routeName,
+    routeName,
+    sdkRoute: route,
     eta: etaDate,
   });
 
@@ -405,7 +411,11 @@ const Redeem = () => {
     } else if (isTxDestQueued) {
       statusText = 'Transaction delayed';
     } else if (isTxAttested && !isAutomaticRoute) {
-      statusText = `Ready to claim on ${toChain}`;
+      if (isHyperliquid) {
+        statusText = `Complete transfer below`;
+      } else {
+        statusText = `Ready to claim on ${toChain}`;
+      }
     }
 
     return (
@@ -420,6 +430,7 @@ const Redeem = () => {
     isTxDestQueued,
     isTxAttested,
     isAutomaticRoute,
+    isHyperliquid,
     toChain,
   ]);
 
@@ -784,6 +795,7 @@ const Redeem = () => {
     routeContext.route,
     routeName,
     toChain,
+    receivedToken,
   ]);
 
   // Main CTA button which has separate states for automatic and manual claims
@@ -831,7 +843,9 @@ const Redeem = () => {
             onClick={handleManualClaim}
           >
             <Typography textTransform="none">
-              Claim tokens to complete transfer
+              {isHyperliquid
+                ? 'Approve deposit to Hyperliquid'
+                : 'Claim tokens to complete transfer'}
             </Typography>
           </Button>
         );
@@ -865,6 +879,7 @@ const Redeem = () => {
     isAutomaticRoute,
     isClaimInProgress,
     isConnectedToReceivingWallet,
+    isHyperliquid,
     isTxAttested,
     isTxCompleted,
     isTxDestQueued,

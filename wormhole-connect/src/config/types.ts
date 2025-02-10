@@ -143,6 +143,7 @@ export interface InternalConfig<N extends Network> {
 
   chains: ChainsConfig;
   chainsArr: ChainConfig[];
+  nonSDKChains?: NonSDKChainsConfig;
 
   routes: RouteOperator;
 
@@ -172,6 +173,12 @@ export type TokenConfig = {
 
 export type TokensConfig = { [key: string]: TokenConfig };
 
+export type NonSDKChain = 'Hyperliquid';
+
+export type NonSDKChainsConfig = {
+  [chain in NonSDKChain]?: ChainConfig;
+};
+
 export interface ChainConfig extends BaseChainConfig {
   sdkName: Chain;
   displayName: string;
@@ -179,7 +186,7 @@ export interface ChainConfig extends BaseChainConfig {
   explorerName: string;
   wrappedGasToken?: string;
   chainId: number | string;
-  icon: Chain;
+  icon: Chain | NonSDKChain;
   symbol?: string;
 }
 
@@ -196,6 +203,7 @@ export type GuardianSetData = {
 
 export type NetworkData = {
   chains: ChainsConfig;
+  nonSDKChains?: NonSDKChainsConfig;
   tokens: TokenConfig[];
   wrappedTokens: WrappedTokenAddresses;
   rpcs: RpcMapping;

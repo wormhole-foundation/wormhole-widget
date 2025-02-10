@@ -7,7 +7,7 @@ import { makeStyles } from 'tss-react/mui';
 import { amount as sdkAmount, toNative } from '@wormhole-foundation/sdk';
 
 import useGetTokenBalances from 'hooks/useGetTokenBalances';
-import type { ChainConfig } from 'config/types';
+import type { ChainConfig, NonSDKChain } from 'config/types';
 import { isTokenTuple, Token, tokenIdFromTuple } from 'config/tokens';
 import type { WalletData } from 'store/wallet';
 import SearchableList from 'views/v2/Bridge/AssetPicker/SearchableList';
@@ -44,6 +44,7 @@ type Props = {
   wallet: WalletData;
   onSelectToken: (key: Token) => void;
   isSource: boolean;
+  selectedNonSDKChain?: NonSDKChain | undefined;
 };
 
 const TokenList = (props: Props) => {
@@ -57,7 +58,7 @@ const TokenList = (props: Props) => {
 
   const { isFetching: isFetchingTokenBalances, balances } = useGetTokenBalances(
     props.wallet,
-    props.selectedChainConfig.key,
+    props.selectedChainConfig,
     props.tokenList || [],
   );
 
@@ -140,12 +141,13 @@ const TokenList = (props: Props) => {
       });
     }
 
-    // Third: Add the native gas token
+    // Third: Add the native gas token unless non-SDK destination chain is Hyperliquid
     if (
       nativeToken &&
       nativeToken.address.toString() !==
         props.selectedToken?.address.toString() &&
-      !tokenSet.has(nativeToken.address.toString())
+      !tokenSet.has(nativeToken.address.toString()) &&
+      props.selectedChainConfig.displayName !== 'Hyperliquid'
     ) {
       tokenSet.add(nativeToken.address.toString());
       tokens.push(nativeToken);
@@ -248,7 +250,9 @@ const TokenList = (props: Props) => {
   }, [
     balances,
     props.tokenList,
+    props.selectedChainConfig.sdkName,
     props.selectedChainConfig.key,
+    props.selectedChainConfig.displayName,
     props.sourceToken,
     props.isSource,
     props.wallet?.address,

@@ -135,4 +135,11 @@ export const RoutesConfig: Record<string, RouteData> = {
     icon: XLabsIcon,
     pendingMessage: 'Waiting for Wormhole network consensus . . .',
   },
+  HyperliquidRoute: {
+    name: 'HyperliquidRoute',
+    displayName: 'Hyperliquid Route',
+    link: 'https://hyperfoundation.org/',
+    icon: XLabsIcon,
+    pendingMessage: 'Waiting for Wormhole network consensus . . .',
+  },
 };

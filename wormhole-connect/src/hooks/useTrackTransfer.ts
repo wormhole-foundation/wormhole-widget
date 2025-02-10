@@ -4,7 +4,7 @@ import { isCompleted, routes, TransferState } from '@wormhole-foundation/sdk';
 import config, { getWormholeContextV2 } from 'config';
 import { sleep } from 'utils';
 
-import type { AttestationReceipt } from '@wormhole-foundation/sdk';
+import type { AttestationReceipt, Network } from '@wormhole-foundation/sdk';
 
 // We don't start trying to fetch transfer updates until 1 minute from ETA
 const MINIMUM_ETA = 60 * 1000;
@@ -12,10 +12,16 @@ const MINIMUM_ETA = 60 * 1000;
 const TRACK_TIMEOUT = 120 * 1000;
 
 type Props = {
-  route: string | undefined;
+  routeName: string | undefined;
   receipt: routes.Receipt<AttestationReceipt> | null;
   // Timestamp the transfer was estimated to be finished
   eta?: Date;
+  sdkRoute?: routes.Route<
+    Network,
+    routes.Options,
+    routes.ValidatedTransferParams<routes.Options>,
+    routes.Receipt
+  > | null;
 };
 
 type ReturnProps = {
@@ -29,8 +35,6 @@ const useTrackTransfer = (props: Props): ReturnProps => {
   const [readyToClaim, setReadyToClaim] = useState(false);
   const [receipt, setReceipt] = useState<routes.Receipt<AttestationReceipt>>();
 
-  const { eta, route: routeName } = props;
-
   // Set initial receipt from the caller
   useEffect(() => {
     if (props.receipt) {
@@ -42,11 +46,11 @@ const useTrackTransfer = (props: Props): ReturnProps => {
     let isActive = true;
 
     const track = async () => {
-      if (!routeName || !receipt) {
+      if (!props.routeName || !receipt) {
         return;
       }
 
-      const route = config.routes.get(routeName);
+      const route = config.routes.get(props.routeName);
 
       if (!route) {
         return;
@@ -55,14 +59,25 @@ const useTrackTransfer = (props: Props): ReturnProps => {
       const millisUntilEta = (eta: Date) =>
         eta.valueOf() - new Date().valueOf();
 
-      const wh = await getWormholeContextV2();
-      const sdkRoute = new route.rc(wh);
+      let sdkRoute: routes.Route<
+        Network,
+        routes.Options,
+        routes.ValidatedTransferParams<routes.Options>,
+        routes.Receipt<AttestationReceipt>
+      >;
+
+      if (props.sdkRoute) {
+        sdkRoute = props.sdkRoute;
+      } else {
+        const wh = await getWormholeContextV2();
+        sdkRoute = new route.rc(wh);
+      }
 
       while (isActive && !isCompleted(receipt)) {
-        if (eta !== undefined) {
+        if (props.eta !== undefined) {
           // If we have an ETA, and it's longer than 1 minute out, we wait until 1 minute is left
           // before trying to track the transfer's progress.
-          const msRemaining = millisUntilEta(eta);
+          const msRemaining = millisUntilEta(props.eta);
 
           if (msRemaining > MINIMUM_ETA) {
             await sleep(msRemaining - MINIMUM_ETA);
@@ -108,8 +123,8 @@ const useTrackTransfer = (props: Props): ReturnProps => {
         let sleepTime = 5_000;
 
         // For automatic routes which are estimated to be done soon, we re-attempt more frequently
-        if (eta !== undefined && route.AUTOMATIC_DEPOSIT) {
-          const msRemaining = millisUntilEta(eta);
+        if (props.eta !== undefined && route.AUTOMATIC_DEPOSIT) {
+          const msRemaining = millisUntilEta(props.eta);
           if (msRemaining < 10_000) {
             sleepTime = 1_000;
           }
@@ -125,7 +140,7 @@ const useTrackTransfer = (props: Props): ReturnProps => {
     return () => {
       isActive = false;
     };
-  }, [eta, receipt, routeName]);
+  }, [props.eta, props.routeName, props.sdkRoute, receipt]);
 
   return {
     isCompleted: completed,

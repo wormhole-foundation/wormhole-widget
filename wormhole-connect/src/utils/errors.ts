@@ -29,7 +29,10 @@ export function interpretTransferError(
   transferDetails: TransferDetails,
 ): [string, TransferError] {
   // Fall-back values
-  let uiErrorMessage = 'Error with transfer, please try again';
+  let uiErrorMessage =
+    transferDetails.route === 'HyperliquidRoute'
+      ? 'Hyperliquid deposit error. USDC has been deposited in your wallet on Arbitrum'
+      : 'Error with transfer, please try again';
   let internalErrorCode: TransferErrorType = ERR_UNKNOWN;
 
   if (e.message) {
