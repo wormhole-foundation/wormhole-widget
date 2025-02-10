@@ -135,4 +135,12 @@ export const RoutesConfig: Record<string, RouteData> = {
     icon: XLabsIcon,
     pendingMessage: 'Waiting for Wormhole network consensus . . .',
   },
+  MayanSwapSHUTTLE: {
+    name: 'MayanSwapSHUTTLE',
+    displayName: 'Mayan Swap Shuttle',
+    providedBy: 'Mayan Shuttle',
+    link: 'https://mayan.finance/',
+    icon: XLabsIcon,
+    pendingMessage: 'Waiting for Wormhole network consensus . . .',
+  },
 };
