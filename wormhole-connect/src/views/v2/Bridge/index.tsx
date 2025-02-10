@@ -19,7 +19,6 @@ import Header, { Alignment } from 'components/Header';
 import FooterNavBar from 'components/FooterNavBar';
 import useFetchSupportedRoutes from 'hooks/useFetchSupportedRoutes';
 import useComputeDestinationTokens from 'hooks/useComputeDestinationTokens';
-import useComputeSourceTokens from 'hooks/useComputeSourceTokens';
 import { setRoute as setAppRoute } from 'store/router';
 import {
   selectFromChain,
@@ -126,7 +125,6 @@ const Bridge = () => {
     toChain: destChain,
     route,
     preferredRouteName,
-    supportedSourceTokens,
     amount,
     validations,
   } = useSelector((state: RootState) => state.transferInput);
@@ -140,16 +138,6 @@ const Bridge = () => {
     quotesMap,
     isFetching: isFetchingQuotes,
   } = useSortedRoutesWithQuotes();
-
-  // Compute and set source tokens
-  const { isFetching: isFetchingSupportedSourceTokens } =
-    useComputeSourceTokens({
-      sourceChain,
-      destChain,
-      sourceToken,
-      destToken,
-      route: selectedRoute,
-    });
 
   // Compute and set destination tokens
   const { isFetching: isFetchingSupportedDestTokens, supportedDestTokens } =
@@ -300,9 +288,7 @@ const Bridge = () => {
           chainList={supportedSourceChains}
           token={sourceToken}
           tokenList={sourceTokens}
-          isFetching={
-            sourceTokens.length === 0 && isFetchingSupportedSourceTokens
-          }
+          isFetching={false}
           setChain={(value: Chain) => {
             selectFromChain(dispatch, value, sendingWallet);
           }}
@@ -321,9 +307,7 @@ const Bridge = () => {
     sourceToken,
     sourceTokens,
     lastTokenCacheUpdate,
-    supportedSourceTokens,
     sendingWallet,
-    isFetchingSupportedSourceTokens,
   ]);
 
   // Asset picker for the destination network and token
@@ -492,7 +476,7 @@ const Bridge = () => {
       {destAssetPicker}
       <AmountInput
         sourceChain={sourceChain}
-        supportedSourceTokens={config.tokens.getList(supportedSourceTokens)}
+        supportedSourceTokens={sourceTokens}
         tokenBalance={sourceToken ? balances[sourceToken.key]?.balance : null}
         isFetchingTokenBalance={isFetchingBalances}
         error={amountValidation.error}
