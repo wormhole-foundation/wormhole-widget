@@ -27,6 +27,7 @@ interface ImportMetaEnv {
   REACT_APP_XLAYER_RPC: string;
   REACT_APP_MANTLE_RPC: string;
   REACT_APP_WORLDCHAIN_RPC: string;
+  REACT_APP_UNICHAIN_RPC: string;
 
   // testnet
   REACT_APP_SEPOLIA_RPC: string;
@@ -47,6 +48,7 @@ interface ImportMetaEnv {
   REACT_APP_XLAYER_TESTNET_RPC: string;
   REACT_APP_MANTLE_TESTNET_RPC: string;
   REACT_APP_WORLDCHAIN_TESTNET_RPC: string;
+  REACT_APP_UNICHAIN_TESTNET_RPC: string;
 
   // devnet
   REACT_APP_ETHEREUM_DEVNET_RPC: string;

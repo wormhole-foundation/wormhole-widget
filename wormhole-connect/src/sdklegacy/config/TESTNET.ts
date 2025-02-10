@@ -87,6 +87,11 @@ const TESTNET: { [chain in Chain]?: ChainConfig } = {
     id: 35,
     context: Context.ETH,
   },
+  Unichain: {
+    key: 'Unichain',
+    id: 44,
+    context: Context.ETH,
+  },
   Worldchain: {
     key: 'Worldchain',
     id: 45,
@@ -125,6 +130,7 @@ const TESTNET_CONFIG: WormholeConfig = {
     Xlayer: 'https://testrpc.xlayer.tech',
     Mantle: 'https://rpc.sepolia.mantle.xyz',
     Worldchain: 'https://worldchain-sepolia.g.alchemy.com/public',
+    Unichain: 'https://sepolia.unichain.org',
   },
   chains: TESTNET,
 };

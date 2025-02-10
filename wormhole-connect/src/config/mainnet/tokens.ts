@@ -611,4 +611,31 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     decimals: 18,
     icon: TokenIcon.WORLDCHAIN,
   },
+  {
+    symbol: 'ETH',
+    tokenId: {
+      chain: 'Unichain',
+      address: 'native',
+    },
+    decimals: 18,
+    icon: TokenIcon.UNICHAIN,
+  },
+  {
+    symbol: 'WETH',
+    tokenId: {
+      chain: 'Unichain',
+      address: '0x4200000000000000000000000000000000000006',
+    },
+    decimals: 18,
+    icon: TokenIcon.UNICHAIN,
+  },
+  {
+    symbol: 'USDC',
+    tokenId: {
+      chain: 'Unichain',
+      address: '0x078D782b760474a361dDA0AF3839290b0EF57AD6',
+    },
+    decimals: 6,
+    icon: TokenIcon.USDC,
+  },
 ];
