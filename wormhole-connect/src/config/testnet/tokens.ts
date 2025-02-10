@@ -307,4 +307,31 @@ export const TESTNET_TOKENS: TokenConfig[] = [
     decimals: 18,
     icon: TokenIcon.WORLDCHAIN,
   },
+  {
+    symbol: 'ETH',
+    tokenId: {
+      chain: 'Unichain',
+      address: 'native',
+    },
+    decimals: 18,
+    icon: TokenIcon.ETH,
+  },
+  {
+    symbol: 'WETH',
+    tokenId: {
+      chain: 'Unichain',
+      address: '0x4200000000000000000000000000000000000006',
+    },
+    decimals: 18,
+    icon: TokenIcon.ETH,
+  },
+  {
+    symbol: 'USDC',
+    tokenId: {
+      chain: 'Unichain',
+      address: '0x31d0220469e10c4E71834a79b1f276d740d3768F',
+    },
+    decimals: 6,
+    icon: TokenIcon.USDC,
+  },
 ];

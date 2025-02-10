@@ -198,4 +198,15 @@ export const TESTNET_CHAINS: ChainsConfig = {
     sdkName: 'Worldchain',
     symbol: 'WORLD',
   },
+  Unichain: {
+    ...chains.Unichain!,
+    displayName: 'Unichain',
+    explorerUrl: 'https://unichain-sepolia.blockscout.com/',
+    explorerName: 'Unichain Explorer',
+    chainId: 1301,
+    icon: 'Unichain',
+    symbol: 'UNI',
+    sdkName: 'Unichain',
+    wrappedGasToken: '0x4200000000000000000000000000000000000006',
+  },
 };

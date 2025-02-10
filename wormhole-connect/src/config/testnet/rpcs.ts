@@ -18,6 +18,7 @@ const {
   REACT_APP_XLAYER_TESTNET_RPC,
   REACT_APP_MANTLE_TESTNET_RPC,
   REACT_APP_WORLDCHAIN_TESTNET_RPC,
+  REACT_APP_UNICHAIN_TESTNET_RPC,
 } = import.meta.env;
 
 export const TESTNET_RPC_MAPPING = {
@@ -39,4 +40,5 @@ export const TESTNET_RPC_MAPPING = {
   ...populateRpcField('Xlayer', REACT_APP_XLAYER_TESTNET_RPC),
   ...populateRpcField('Mantle', REACT_APP_MANTLE_TESTNET_RPC),
   ...populateRpcField('Worldchain', REACT_APP_WORLDCHAIN_TESTNET_RPC),
+  ...populateRpcField('Unichain', REACT_APP_UNICHAIN_TESTNET_RPC),
 };
